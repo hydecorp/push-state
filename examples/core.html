@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- @include examples/includes/head-content.html -->
+
+    <link rel="stylesheet" href="dist/index.css"></link>
+  </head>
+  <body>
+    <div id="smoothState">
+      <aside>
+        <!-- @include examples/includes/drawer-content.html -->
+      </aside>
+      <main>
+        <!-- @include examples/includes/lorem-ipsum-core.html -->
+      </main>
+    </div>
+
+    <script src="dist/core/index.js"></script>
+    <script>
+      var smoothStateCore = y.smoothState.core.default;
+      var SmoothState = smoothStateCore();
+      var smoothStateObj = new SmoothState();
+      smoothStateObj.initComponent(smoothState);
+    </script>
+  </body>
+</html>

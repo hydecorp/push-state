@@ -123,12 +123,12 @@ export default C => class extends componentCore(C) {
 
   onBefore() {
     document.body.classList.add(this.loadingClass);
-    this.getEl().dispatchEvent(new Event('beforesmoothstate'));
+    this.getEl().dispatchEvent(new Event('y-smooth-state-before'));
   }
 
   onAfter() {
     document.body.classList.remove(this.loadingClass);
-    this.getEl().dispatchEvent(new Event('aftersmoothstate'));
+    this.getEl().dispatchEvent(new Event('y-smooth-state-after'));
   }
 
   onError() {

@@ -1,10 +1,15 @@
-<script src="index.js"></script>
+<template id="y-smooth-state-template-v0">
+  <!-- @include ./template-v0.html -->
+</template>
+<template id="y-smooth-state-template-v1">
+  <!-- @include ./template-v1.html -->
+</template>
+<script src="y-smooth-state.js"></script>
 <script>
-  (function(window, document) {
-    if ('customElements' in window) {
-      customElements.define('y-smooth-state', y.smoothState.webcomponent.default);
-    } else if ('registerElement' in document) {
-      document.registerElement('y-smooth-state', y.smoothState.webcomponent.default);
-    }
-  }(window, document));
+  var HTMLYSmoothStateElement = ySmoothState.webcomponent.default;
+  if ('customElements' in window) {
+    customElements.define('y-smooth-state', HTMLYSmoothStateElement);
+  } else if ('registerElement' in document) {
+    document.registerElement('y-smooth-state', HTMLYSmoothStateElement);
+  }
 </script>

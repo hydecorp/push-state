@@ -20,6 +20,7 @@ import 'rxjs-es/add/observable/of';
 import 'rxjs-es/add/observable/dom/ajax';
 
 import 'rxjs-es/add/operator/catch';
+import 'rxjs-es/add/operator/delay';
 import 'rxjs-es/add/operator/do';
 import 'rxjs-es/add/operator/filter';
 import 'rxjs-es/add/operator/map';
@@ -27,8 +28,10 @@ import 'rxjs-es/add/operator/mergeAll';
 import 'rxjs-es/add/operator/retry';
 import 'rxjs-es/add/operator/switch';
 import 'rxjs-es/add/operator/switchMap';
+import 'rxjs-es/add/operator/materialize';
+import 'rxjs-es/add/operator/zip';
 
-import { shouldLoadAnchor } from '../common';
+import { shouldLoadAnchor, getScrollTop, getScrollHeight } from '../common';
 
 const LINK_SELECTOR = 'a[href]'; // 'a[href^="/"]';
 const CONTENT_SELECTOR = 'main';
@@ -39,6 +42,11 @@ const LOADING_CLASS = 'is-loading';
 
 // window.Observable = Observable;
 
+function minDur(time) {
+  return this.zip(Observable.of(null).delay(time))
+    .map(([$]) => $);
+}
+
 // ~ mixin smoothStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
 
@@ -48,6 +56,20 @@ export default C => class extends componentCore(C) {
 
     this.bindCallbacks();
 
+    if ('scrollRestoration' in history) {
+      if (this.scroll) history.scrollRestoration = 'manual';
+      else history.scrollRestoration = 'auto';
+    }
+
+    if (this.scroll) {
+      this.resetScrollPostion();
+      window.addEventListener('beforeunload', () => {
+        this.saveScrollPosition();
+      });
+    }
+
+    this.resetScrollPostion();
+
     // cache title element
     this.titleElement = document.querySelector('title') || {};
 
@@ -55,13 +77,14 @@ export default C => class extends componentCore(C) {
 
     const pushstate$ = click$$
       .switch()
+      .do(() => this.saveScrollPosition())
       .map(href => ({
         push: true,
         href,
       }));
 
     const popstate$ = Observable.fromEvent(window, 'popstate')
-      .filter(({ state }) => state != null)
+      .filter(() => window.history.state != null)
       .map(() => ({
         push: false,
         href: window.location.href,
@@ -96,6 +119,7 @@ export default C => class extends componentCore(C) {
       contentSelector: CONTENT_SELECTOR,
       linkSelector: LINK_SELECTOR,
       loadingClass: LOADING_CLASS,
+      scroll: false,
       hrefRegex: null,
       blacklist: null,
     };
@@ -122,6 +146,13 @@ export default C => class extends componentCore(C) {
   }
 
   onBefore() {
+    // console.log(push, history.state.scrollHeight);
+    //
+    // if (!push && history.state.scrollHeight) {
+    //   document.body.style.minHeight = `${history.state.scrollHeight}px`;
+    // } else {
+    //   document.body.style.minHeight = 0;
+    // }
     document.body.classList.add(this.loadingClass);
     this.getEl().dispatchEvent(new Event('y-smooth-state-before'));
   }
@@ -133,6 +164,7 @@ export default C => class extends componentCore(C) {
 
   onError() {
     document.body.classList.remove(this.loadingClass);
+    this.getEl().dispatchEvent(new Event('y-smooth-state-error'));
   }
 
   beNice(e) {
@@ -163,14 +195,17 @@ export default C => class extends componentCore(C) {
   }
 
   makeRequest(hairball) {
-    return Observable
-      .ajax(hairball.requestData)
-      .retry(3)
-      .map(ajaxResponse => Object.assign(hairball, { ajaxResponse }))
-      .catch((e) => {
-        this.onError(e);
-        return Observable.empty();
-      });
+    return minDur.call(
+      Observable
+        .ajax(hairball.requestData)
+        .retry(3)
+        .map(ajaxResponse => Object.assign(hairball, { ajaxResponse }))
+        .catch((e) => {
+          this.onError(e);
+          return Observable.empty();
+        }),
+      200
+    );
   }
 
   ajaxResponseToContent(hairball) {
@@ -185,7 +220,17 @@ export default C => class extends componentCore(C) {
   }
 
   updateDOM({ title, content, url, push }) {
-    // replace content
+    // update title separately
+    // TODO: update meta description?
+    this.titleElement.textContent = title;
+
+    // push new frame to history if not a popstate
+    if (push) {
+      window.history.pushState({}, title, url);
+    }
+
+    this.resetScrollPostion();
+
     const oldContent = this.getEl().querySelectorAll(this.contentSelector);
 
     if (content.length === oldContent.length) {
@@ -195,16 +240,27 @@ export default C => class extends componentCore(C) {
     Array.from(oldContent).forEach((oldElement, i) => {
       oldElement.parentNode.replaceChild(content[i], oldElement);
     });
+  }
 
-    // update title separately
-    // TODO: update meta description?
-    this.titleElement.textContent = title;
+  saveScrollPosition() {
+    if (this.scroll) {
+      const state = history.state || {};
+      state.scrollTop = getScrollTop();
+      state.scrollHeight = getScrollHeight();
+      history.replaceState(state, document.title, window.location.href);
+    }
+  }
 
-    // push new frame to history if not a popstate
-    if (push) {
-      requestAnimationFrame(() => {
-        window.history.pushState({}, title, url);
-        window.scrollTo(window.pageXOffset, 0);
+  resetScrollPostion() {
+    if (this.scroll) {
+      const state = history.state || {};
+      setImmediate(() => {
+        document.body.style.willChange = 'scroll-position';
+        requestAnimationFrame(() => {
+          document.body.style.minHeight = `${state.scrollHeight || 0}px`;
+          window.scrollTo(window.pageXOffset, state.scrollTop || 0);
+          document.body.style.willChange = '';
+        });
       });
     }
   }

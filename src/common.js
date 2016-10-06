@@ -69,3 +69,14 @@ export function shouldLoadAnchor(anchor, blacklist, hrefRegex) {
     )
   );
 }
+
+export function getScrollHeight() {
+  const h = document.documentElement;
+  const b = document.body;
+  const sh = 'scrollHeight';
+  return h[sh] || b[sh];
+}
+
+export function getScrollTop() {
+  return window.pageYOffset;
+}

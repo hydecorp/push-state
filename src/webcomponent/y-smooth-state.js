@@ -4,31 +4,13 @@
  */
 
 /* eslint-disable import/no-extraneous-dependencies, import/no-unresolved, import/extensions */
-import htmlElement from 'y-component/src/htmlElement';
+import htmlElement from 'y-component/src/html-element';
 
 import smoothStateCore from '../core';
 
-export default class HTMLYDrawerElement extends htmlElement(smoothStateCore(HTMLElement)) {
-  connectedCallback() {
-    this.createdConnected();
-  }
-
-  createdCallback() {
-    this.createdConnected();
-  }
-
-  getTemplateInstance(version) {
-    const name = 'y-smooth-state';
-    return document
-        .querySelector(`link[href$="${name}.html"]`)
-        .import
-        .getElementById(`${name}-template-${version}`)
-        .content
-        .cloneNode(true);
-  }
-
+export default class extends htmlElement(smoothStateCore(HTMLElement)) {
   // @override
-  setupDOM(el) {
+  setupDOM(el) { // don't use shadow DOM
     return el;
   }
 }

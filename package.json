@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "Y smooth state?",
   "config" : {
-    "port" : "8080"
+    "port" : "8081"
   },
   "scripts": {
     "test": "echo \"Warning: no test specified\" && exit 0",
@@ -55,8 +55,7 @@
     "watchify": "3.7.0"
   },
   "dependencies": {
-    "rxjs-es": "5.0.0-beta.12",
-    "y-component": "3.0.0"
+    "rxjs-es": "5.0.0-beta.12"
   },
   "directories": {
     "example": "examples"

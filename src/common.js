@@ -49,6 +49,11 @@ export function isHash(href, prev) {
   return (hasHash && samePath);
 }
 
+function matches(el, selector) {
+  return (el.matches || el.matchesSelector || el.msMatchesSelector || el.mozMatchesSelector ||
+    el.webkitMatchesSelector || el.oMatchesSelector).call(el, selector);
+}
+
 /**
  * Checks to see if we should be loading this URL
  *
@@ -62,7 +67,7 @@ export function shouldLoadAnchor(anchor, blacklist, hrefRegex) {
   return (
     !isExternal(href) &&
     !isHash(href) &&
-    !anchor.matches(blacklist) &&
+    !matches(anchor, blacklist) &&
     anchor.target === '' && (
       hrefRegex === null ||
       href.search(hrefRegex) !== -1

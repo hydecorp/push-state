@@ -7,7 +7,7 @@
  */
 
 /* eslint-disable import/no-extraneous-dependencies, import/no-unresolved, import/extensions */
-import componentCore from 'y-component/src/componentCore';
+import componentCore from 'y-component/src/component-core';
 
 import { Observable } from 'rxjs-es/Observable';
 import { Subject } from 'rxjs-es/Subject';
@@ -33,12 +33,8 @@ import 'rxjs-es/add/operator/zip';
 
 import { shouldLoadAnchor, getScrollTop, getScrollHeight } from '../common';
 
-const LINK_SELECTOR = 'a[href]'; // 'a[href^="/"]';
-const CONTENT_SELECTOR = 'main';
-const LOADING_CLASS = 'is-loading';
-
 // requirements
-// object.assign, queryslector, el.match
+// object.assign, queryslector
 
 // window.Observable = Observable;
 
@@ -51,28 +47,61 @@ function minDur(time) {
 export default C => class extends componentCore(C) {
 
   // @override
-  initComponent(el, props) {
-    super.initComponent(el, props);
+  componentName() {
+    return 'y-smooth-state';
+  }
 
+  // @override
+  defaults() {
+    return {
+      replaceIds: [],
+      linkSelector: 'a[href]',
+      scrollRestoration: false,
+      hrefRegex: null,
+      blacklist: null,
+      duration: 0,
+    };
+  }
+
+  startHistory() {
     this.bindCallbacks();
+    this.checkPreCondition();
+    this.setupScrollRestoration();
+    this.resetScrollPostion();
+    this.cacheTitleElement();
+    this.layPipes();
+  }
 
+  checkPreCondition() {
+    if (this.replaceIds.length === 0) {
+      const id = this.eventSource().id;
+      if (id) {
+        console.warn(`No replace ids provided. Will replace entire content of #${id}`); // eslint-disable-line no-console
+      } else {
+        throw Error('No replace ids provided nor does this component have and id'); // eslint-disable-line no-console
+      }
+    }
+  }
+
+  setupScrollRestoration() {
     if ('scrollRestoration' in history) {
-      if (this.scroll) history.scrollRestoration = 'manual';
+      if (this.scrollRestoration) history.scrollRestoration = 'manual';
       else history.scrollRestoration = 'auto';
     }
 
-    if (this.scroll) {
+    if (this.scrollRestoration) {
       this.resetScrollPostion();
       window.addEventListener('beforeunload', () => {
         this.saveScrollPosition();
       });
     }
+  }
 
-    this.resetScrollPostion();
-
-    // cache title element
+  cacheTitleElement() {
     this.titleElement = document.querySelector('title') || {};
+  }
 
+  layPipes() {
     const click$$ = new Subject();
 
     const pushstate$ = click$$
@@ -95,40 +124,15 @@ export default C => class extends componentCore(C) {
       .map(this.hrefToRquestData)
       .switchMap(this.makeRequest)
       .map(this.ajaxResponseToContent)
-      .subscribe((hairball) => {
-        this.updateDOM(hairball);
-        click$$.next(this.bindEvents());
-        this.onAfter();
+      .do(this.updateDOM)
+      .do(this.onAfter)
+      .delay(100) // TODO: make configureable?
+      .subscribe(() => {
+        click$$.next(this.bindEvents()); // TODO: bind events before adding to DOM?
       });
 
     // let's get the party started
     click$$.next(this.bindEvents());
-  }
-
-  setupDOM(el) {
-    // TODO: improve API
-    if (el.querySelector(this.state.contentSelector) == null) {
-      throw Error('el needs to contain content');
-    }
-    return el;
-  }
-
-  // @override
-  defaults() {
-    return {
-      contentSelector: CONTENT_SELECTOR,
-      linkSelector: LINK_SELECTOR,
-      loadingClass: LOADING_CLASS,
-      scroll: false,
-      hrefRegex: null,
-      blacklist: null,
-    };
-  }
-
-  // @override
-  sideEffects() {
-    return {
-    };
   }
 
   bindCallbacks() {
@@ -146,25 +150,21 @@ export default C => class extends componentCore(C) {
   }
 
   onBefore() {
-    // console.log(push, history.state.scrollHeight);
-    //
-    // if (!push && history.state.scrollHeight) {
-    //   document.body.style.minHeight = `${history.state.scrollHeight}px`;
-    // } else {
-    //   document.body.style.minHeight = 0;
-    // }
-    document.body.classList.add(this.loadingClass);
-    this.getEl().dispatchEvent(new Event('y-smooth-state-before'));
+    // document.body.classList.add(this.loadingClass);
+    this.eventSource().style.willChange = 'content';
+    this.fireEvent('before');
   }
 
   onAfter() {
-    document.body.classList.remove(this.loadingClass);
-    this.getEl().dispatchEvent(new Event('y-smooth-state-after'));
+    // document.body.classList.remove(this.loadingClass);
+    this.eventSource().style.willChange = '';
+    this.fireEvent('after');
   }
 
   onError() {
-    document.body.classList.remove(this.loadingClass);
-    this.getEl().dispatchEvent(new Event('y-smooth-state-error'));
+    // document.body.classList.remove(this.loadingClass);
+    this.eventSource().style.willChange = '';
+    this.fireEvent('error');
   }
 
   beNice(e) {
@@ -176,7 +176,7 @@ export default C => class extends componentCore(C) {
   }
 
   bindEvents() {
-    return Observable.of(this.getEl().querySelectorAll(this.linkSelector))
+    return Observable.of(this.eventSource().querySelectorAll(this.linkSelector))
       .map(link => Observable.fromEvent(link, 'click'))
       .mergeAll()
       .filter(this.beNice)
@@ -204,17 +204,28 @@ export default C => class extends componentCore(C) {
           this.onError(e);
           return Observable.empty();
         }),
-      200
+      this.duration
     );
   }
 
-  ajaxResponseToContent(hairball) {
-    const documentFragment = this.fragmentFromString(hairball.ajaxResponse.response);
-    const title = (documentFragment.querySelector('title') || {}).textContent;
-    const url = hairball.ajaxResponse.request.url;
+  getTitleFromDocumentFragment(documentFragment) {
+    return (documentFragment.querySelector('title') || {}).textContent;
+  }
 
-    // TODO: abort if content_selector not present
-    const content = documentFragment.querySelectorAll(this.contentSelector);
+  getContentFromDocumentFragment(documentFragment) {
+    if (this.replaceIds.length > 0) {
+      return this.replaceIds.map(id => documentFragment.querySelector(`#${id}`));
+    }
+
+    return documentFragment.getElementById(this.eventSource().id);
+  }
+
+  ajaxResponseToContent(hairball) {
+    const { ajaxResponse: { request: { url }, response } } = hairball;
+
+    const documentFragment = this.fragmentFromString(response);
+    const title = this.getTitleFromDocumentFragment(documentFragment);
+    const content = this.getContentFromDocumentFragment(documentFragment);
 
     return Object.assign(hairball, { title, url, content });
   }
@@ -225,25 +236,45 @@ export default C => class extends componentCore(C) {
     this.titleElement.textContent = title;
 
     // push new frame to history if not a popstate
-    if (push) {
-      window.history.pushState({}, title, url);
-    }
+    if (push) window.history.pushState({}, title, url);
 
     this.resetScrollPostion();
+    this.replaceContent(content);
+  }
 
-    const oldContent = this.getEl().querySelectorAll(this.contentSelector);
-
-    if (content.length === oldContent.length) {
-      // TODO: warn
+  replaceContent(content) {
+    if (this.replaceIds.length > 0) {
+      this.replaceContentByIds(content);
+    } else {
+      this.replaceContentWholesale(content);
     }
+  }
 
-    Array.from(oldContent).forEach((oldElement, i) => {
-      oldElement.parentNode.replaceChild(content[i], oldElement);
-    });
+  // TODO: rename
+  checkCondition(oldElements, content) {
+    // TODO: replace existing ids, remove missing ides
+    if (content.length !== oldElements.length) {
+      throw Error("New document doesn't contain the same number of ids");
+    }
+  }
+
+  replaceContentByIds(content) {
+    const oldElements = this.replaceIds
+      .map(id => document.getElementById(id));
+
+    this.checkCondition(oldElements, content);
+
+    for (const oldElement of oldElements) {
+      oldElement.parentNode.replaceChild(content.shift(), oldElement);
+    }
+  }
+
+  replaceContentWholesale(content) {
+    this.eventSource().innerHTML = content.innerHTML;
   }
 
   saveScrollPosition() {
-    if (this.scroll) {
+    if (this.scrollRestoration) {
       const state = history.state || {};
       state.scrollTop = getScrollTop();
       state.scrollHeight = getScrollHeight();
@@ -252,15 +283,13 @@ export default C => class extends componentCore(C) {
   }
 
   resetScrollPostion() {
-    if (this.scroll) {
+    if (this.scrollRestoration) {
       const state = history.state || {};
-      setImmediate(() => {
-        document.body.style.willChange = 'scroll-position';
-        requestAnimationFrame(() => {
-          document.body.style.minHeight = `${state.scrollHeight || 0}px`;
-          window.scrollTo(window.pageXOffset, state.scrollTop || 0);
-          document.body.style.willChange = '';
-        });
+      document.body.style.willChange = 'scroll-position';
+      requestAnimationFrame(() => {
+        document.body.style.minHeight = `${state.scrollHeight || 0}px`;
+        window.scrollTo(window.pageXOffset, state.scrollTop || 0);
+        document.body.style.willChange = '';
       });
     }
   }

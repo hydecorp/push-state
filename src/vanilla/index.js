@@ -7,7 +7,7 @@ import smoothStateCore from '../core';
 export default class SmoothState extends smoothStateCore() {
   constructor(el, props) {
     super();
-    this.initComponent(el, props);
+    this.setupComponent(el, props);
   }
 
   // @override

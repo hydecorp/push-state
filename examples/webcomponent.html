@@ -3,7 +3,6 @@
   <head>
     <!-- @include examples/includes/head-content.html -->
 
-    <link rel="import" href="dist/webcomponent/y-smooth-state.html">
   </head>
   <body>
     <y-smooth-state id="smoothState">
@@ -14,5 +13,18 @@
         <!-- @include examples/includes/lorem-ipsum-webcomponent.html -->
       </main>
     </y-smooth-state>
+
+    <script>
+      const elem = document.getElementById('smoothState');
+
+      function setup() {
+        elem.startHistory();
+        elem.removeEventListener('y-smooth-state-attached', setup);
+      }
+
+      elem.addEventListener('y-smooth-state-attached', setup);
+    </script>
+
+    <link rel="import" href="dist/webcomponent/y-smooth-state.html">
   </body>
 </html>

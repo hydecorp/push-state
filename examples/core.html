@@ -19,8 +19,9 @@
     <script>
       var smoothStateCore = ySmoothState.core.default;
       var SmoothState = smoothStateCore();
-      var smoothStateObj = new SmoothState();
-      smoothStateObj.initComponent(smoothState);
+      new SmoothState()
+        .setupComponent(smoothState)
+        .startHistory();
     </script>
   </body>
 </html>

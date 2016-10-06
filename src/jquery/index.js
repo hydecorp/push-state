@@ -3,14 +3,14 @@
  * Licensed under MIT
  */
 /* eslint-disable import/no-extraneous-dependencies, import/no-unresolved, import/extensions */
-import defineJQueryComponent from 'y-component/src/defineJQueryComponent';
+import defineJQueryComponent from 'y-component/src/define-jquery-component';
 
 import smoothStateCore from '../core';
 
 defineJQueryComponent('smoothState', class extends smoothStateCore() {
   constructor(el, props) {
     super();
-    this.initComponent(el, props);
+    this.setupComponent(el, props);
   }
 
   // @override

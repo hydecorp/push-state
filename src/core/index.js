@@ -20,23 +20,32 @@ import 'rxjs-es/add/observable/of';
 import 'rxjs-es/add/observable/dom/ajax';
 
 import 'rxjs-es/add/operator/catch';
+import 'rxjs-es/add/operator/concatMap';
 import 'rxjs-es/add/operator/delay';
+import 'rxjs-es/add/operator/distinctUntilChanged';
 import 'rxjs-es/add/operator/do';
 import 'rxjs-es/add/operator/filter';
 import 'rxjs-es/add/operator/map';
 import 'rxjs-es/add/operator/mergeAll';
+import 'rxjs-es/add/operator/pairwise';
 import 'rxjs-es/add/operator/retry';
+import 'rxjs-es/add/operator/startWith';
 import 'rxjs-es/add/operator/switch';
 import 'rxjs-es/add/operator/switchMap';
-import 'rxjs-es/add/operator/materialize';
+import 'rxjs-es/add/operator/withLatestFrom';
 import 'rxjs-es/add/operator/zip';
 
-import { shouldLoadAnchor, getScrollTop, getScrollHeight } from '../common';
+import 'rxjs-es/add/operator/publish';
+import 'rxjs-es/add/operator/publishLast';
+// import 'rxjs-es/add/operator/materialize';
+// import 'rxjs-es/add/operator/dematerialize';
+
+import { shouldLoadAnchor, getScrollTop, getScrollHeight, querySelectorInv } from '../common';
 
 // requirements
 // object.assign, queryslector
 
-// window.Observable = Observable;
+window.Observable = Observable;
 
 function minDur(time) {
   return this.zip(Observable.of(null).delay(time))
@@ -72,6 +81,19 @@ export default C => class extends componentCore(C) {
     this.layPipes();
   }
 
+  bindCallbacks() {
+    this.ajaxResponseToContent = this.ajaxResponseToContent.bind(this);
+    this.beNice = this.beNice.bind(this);
+    this.beOkay = this.beOkay.bind(this);
+    this.hrefToRequestData = this.hrefToRequestData.bind(this);
+    this.makeRequest = this.makeRequest.bind(this);
+    this.makePrefetchRequest = this.makePrefetchRequest.bind(this);
+    this.usePrefechOrMakeRequest = this.usePrefechOrMakeRequest.bind(this);
+    this.onBefore = this.onBefore.bind(this);
+    this.onAfter = this.onAfter.bind(this);
+    this.updateDOM = this.updateDOM.bind(this);
+  }
+
   checkPreCondition() {
     if (this.replaceIds.length === 0) {
       const id = this.eventSource().id;
@@ -102,47 +124,56 @@ export default C => class extends componentCore(C) {
   }
 
   layPipes() {
-    const click$$ = new Subject();
-
-    const pushstate$ = click$$
-      .switch()
+    const pushstate$ = Observable.fromEvent(this.eventSource(), 'click')
+      .map(event => ({
+        event,
+        anchor: querySelectorInv(event.target, this.linkSelector),
+      }))
+      .filter(this.beNice)
       .do(() => this.saveScrollPosition())
-      .map(href => ({
+      .do(({ event }) => event.preventDefault())
+      .map(({ anchor }) => ({
         push: true,
-        href,
+        href: anchor.href,
       }));
 
     const popstate$ = Observable.fromEvent(window, 'popstate')
       .filter(() => window.history.state != null)
+      .do(event => event.preventDefault())
       .map(() => ({
         push: false,
         href: window.location.href,
       }));
 
+    const prefetchHref$$ = new Subject();
+    const prefetch$$ = prefetchHref$$
+      .switch()
+      .distinctUntilChanged() // don't cancel request if user jiggels over link
+      .map(href => ({ href }))
+      .map(this.hrefToRequestData)
+      .map(this.makePrefetchRequest)
+      .startWith({})
+      .pairwise()
+      .map(([prev, curr]) => {
+        if (prev.conn) prev.conn.unsubscribe();
+        return curr;
+      });
+
     Observable.merge(pushstate$, popstate$)
       .do(this.onBefore)
-      .map(this.hrefToRquestData)
-      .switchMap(this.makeRequest)
+      .map(this.hrefToRequestData)
+      .withLatestFrom(prefetch$$)
+      .switchMap(this.usePrefechOrMakeRequest)
       .map(this.ajaxResponseToContent)
       .do(this.updateDOM)
       .do(this.onAfter)
-      .delay(100) // TODO: make configureable?
       .subscribe(() => {
-        click$$.next(this.bindEvents()); // TODO: bind events before adding to DOM?
+        const link$ = this.linkObservable();
+        prefetchHref$$.next(this.bindPrefetchEvents(link$));
       });
 
-    // let's get the party started
-    click$$.next(this.bindEvents());
-  }
-
-  bindCallbacks() {
-    this.beNice = this.beNice.bind(this);
-    this.hrefToRquestData = this.hrefToRquestData.bind(this);
-    this.makeRequest = this.makeRequest.bind(this);
-    this.ajaxResponseToContent = this.ajaxResponseToContent.bind(this);
-    this.updateDOM = this.updateDOM.bind(this);
-    this.onBefore = this.onBefore.bind(this);
-    this.onAfter = this.onAfter.bind(this);
+    const link$ = this.linkObservable();
+    prefetchHref$$.next(this.bindPrefetchEvents(link$));
   }
 
   fragmentFromString(strHTML) {
@@ -152,12 +183,14 @@ export default C => class extends componentCore(C) {
   onBefore() {
     // document.body.classList.add(this.loadingClass);
     this.eventSource().style.willChange = 'content';
+    document.body.style.willChange = 'scroll-position';
     this.fireEvent('before');
   }
 
   onAfter() {
     // document.body.classList.remove(this.loadingClass);
     this.eventSource().style.willChange = '';
+    document.body.style.willChange = '';
     this.fireEvent('after');
   }
 
@@ -167,24 +200,42 @@ export default C => class extends componentCore(C) {
     this.fireEvent('error');
   }
 
-  beNice(e) {
+  // TODO: rename
+  beNice({ event, anchor }) {
     return (
-      !e.metaKey &&
-      !e.ctrlKey &&
-      shouldLoadAnchor(e.currentTarget, this.blacklist, this.hrefRegex)
+      anchor != null &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
     );
   }
 
-  bindEvents() {
-    return Observable.of(this.eventSource().querySelectorAll(this.linkSelector))
-      .map(link => Observable.fromEvent(link, 'click'))
-      .mergeAll()
-      .filter(this.beNice)
-      .do(e => e.preventDefault())
-      .map(e => e.currentTarget.href);
+  // TODO: rename
+  beOkay({ anchor }) {
+    return (
+      anchor != null &&
+      shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
+    );
   }
 
-  hrefToRquestData(hairball) {
+  linkObservable() {
+    return Observable.of(this.eventSource().querySelectorAll(this.linkSelector));
+  }
+
+  bindPrefetchEvents(link$) {
+    return Observable.of(
+      link$.map(link => Observable.fromEvent(link, 'mouseenter')),
+      link$.map(link => Observable.fromEvent(link, 'touchstart')),
+      link$.map(link => Observable.fromEvent(link, 'focus'))
+    )
+      .mergeAll()
+      .mergeAll()
+      .map(event => ({ anchor: event.currentTarget }))
+      .filter(this.beOkay)
+      .map(({ anchor }) => anchor.href);
+  }
+
+  hrefToRequestData(hairball) {
     return Object.assign(hairball, {
       requestData: {
         method: 'GET',
@@ -195,17 +246,36 @@ export default C => class extends componentCore(C) {
   }
 
   makeRequest(hairball) {
-    return minDur.call(
-      Observable
-        .ajax(hairball.requestData)
-        .retry(3)
-        .map(ajaxResponse => Object.assign(hairball, { ajaxResponse }))
-        .catch((e) => {
-          this.onError(e);
-          return Observable.empty();
-        }),
-      this.duration
-    );
+    const ajax = Observable
+      .ajax(hairball.requestData)
+      .retry(3)
+      .map(ajaxResponse => Object.assign(hairball, { ajaxResponse }))
+      .catch((e) => {
+        this.onError(e);
+        return Observable.empty();
+      });
+    return minDur.call(ajax, this.duration);
+  }
+
+  makePrefetchRequest(hairball) {
+    const { href } = hairball;
+    const ajax = this.makeRequest(hairball).publishLast();
+    const conn = ajax.connect();
+    return { href, ajax, conn };
+  }
+
+  usePrefechOrMakeRequest([hairball, prefetch]) {
+    // prefetch request matches user intent
+    if (hairball.href === prefetch.href) {
+      return prefetch.ajax
+        // copy properties of original req
+        .map(h => Object.assign(h, hairball));
+    }
+    // current request doesn't match prefetch
+    // unsubscribe/cancel prefetch
+    if (prefetch.conn) prefetch.conn.unsubscribe();
+    // make new, correct request
+    return this.makeRequest(hairball);
   }
 
   getTitleFromDocumentFragment(documentFragment) {
@@ -285,12 +355,10 @@ export default C => class extends componentCore(C) {
   resetScrollPostion() {
     if (this.scrollRestoration) {
       const state = history.state || {};
-      document.body.style.willChange = 'scroll-position';
-      requestAnimationFrame(() => {
-        document.body.style.minHeight = `${state.scrollHeight || 0}px`;
-        window.scrollTo(window.pageXOffset, state.scrollTop || 0);
-        document.body.style.willChange = '';
-      });
+      document.body.style.minHeight = `${state.scrollHeight || 0}px`;
+      window.scrollTo(window.pageXOffset, state.scrollTop || 0);
+    } else {
+      window.scrollTo(window.pageXOffset, 0);
     }
   }
 };

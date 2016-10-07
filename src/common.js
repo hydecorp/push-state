@@ -49,9 +49,28 @@ export function isHash(href, prev) {
   return (hasHash && samePath);
 }
 
-function matches(el, selector) {
+export function matches(el, selector) {
   return (el.matches || el.matchesSelector || el.msMatchesSelector || el.mozMatchesSelector ||
     el.webkitMatchesSelector || el.oMatchesSelector).call(el, selector);
+  // if (!matches.memo) {
+  //   matches.memo =
+  //     el.matches ||
+  //     el.matchesSelector ||
+  //     el.msMatchesSelector ||
+  //     el.mozMatchesSelector ||
+  //     el.webkitMatchesSelector ||
+  //     el.oMatchesSelector;
+  // }
+  // return matches.memo.call(el, selector);
+}
+
+export function querySelectorInv(el, selector) {
+  let curr = el;
+  while (curr !== document && curr !== document.documentElement) {
+    if (matches(curr, selector)) return curr;
+    curr = curr.parentNode;
+  }
+  return null;
 }
 
 /**

@@ -2,8 +2,8 @@
   "name": "y-smooth-state",
   "version": "2.0.0",
   "description": "Y smooth state?",
-  "config" : {
-    "port" : "8081"
+  "config": {
+    "port": "8081"
   },
   "scripts": {
     "test": "echo \"Warning: no test specified\" && exit 0",

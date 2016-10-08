@@ -16,11 +16,12 @@ import 'rxjs-es/add/observable/empty';
 import 'rxjs-es/add/observable/fromEvent';
 import 'rxjs-es/add/observable/merge';
 import 'rxjs-es/add/observable/of';
+import 'rxjs-es/add/observable/throw';
 
 import 'rxjs-es/add/observable/dom/ajax';
 
+import 'rxjs-es/add/operator/auditTime';
 import 'rxjs-es/add/operator/catch';
-import 'rxjs-es/add/operator/concatMap';
 import 'rxjs-es/add/operator/delay';
 import 'rxjs-es/add/operator/distinctUntilChanged';
 import 'rxjs-es/add/operator/do';
@@ -28,6 +29,7 @@ import 'rxjs-es/add/operator/filter';
 import 'rxjs-es/add/operator/map';
 import 'rxjs-es/add/operator/mergeAll';
 import 'rxjs-es/add/operator/pairwise';
+import 'rxjs-es/add/operator/publishLast';
 import 'rxjs-es/add/operator/retry';
 import 'rxjs-es/add/operator/startWith';
 import 'rxjs-es/add/operator/switch';
@@ -35,15 +37,12 @@ import 'rxjs-es/add/operator/switchMap';
 import 'rxjs-es/add/operator/withLatestFrom';
 import 'rxjs-es/add/operator/zip';
 
-import 'rxjs-es/add/operator/publish';
-import 'rxjs-es/add/operator/publishLast';
-// import 'rxjs-es/add/operator/materialize';
-// import 'rxjs-es/add/operator/dematerialize';
-
 import { shouldLoadAnchor, getScrollTop, getScrollHeight, querySelectorInv } from '../common';
 
 // requirements
 // object.assign, queryslector
+
+const def = Object.defineProperty.bind(Object);
 
 window.Observable = Observable;
 
@@ -79,24 +78,26 @@ export default C => class extends componentCore(C) {
     this.resetScrollPostion();
     this.cacheTitleElement();
     this.layPipes();
+    return this;
   }
 
   bindCallbacks() {
-    this.ajaxResponseToContent = this.ajaxResponseToContent.bind(this);
-    this.beNice = this.beNice.bind(this);
-    this.beOkay = this.beOkay.bind(this);
-    this.hrefToRequestData = this.hrefToRequestData.bind(this);
-    this.makeRequest = this.makeRequest.bind(this);
-    this.makePrefetchRequest = this.makePrefetchRequest.bind(this);
-    this.usePrefechOrMakeRequest = this.usePrefechOrMakeRequest.bind(this);
-    this.onBefore = this.onBefore.bind(this);
-    this.onAfter = this.onAfter.bind(this);
-    this.updateDOM = this.updateDOM.bind(this);
+    def(this, 'ajaxResponseToContent', { value: this.ajaxResponseToContent.bind(this) });
+    def(this, 'beNice', { value: this.beNice.bind(this) });
+    def(this, 'beOkay', { value: this.beOkay.bind(this) });
+    def(this, 'hrefToRequestData', { value: this.hrefToRequestData.bind(this) });
+    def(this, 'makeRequest', { value: this.makeRequest.bind(this) });
+    def(this, 'makePrefetchRequest', { value: this.makePrefetchRequest.bind(this) });
+    def(this, 'usePrefechOrMakeRequest', { value: this.usePrefechOrMakeRequest.bind(this) });
+    def(this, 'onBefore', { value: this.onBefore.bind(this) });
+    def(this, 'onAfter', { value: this.onAfter.bind(this) });
+    def(this, 'onError', { value: this.onError.bind(this) });
+    def(this, 'updateDOM', { value: this.updateDOM.bind(this) });
   }
 
   checkPreCondition() {
     if (this.replaceIds.length === 0) {
-      const id = this.eventSource().id;
+      const id = this.el.id;
       if (id) {
         console.warn(`No replace ids provided. Will replace entire content of #${id}`); // eslint-disable-line no-console
       } else {
@@ -120,11 +121,11 @@ export default C => class extends componentCore(C) {
   }
 
   cacheTitleElement() {
-    this.titleElement = document.querySelector('title') || {};
+    def(this, 'titleElement', { value: document.querySelector('title') || {} });
   }
 
   layPipes() {
-    const pushstate$ = Observable.fromEvent(this.eventSource(), 'click')
+    const pushstate$ = Observable.fromEvent(this.el, 'click')
       .map(event => ({
         event,
         anchor: querySelectorInv(event.target, this.linkSelector),
@@ -148,22 +149,25 @@ export default C => class extends componentCore(C) {
     const prefetchHref$$ = new Subject();
     const prefetch$$ = prefetchHref$$
       .switch()
+      // .filter(() => !this.isLoading) // TODO: this works, but isn't so great...
       .distinctUntilChanged() // don't cancel request if user jiggels over link
       .map(href => ({ href }))
       .map(this.hrefToRequestData)
       .map(this.makePrefetchRequest)
-      .startWith({})
       .pairwise()
       .map(([prev, curr]) => {
         if (prev.conn) prev.conn.unsubscribe();
         return curr;
-      });
+      })
+      .startWith({});
 
     Observable.merge(pushstate$, popstate$)
       .do(this.onBefore)
       .map(this.hrefToRequestData)
       .withLatestFrom(prefetch$$)
-      .switchMap(this.usePrefechOrMakeRequest)
+      .map(this.usePrefechOrMakeRequest)
+      .map(ajax => ajax.catch(this.onError))
+      .switch()
       .map(this.ajaxResponseToContent)
       .do(this.updateDOM)
       .do(this.onAfter)
@@ -181,32 +185,34 @@ export default C => class extends componentCore(C) {
   }
 
   onBefore() {
-    // document.body.classList.add(this.loadingClass);
-    this.eventSource().style.willChange = 'content';
+    // this.isLoading = true;
+    this.el.style.willChange = 'content';
     document.body.style.willChange = 'scroll-position';
     this.fireEvent('before');
   }
 
   onAfter() {
-    // document.body.classList.remove(this.loadingClass);
-    this.eventSource().style.willChange = '';
+    // this.isLoading = false;
+    this.el.style.willChange = '';
     document.body.style.willChange = '';
     this.fireEvent('after');
   }
 
   onError() {
-    // document.body.classList.remove(this.loadingClass);
-    this.eventSource().style.willChange = '';
+    // this.isLoading = false;
+    this.el.style.willChange = '';
+    document.body.style.willChange = '';
     this.fireEvent('error');
+
+    return Observable.empty();
   }
 
   // TODO: rename
   beNice({ event, anchor }) {
     return (
-      anchor != null &&
       !event.metaKey &&
       !event.ctrlKey &&
-      shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
+      this.beOkay({ anchor })
     );
   }
 
@@ -219,7 +225,7 @@ export default C => class extends componentCore(C) {
   }
 
   linkObservable() {
-    return Observable.of(this.eventSource().querySelectorAll(this.linkSelector));
+    return Observable.of(this.el.querySelectorAll(this.linkSelector));
   }
 
   bindPrefetchEvents(link$) {
@@ -248,12 +254,17 @@ export default C => class extends componentCore(C) {
   makeRequest(hairball) {
     const ajax = Observable
       .ajax(hairball.requestData)
-      .retry(3)
       .map(ajaxResponse => Object.assign(hairball, { ajaxResponse }))
-      .catch((e) => {
-        this.onError(e);
-        return Observable.empty();
+      .catch((error) => {
+        if (error.status && error.status > 400 && error.xhr) {
+          // recover with error page returned from server
+          // assuming error page contains the same ids...
+          // TODO: maybe parse and check if error page can be swapped and reload otherwise?
+          return Observable.of(Object.assign(hairball, { ajaxResponse: error.xhr }));
+        }
+        return Observable.throw(error);
       });
+      // ::minDur(this.duration)
     return minDur.call(ajax, this.duration);
   }
 
@@ -266,7 +277,7 @@ export default C => class extends componentCore(C) {
 
   usePrefechOrMakeRequest([hairball, prefetch]) {
     // prefetch request matches user intent
-    if (hairball.href === prefetch.href) {
+    if (hairball.href && prefetch.href && hairball.href === prefetch.href) {
       return prefetch.ajax
         // copy properties of original req
         .map(h => Object.assign(h, hairball));
@@ -287,26 +298,26 @@ export default C => class extends componentCore(C) {
       return this.replaceIds.map(id => documentFragment.querySelector(`#${id}`));
     }
 
-    return documentFragment.getElementById(this.eventSource().id);
+    return documentFragment.getElementById(this.el.id);
   }
 
   ajaxResponseToContent(hairball) {
-    const { ajaxResponse: { request: { url }, response } } = hairball;
+    const { href, ajaxResponse: { response } } = hairball;
 
     const documentFragment = this.fragmentFromString(response);
     const title = this.getTitleFromDocumentFragment(documentFragment);
     const content = this.getContentFromDocumentFragment(documentFragment);
 
-    return Object.assign(hairball, { title, url, content });
+    return Object.assign(hairball, { title, href, content });
   }
 
-  updateDOM({ title, content, url, push }) {
+  updateDOM({ title, content, href, push }) {
     // update title separately
     // TODO: update meta description?
     this.titleElement.textContent = title;
 
     // push new frame to history if not a popstate
-    if (push) window.history.pushState({}, title, url);
+    if (push) window.history.pushState({}, title, href);
 
     this.resetScrollPostion();
     this.replaceContent(content);
@@ -340,7 +351,7 @@ export default C => class extends componentCore(C) {
   }
 
   replaceContentWholesale(content) {
-    this.eventSource().innerHTML = content.innerHTML;
+    this.el.innerHTML = content.innerHTML;
   }
 
   saveScrollPosition() {

@@ -11,83 +11,43 @@ import componentCore from 'y-component/src/component-core';
 
 import { Observable } from 'rxjs-es/Observable';
 import { Subject } from 'rxjs-es/Subject';
-// import { asap } from 'rxjs-es/scheduler/asap';
 
 import 'rxjs-es/add/observable/defer';
 import 'rxjs-es/add/observable/empty';
 import 'rxjs-es/add/observable/fromEvent';
 import 'rxjs-es/add/observable/merge';
-// import 'rxjs-es/add/observable/never';
 import 'rxjs-es/add/observable/of';
 import 'rxjs-es/add/observable/throw';
 
 import 'rxjs-es/add/observable/dom/ajax';
 
-// import 'rxjs-es/add/operator/auditTime';
 import 'rxjs-es/add/operator/catch';
-// import 'rxjs-es/add/operator/concat';
-// import 'rxjs-es/add/operator/combineLatest';
 import 'rxjs-es/add/operator/delay';
-// import 'rxjs-es/add/operator/distinctUntilChanged';
 import 'rxjs-es/add/operator/distinctUntilKeyChanged';
 import 'rxjs-es/add/operator/do';
 import 'rxjs-es/add/operator/filter';
 import 'rxjs-es/add/operator/map';
-// import 'rxjs-es/add/operator/mapTo';
 import 'rxjs-es/add/operator/merge';
 import 'rxjs-es/add/operator/mergeAll';
-// import 'rxjs-es/add/operator/pairwise';
-// import 'rxjs-es/add/operator/publish';
-// import 'rxjs-es/add/operator/publishLast';
-// import 'rxjs-es/add/operator/repeat';
-// import 'rxjs-es/add/operator/retry';
+import 'rxjs-es/add/operator/retry';
 import 'rxjs-es/add/operator/share';
-// import 'rxjs-es/add/operator/skipUntil';
 import 'rxjs-es/add/operator/startWith';
-// import 'rxjs-es/add/operator/subscribeOn';
 import 'rxjs-es/add/operator/switch';
 import 'rxjs-es/add/operator/switchMap';
 import 'rxjs-es/add/operator/take';
-// import 'rxjs-es/add/operator/takeUntil';
 import 'rxjs-es/add/operator/withLatestFrom';
 import 'rxjs-es/add/operator/zip';
 
 import { shouldLoadAnchor, getScrollTop, getScrollHeight } from '../common';
-
-// requirements
-// object.assign, queryslector
+import { Push, Hint, Pop } from './kind';
 
 const def = Object.defineProperty.bind(Object);
 
-window.Observable = Observable;
+// window.Observable = Observable;
 
 function minDur(time) {
   return this.zip(Observable.of(null).delay(time))
     .map(([$]) => $);
-}
-
-class Kind {
-  constructor(event) {
-    this.event = event;
-  }
-}
-class Push extends Kind {
-  constructor(event) {
-    super(event);
-    this.href = event.currentTarget.href;
-  }
-}
-class Hint extends Kind {
-  constructor(event) {
-    super(event);
-    this.href = event.currentTarget.href;
-  }
-}
-class Pop extends Kind {
-  constructor(event) {
-    super(event);
-    this.href = window.location.href;
-  }
 }
 
 // ~ mixin smoothStateCore with componentCore { ...
@@ -111,21 +71,12 @@ export default C => class extends componentCore(C) {
   }
 
   startHistory() {
-    this.bindCallbacks();
     this.checkPreCondition();
     this.setupScrollRestoration();
     this.resetScrollPostion();
     this.cacheTitleElement();
-    this.layPipes();
+    this.setupObservables();
     return this;
-  }
-
-  bindCallbacks() {
-    def(this, 'fetchPage', { value: this.fetchPage.bind(this) });
-    def(this, 'onBefore', { value: this.onBefore.bind(this) });
-    def(this, 'onAfter', { value: this.onAfter.bind(this) });
-    def(this, 'onError', { value: this.onError.bind(this) });
-    def(this, 'updateDOM', { value: this.updateDOM.bind(this) });
   }
 
   checkPreCondition() {
@@ -158,10 +109,9 @@ export default C => class extends componentCore(C) {
   }
 
   bindPushEvents(link$) {
-    return Observable.defer(() => this.fromEvent(link$, 'click'))
-      .mergeAll()
+    return this.fromEvents(link$, 'click')
       .map(event => new Push(event))
-      .filter(({ event }) => this.beNice(event))
+      .filter(kind => this.isPageChangeEvent(kind))
       .do(({ event }) => {
         this.saveScrollPosition();
         event.preventDefault();
@@ -169,14 +119,13 @@ export default C => class extends componentCore(C) {
   }
 
   bindHintEvents(link$) {
-    return Observable.defer(() => Observable.empty()
-      .merge(this.fromEvent(link$, 'mouseenter'))
-      .merge(this.fromEvent(link$, 'touchstart'))
-      .merge(this.fromEvent(link$, 'focus'))
-    )
-      .mergeAll()
+    return Observable.merge(
+        this.fromEvents(link$, 'mouseenter'),
+        this.fromEvents(link$, 'touchstart'))
+      .merge(
+        this.fromEvents(link$, 'focus'))
       .map(event => new Hint(event))
-      .filter(({ event }) => this.beOkay(event));
+      .filter(kind => this.isPageChangeAnchor(kind));
   }
 
   bindPopstateEvent() {
@@ -189,8 +138,8 @@ export default C => class extends componentCore(C) {
     return Observable.of(this.el.querySelectorAll(this.linkSelector));
   }
 
-  fromEvent(link$, event) {
-    return link$.map(link => Observable.fromEvent(link, event));
+  fromEvents(link$, event) {
+    return link$.map(link => Observable.fromEvent(link, event)).mergeAll();
   }
 
   fetchPage(kind) {
@@ -199,7 +148,7 @@ export default C => class extends componentCore(C) {
     const ajax$ = Observable
       .ajax(requestData)
       .map(({ response }) => Object.assign(kind, { response }))
-      .catch(error => this.recoverIfPossible(kind, error));
+      .catch(error => this.recoverWhenResponse(kind, error));
 
     return minDur.call(ajax$, this.duration);
   }
@@ -212,36 +161,46 @@ export default C => class extends componentCore(C) {
     };
   }
 
-  recoverIfPossible(kind, error) {
+  recoverWhenResponse(kind, error) {
     const { status, xhr } = error;
 
     if (status && status > 400 && xhr) {
-      // recover with error page returned from server
-      // assuming error page contains the same ids...
-      // TODO: maybe parse and check if error page can be swapped and reload otherwise?
+      // Recover with error page returned from server.
+      // Assumes error page contains the same ids as other pages.
       return Observable.of(Object.assign(kind, { response: xhr.response }));
     }
 
-    // TODO: don't throw here?
+    // TODO: Don't throw here?
     return Observable.throw(error);
   }
 
-  layPipes() {
+  setupObservables() {
+    // TODO: Possible without subjects?
     this.push$$ = new Subject();
     this.hint$$ = new Subject();
 
     const push$ = this.push$$.switch();
     const pop$ = this.bindPopstateEvent();
 
+    // Definitive page change (i.e. either push or pop event)
     this.page$ = Observable.merge(push$, pop$);
 
+    // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
+    // while a _definitive_ page load is going on => `pauser$` stream.
+    // Needs to be deferred b/c of "cyclical" dependency.
     const pauser$ = Observable.defer(() =>
       Observable.merge(
+        // A page change event means we want to pause prefetching
         this.page$.map(() => true),
+        // A render complete event means we want to resume prefetching
         this.render$.map(() => false)
-      ).startWith(false)
+      )
+        // Start with prefetching
+        .startWith(false)
     );
 
+    // The stream of hint (prefetch) events, possibly paused.
+    // Dream syntax (not supported, yet): `this.hint$$.switch().pauseable(pauser$)`
     this.hint$ = this.hint$$.switch()
       .withLatestFrom(pauser$)
       .switchMap(([hint, paused]) => (paused ?
@@ -249,37 +208,36 @@ export default C => class extends componentCore(C) {
         Observable.of(hint))
       );
 
-    // Dream syntax:
-    // this.hint$$.switch().pauseable(pauser$);
-
+    // The stream of (pre-)fetch events.
+    // Includes definitive page change events do deal with unexpected page changes.
     const prefetch$ = Observable.merge(this.hint$, this.page$)
-      .distinctUntilKeyChanged('href')
-      .switchMap(this.fetchPage)
-      .startWith({})
+      .distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
+      .switchMap(kind => this.fetchPage(kind))
+      .startWith({}) // Start with some value so `withLatestFrom` below doesn't block
       .share();
 
     this.render$ = this.page$
-      .do(this.onBefore)
+      .do(() => this.onBefore())
       .withLatestFrom(prefetch$)
       .switchMap(([kind, prefetch]) => (kind.href === prefetch.href ?
-        // Case 1.1: Prefetch already complete, use result
+        // Prefetch already complete, use result.
         Observable.of([kind, prefetch]) :
-        // Case 1.2: Prefetch in progress, use next result
+        // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d).
         prefetch$.take(1).map(fetch => [kind, fetch])
       ))
-      .do(([kind, prefetch]) => {
-        // try {
+      // Perform side effects
+      .do(([kind, prefetch]) => requestAnimationFrame(() => { // TODO: Use scheduler?
         this.updateDOM(kind, prefetch);
-        this.onAfter();
         this.renewEventListeners();
-        // } catch (e) {
-        //   this.onError(e);
-        // }
-      })
+        this.onAfter();
+      }))
+      // `share`ing the stream between the subscription below and `pauser$`.
       .share();
 
+    // Start pulling values
     this.render$.subscribe(() => {});
 
+    // Push streams into `push$$` and `hint$$`
     this.renewEventListeners();
   }
 
@@ -328,26 +286,24 @@ export default C => class extends componentCore(C) {
   }
 
   onError() {
+    console.log('onError');
+
     // this.pauser$.next(false);
     this.el.style.willChange = '';
     document.body.style.willChange = '';
     this.fireEvent('error');
-
-    return Observable.empty();
   }
 
-  // TODO: rename
-  beNice(event) {
+  isPageChangeEvent(kind) {
+    const { event } = kind;
     return (
       !event.metaKey &&
       !event.ctrlKey &&
-      this.beOkay(event)
+      this.isPageChangeAnchor(kind)
     );
   }
 
-  // TODO: rename
-  beOkay(event) {
-    const anchor = event.currentTarget;
+  isPageChangeAnchor({ event: { currentTarget: anchor } }) {
     return (
       anchor != null &&
       shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
@@ -374,9 +330,10 @@ export default C => class extends componentCore(C) {
     }
   }
 
-  // TODO: rename
+  // TODO: Rename
   checkCondition(oldElements, content) {
-    // TODO: replace existing ids, remove missing ides
+    // TODO: Just replace existing ids, remove missing ides
+    // TODO: Remove in production builds
     if (content.length !== oldElements.length) {
       throw Error("New document doesn't contain the same number of ids");
     }
@@ -398,12 +355,14 @@ export default C => class extends componentCore(C) {
   }
 
   saveScrollPosition() {
+    const state = history.state || { id: 'y-smooth-state' };
+
     if (this.scrollRestoration) {
-      const state = history.state || {};
       state.scrollTop = getScrollTop();
       state.scrollHeight = getScrollHeight();
-      history.replaceState(state, document.title, window.location.href);
     }
+
+    history.replaceState(state, document.title, window.location.href);
   }
 
   resetScrollPostion() {
@@ -411,8 +370,6 @@ export default C => class extends componentCore(C) {
       const state = history.state || {};
       document.body.style.minHeight = `${state.scrollHeight || 0}px`;
       window.scrollTo(window.pageXOffset, state.scrollTop || 0);
-    } else {
-      window.scrollTo(window.pageXOffset, 0);
     }
   }
 };

@@ -5,9 +5,25 @@
  * Copyright (c) 2016 Florian Klampfer
  * Licensed under MIT
  */
-
 /* eslint-disable import/no-extraneous-dependencies, import/no-unresolved, import/extensions */
-import componentCore from 'y-component/src/component-core';
+
+// const JS_FEATURES = [
+//   'fn/array/for-each',
+//   'fn/function/bind',
+//   'fn/number/constructor',
+//   'fn/object/assign',
+//   'fn/object/define-property',
+//   'fn/object/keys',
+// ];
+//
+// const MODERNIZR_TESTS = [
+//   'customevent',
+//   'documentfragment',
+//   'eventlistener',
+//   'history',
+//   'requestanimationframe',
+//   'queryselector',
+// ];
 
 import { Observable } from 'rxjs-es/Observable';
 import { Subject } from 'rxjs-es/Subject';
@@ -38,17 +54,14 @@ import 'rxjs-es/add/operator/take';
 import 'rxjs-es/add/operator/withLatestFrom';
 import 'rxjs-es/add/operator/zip';
 
+import componentCore from 'y-component/src/component-core';
+
 import { shouldLoadAnchor, getScrollTop, getScrollHeight } from '../common';
 import { Push, Hint, Pop } from './kind';
 
 const def = Object.defineProperty.bind(Object);
 
 // window.Observable = Observable;
-
-function minDur(time) {
-  return this.zip(Observable.of(null).delay(time))
-    .map(([$]) => $);
-}
 
 // ~ mixin smoothStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
@@ -99,7 +112,7 @@ export default C => class extends componentCore(C) {
     if (this.scrollRestoration) {
       this.resetScrollPostion();
       window.addEventListener('beforeunload', () => {
-        this.saveScrollPosition();
+        this.updateHistoryState();
       });
     }
   }
@@ -113,7 +126,7 @@ export default C => class extends componentCore(C) {
       .map(event => new Push(event))
       .filter(kind => this.isPageChangeEvent(kind))
       .do(({ event }) => {
-        this.saveScrollPosition();
+        this.updateHistoryState();
         event.preventDefault();
       });
   }
@@ -144,13 +157,10 @@ export default C => class extends componentCore(C) {
 
   fetchPage(kind) {
     const requestData = this.hrefToRequestData(kind);
-
-    const ajax$ = Observable
+    return Observable
       .ajax(requestData)
       .map(({ response }) => Object.assign(kind, { response }))
       .catch(error => this.recoverWhenResponse(kind, error));
-
-    return minDur.call(ajax$, this.duration);
   }
 
   hrefToRequestData({ href }) {
@@ -272,23 +282,18 @@ export default C => class extends componentCore(C) {
   }
 
   onBefore() {
-    // this.pauser$.next(true);
     this.el.style.willChange = 'content';
     document.body.style.willChange = 'scroll-position';
     this.fireEvent('before');
   }
 
   onAfter() {
-    // this.pauser$.next(false);
     this.el.style.willChange = '';
     document.body.style.willChange = '';
     this.fireEvent('after');
   }
 
   onError() {
-    console.log('onError');
-
-    // this.pauser$.next(false);
     this.el.style.willChange = '';
     document.body.style.willChange = '';
     this.fireEvent('error');
@@ -345,24 +350,29 @@ export default C => class extends componentCore(C) {
 
     this.checkCondition(oldElements, content);
 
-    for (const oldElement of oldElements) {
+    Array.prototype.forEach.call(oldElements, (oldElement) => {
       oldElement.parentNode.replaceChild(content.shift(), oldElement);
-    }
+    });
   }
 
   replaceContentWholesale(content) {
     this.el.innerHTML = content.innerHTML;
   }
 
-  saveScrollPosition() {
-    const state = history.state || { id: 'y-smooth-state' };
-
+  saveScrollPosition(state) {
     if (this.scrollRestoration) {
-      state.scrollTop = getScrollTop();
-      state.scrollHeight = getScrollHeight();
+      return Object.assign(state, {
+        scrollTop: getScrollTop(),
+        scrollHeight: getScrollHeight(),
+      });
     }
+    return state;
+  }
 
-    history.replaceState(state, document.title, window.location.href);
+  updateHistoryState() {
+    const state = history.state || { id: 'y-smooth-state' };
+    const stateWithScrollPosition = this.saveScrollPosition(state);
+    history.replaceState(stateWithScrollPosition, document.title, window.location.href);
   }
 
   resetScrollPostion() {

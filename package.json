@@ -55,7 +55,8 @@
     "watchify": "3.7.0"
   },
   "dependencies": {
-    "rxjs-es": "5.0.0-beta.12"
+    "rxjs-es": "5.0.0-beta.12",
+    "y-component": "4.0.0"
   },
   "directories": {
     "example": "examples"

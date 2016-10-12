@@ -27,6 +27,7 @@
 
 import { Observable } from 'rxjs-es/Observable';
 import { Subject } from 'rxjs-es/Subject';
+import { asap } from 'rxjs-es/scheduler/asap';
 
 import 'rxjs-es/add/observable/defer';
 import 'rxjs-es/add/observable/empty';
@@ -38,13 +39,13 @@ import 'rxjs-es/add/observable/throw';
 import 'rxjs-es/add/observable/dom/ajax';
 
 import 'rxjs-es/add/operator/catch';
-import 'rxjs-es/add/operator/delay';
 import 'rxjs-es/add/operator/distinctUntilKeyChanged';
 import 'rxjs-es/add/operator/do';
 import 'rxjs-es/add/operator/filter';
 import 'rxjs-es/add/operator/map';
 import 'rxjs-es/add/operator/merge';
 import 'rxjs-es/add/operator/mergeAll';
+import 'rxjs-es/add/operator/observeOn';
 import 'rxjs-es/add/operator/retry';
 import 'rxjs-es/add/operator/share';
 import 'rxjs-es/add/operator/startWith';
@@ -52,7 +53,6 @@ import 'rxjs-es/add/operator/switch';
 import 'rxjs-es/add/operator/switchMap';
 import 'rxjs-es/add/operator/take';
 import 'rxjs-es/add/operator/withLatestFrom';
-import 'rxjs-es/add/operator/zip';
 
 import componentCore from 'y-component/src/component-core';
 
@@ -61,6 +61,7 @@ import { Push, Hint, Pop } from './kind';
 
 const def = Object.defineProperty.bind(Object);
 
+// const setImmediate = global.setImmediate || (f => setTimeout(f, 0));
 // window.Observable = Observable;
 
 // ~ mixin smoothStateCore with componentCore { ...
@@ -185,6 +186,7 @@ export default C => class extends componentCore(C) {
   }
 
   setupObservables() {
+    // See `renewEventListeners`
     // TODO: Possible without subjects?
     this.push$$ = new Subject();
     this.hint$$ = new Subject();
@@ -227,20 +229,28 @@ export default C => class extends componentCore(C) {
       .share();
 
     this.render$ = this.page$
-      .do(() => this.onBefore())
+      .do(() => {
+        this.setWillChange();
+        this.onBefore();
+      })
       .withLatestFrom(prefetch$)
-      .switchMap(([kind, prefetch]) => (kind.href === prefetch.href ?
-        // Prefetch already complete, use result.
-        Observable.of([kind, prefetch]) :
-        // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d).
-        prefetch$.take(1).map(fetch => [kind, fetch])
+      .switchMap(([kind, prefetch]) => (
+        kind.href === prefetch.href ?
+          // Prefetch already complete, use result
+          Observable.of([kind, prefetch]) :
+          // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
+          prefetch$.take(1).map(fetch => [kind, fetch])
       ))
-      // Perform side effects
-      .do(([kind, prefetch]) => requestAnimationFrame(() => { // TODO: Use scheduler?
+      .do(([kind, prefetch]) => {
         this.updateDOM(kind, prefetch);
-        this.renewEventListeners();
         this.onAfter();
-      }))
+      })
+      // Push renewing event listeners out after layout/painting is complete
+      .observeOn(asap)
+      .do(() => {
+        this.unsetWillChange();
+        this.renewEventListeners();
+      })
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
 
@@ -282,21 +292,27 @@ export default C => class extends componentCore(C) {
   }
 
   onBefore() {
-    this.el.style.willChange = 'content';
-    document.body.style.willChange = 'scroll-position';
     this.fireEvent('before');
   }
 
   onAfter() {
-    this.el.style.willChange = '';
-    document.body.style.willChange = '';
     this.fireEvent('after');
   }
 
-  onError() {
+  // onError() {
+  //   this.el.style.willChange = '';
+  //   document.body.style.willChange = '';
+  //   this.fireEvent('error');
+  // }
+
+  setWillChange() {
+    this.el.style.willChange = 'content';
+    document.body.style.willChange = 'scroll-position';
+  }
+
+  unsetWillChange() {
     this.el.style.willChange = '';
     document.body.style.willChange = '';
-    this.fireEvent('error');
   }
 
   isPageChangeEvent(kind) {

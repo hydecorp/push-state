@@ -2,9 +2,9 @@
  * Copyright (c) 2016 Florian Klampfer
  * Licensed under MIT
  */
-import smoothStateCore from '../core';
+import pushStateCore from '../core';
 
-export default class SmoothState extends smoothStateCore() {
+export default class PushState extends pushStateCore() {
   constructor(el, props) {
     super();
     this.setupComponent(el, props);

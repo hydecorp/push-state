@@ -3,7 +3,7 @@
  * Licensed under MIT
  */
 
-import HTMLYSmoothStateElement from './y-smooth-state';
+import HTMLYPushStateElement from './y-push-state';
 
 const templateV1 = `
   <!-- @include ./template-v1.html -->
@@ -17,7 +17,7 @@ function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);
 }
 
-export default class extends HTMLYSmoothStateElement {
+export default class extends HTMLYPushStateElement {
   getTemplateInstance(version) {
     switch (version) {
       case 'v1': return fragmentFromString(templateV1);

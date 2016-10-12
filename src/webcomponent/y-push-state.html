@@ -1,0 +1,15 @@
+<template id="y-push-state-template-v0">
+  <!-- @include ./template-v0.html -->
+</template>
+<template id="y-push-state-template-v1">
+  <!-- @include ./template-v1.html -->
+</template>
+<script src="y-push-state.js"></script>
+<script>
+  var HTMLYPushStateElement = yPushState.webcomponent.default;
+  if ('customElements' in window) {
+    customElements.define('y-push-state', HTMLYPushStateElement);
+  } else if ('registerElement' in document) {
+    document.registerElement('y-push-state', HTMLYPushStateElement);
+  }
+</script>

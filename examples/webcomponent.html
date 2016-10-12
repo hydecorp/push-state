@@ -5,26 +5,26 @@
 
   </head>
   <body>
-    <y-smooth-state id="smoothState">
+    <y-push-state id="push-state">
       <aside>
         <!-- @include examples/includes/drawer-content.html -->
       </aside>
       <main>
         <!-- @include examples/includes/lorem-ipsum-webcomponent.html -->
       </main>
-    </y-smooth-state>
+    </y-push-state>
 
     <script>
-      const elem = document.getElementById('smoothState');
+      const elem = document.getElementById('push-state');
 
       function setup() {
         elem.startHistory();
-        elem.removeEventListener('y-smooth-state-attached', setup);
+        elem.removeEventListener('y-push-state-attached', setup);
       }
 
-      elem.addEventListener('y-smooth-state-attached', setup);
+      elem.addEventListener('y-push-state-attached', setup);
     </script>
 
-    <link rel="import" href="dist/webcomponent/y-smooth-state.html">
+    <link rel="import" href="dist/webcomponent/y-push-state.html">
   </body>
 </html>

@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="dist/index.css"></link>
   </head>
   <body>
-    <div id="smoothState">
+    <div id="push-state">
       <aside>
         <!-- @include examples/includes/drawer-content.html -->
       </aside>
@@ -17,10 +17,10 @@
 
     <script src="dist/core/index.js"></script>
     <script>
-      var smoothStateCore = ySmoothState.core.default;
-      var SmoothState = smoothStateCore();
-      new SmoothState()
-        .setupComponent(smoothState)
+      var pushStateCore = yPushState.core.default;
+      var PushState = pushStateCore();
+      new PushState()
+        .setupComponent(document.getElementById('push-state'))
         .startHistory();
     </script>
   </body>

@@ -64,12 +64,12 @@ const def = Object.defineProperty.bind(Object);
 // const setImmediate = global.setImmediate || (f => setTimeout(f, 0));
 // window.Observable = Observable;
 
-// ~ mixin smoothStateCore with componentCore { ...
+// ~ mixin pushStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
 
   // @override
-  componentName() {
-    return 'y-smooth-state';
+  getComponentName() {
+    return 'y-push-state';
   }
 
   // @override
@@ -82,6 +82,11 @@ export default C => class extends componentCore(C) {
       blacklist: null,
       duration: 0,
     };
+  }
+
+  // @override
+  sideEffects() {
+    return {};
   }
 
   startHistory() {
@@ -272,7 +277,7 @@ export default C => class extends componentCore(C) {
     const { title, content } = this.responseToHTML(response);
 
     if (kind instanceof Push) {
-      window.history.pushState({ id: 'y-smooth-state' }, title, href);
+      window.history.pushState({ id: this.componentName }, title, href);
     }
 
     this.titleElement.textContent = title;
@@ -386,7 +391,7 @@ export default C => class extends componentCore(C) {
   }
 
   updateHistoryState() {
-    const state = history.state || { id: 'y-smooth-state' };
+    const state = history.state || { id: this.componentName };
     const stateWithScrollPosition = this.saveScrollPosition(state);
     history.replaceState(stateWithScrollPosition, document.title, window.location.href);
   }

@@ -1,7 +1,7 @@
 {
-  "name": "y-smooth-state",
+  "name": "y-push-state",
   "version": "2.0.0",
-  "description": "Y smooth state?",
+  "description": "Y push state?",
   "config": {
     "port": "8081"
   },
@@ -74,11 +74,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qwtel/y-smooth-state.git"
+    "url": "git+https://github.com/qwtel/y-push-state.git"
   },
   "bugs": {
-    "url": "https://github.com/qwtel/y-smooth-state/issues"
+    "url": "https://github.com/qwtel/y-push-state/issues"
   },
-  "homepage": "http://qwtel.com/y-smooth-state",
+  "homepage": "http://qwtel.com/y-push-state",
   "main": "src/core/index.js"
 }

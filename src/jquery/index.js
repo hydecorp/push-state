@@ -5,9 +5,9 @@
 /* eslint-disable import/no-extraneous-dependencies, import/no-unresolved, import/extensions */
 import defineJQueryComponent from 'y-component/src/define-jquery-component';
 
-import smoothStateCore from '../core';
+import pushStateCore from '../core';
 
-defineJQueryComponent('smoothState', class extends smoothStateCore() {
+defineJQueryComponent('pushState', class extends pushStateCore() {
   constructor(el, props) {
     super();
     this.setupComponent(el, props);

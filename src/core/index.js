@@ -209,10 +209,9 @@ export default C => class extends componentCore(C) {
         // A page change event means we want to pause prefetching
         this.page$.map(() => true),
         // A render complete event means we want to resume prefetching
-        this.render$.map(() => false)
+        this.render$.map(() => false),
       )
         // Start with prefetching
-        .startWith(false)
         .startWith(false),
     );
 

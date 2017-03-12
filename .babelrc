@@ -1,4 +1,4 @@
 {
-  "presets": ["es2015"],
-  "only": ["src", "rxjs-es"]
+  "presets": ["es2016"],
+  "only": ["src", "rxjs"]
 }

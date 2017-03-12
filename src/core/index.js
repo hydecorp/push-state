@@ -25,34 +25,33 @@
 //   'queryselector',
 // ];
 
-import { Observable } from 'rxjs-es/Observable';
-import { Subject } from 'rxjs-es/Subject';
-import { asap } from 'rxjs-es/scheduler/asap';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import { asap } from 'rxjs/scheduler/asap';
 
-import 'rxjs-es/add/observable/defer';
-import 'rxjs-es/add/observable/empty';
-import 'rxjs-es/add/observable/fromEvent';
-import 'rxjs-es/add/observable/merge';
-import 'rxjs-es/add/observable/of';
-import 'rxjs-es/add/observable/throw';
+import 'rxjs/add/observable/defer';
+import 'rxjs/add/observable/empty';
+import 'rxjs/add/observable/fromEvent';
+import 'rxjs/add/observable/merge';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/throw';
 
-import 'rxjs-es/add/observable/dom/ajax';
+import 'rxjs/add/observable/dom/ajax';
 
-import 'rxjs-es/add/operator/catch';
-import 'rxjs-es/add/operator/distinctUntilKeyChanged';
-import 'rxjs-es/add/operator/do';
-import 'rxjs-es/add/operator/filter';
-import 'rxjs-es/add/operator/map';
-import 'rxjs-es/add/operator/merge';
-import 'rxjs-es/add/operator/mergeAll';
-import 'rxjs-es/add/operator/observeOn';
-import 'rxjs-es/add/operator/retry';
-import 'rxjs-es/add/operator/share';
-import 'rxjs-es/add/operator/startWith';
-import 'rxjs-es/add/operator/switch';
-import 'rxjs-es/add/operator/switchMap';
-import 'rxjs-es/add/operator/take';
-import 'rxjs-es/add/operator/withLatestFrom';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/distinctUntilKeyChanged';
+import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/filter';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/merge';
+import 'rxjs/add/operator/mergeAll';
+import 'rxjs/add/operator/observeOn';
+import 'rxjs/add/operator/share';
+import 'rxjs/add/operator/startWith';
+import 'rxjs/add/operator/switch';
+import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/withLatestFrom';
 
 import componentCore from 'y-component/src/component-core';
 
@@ -214,6 +213,7 @@ export default C => class extends componentCore(C) {
       )
         // Start with prefetching
         .startWith(false)
+        .startWith(false),
     );
 
     // The stream of hint (prefetch) events, possibly paused.
@@ -222,7 +222,7 @@ export default C => class extends componentCore(C) {
       .withLatestFrom(pauser$)
       .switchMap(([hint, paused]) => (paused ?
         Observable.empty() :
-        Observable.of(hint))
+        Observable.of(hint)),
       );
 
     // The stream of (pre-)fetch events.

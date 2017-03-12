@@ -5,7 +5,7 @@
  * @see     http://stackoverflow.com/questions/6238351/fastest-way-to-detect-external-urls
  */
 export function isExternal(url) {
-  const match = url.match(/^([^:\/?#]+:)?(?:\/\/([^\/?#]*))?([^?#]+)?(\?[^#]*)?(#.*)?/);
+  const match = url.match(/^([^:\/?#]+:)?(?:\/\/([^\/?#]*))?([^?#]+)?(\?[^#]*)?(#.*)?/); // eslint-disable-line no-useless-escape
 
   if (typeof match[1] === 'string' &&
       match[1].length > 0 &&

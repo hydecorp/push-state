@@ -39,6 +39,7 @@ import 'rxjs/add/observable/throw';
 import 'rxjs/add/observable/dom/ajax';
 
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/delay';
 import 'rxjs/add/operator/distinctUntilKeyChanged';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/filter';
@@ -52,6 +53,7 @@ import 'rxjs/add/operator/switch';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/take';
 import 'rxjs/add/operator/withLatestFrom';
+import 'rxjs/add/operator/zip';
 
 import componentCore from 'y-component/src/component-core';
 
@@ -60,8 +62,9 @@ import { Push, Hint, Pop } from './kind';
 
 const def = Object.defineProperty.bind(Object);
 
-// const setImmediate = global.setImmediate || (f => setTimeout(f, 0));
-// window.Observable = Observable;
+function fragmentFromString(strHTML) {
+  return document.createRange().createContextualFragment(strHTML);
+}
 
 // ~ mixin pushStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
@@ -201,6 +204,10 @@ export default C => class extends componentCore(C) {
     // Definitive page change (i.e. either push or pop event)
     this.page$ = Observable.merge(push$, pop$);
 
+    // Wait at least as long as it takes for the animation to finish before changing the DOM
+    // (default = 0ms)
+    this.animation$ = this.page$.delay(this.duration);
+
     // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
     // while a _definitive_ page load is going on => `pauser$` stream.
     // Needs to be deferred b/c of "cyclical" dependency.
@@ -229,32 +236,27 @@ export default C => class extends componentCore(C) {
     const prefetch$ = Observable.merge(this.hint$, this.page$)
       .distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
       .switchMap(kind => this.fetchPage(kind))
-      .startWith({}) // Start with some value so `withLatestFrom` below doesn't block
+      .startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
       .share();
 
     this.render$ = this.page$
-      .do(() => {
-        this.setWillChange();
-        this.onBefore();
-      })
+      .do(this.setWillChange.bind(this))
+      .do(this.onBefore.bind(this))
       .withLatestFrom(prefetch$)
-      .switchMap(([kind, prefetch]) => (
-        kind.href === prefetch.href ?
+      .switchMap(([kind, prefetch]) => (kind.href === prefetch.href ?
           // Prefetch already complete, use result
           Observable.of([kind, prefetch]) :
           // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
           prefetch$.take(1).map(fetch => [kind, fetch])
       ))
-      .do(([kind, prefetch]) => {
-        this.updateDOM(kind, prefetch);
-        this.onAfter();
-      })
+      // ensure `duration` ms have passed since the event
+      .zip(this.animation$, x => x)
+      .do(([kind, prefetch]) => this.updateDOM(kind, prefetch))
+      .do(this.onAfter.bind(this))
       // Push renewing event listeners out after layout/painting is complete
       .observeOn(asap)
-      .do(() => {
-        this.unsetWillChange();
-        this.renewEventListeners();
-      })
+      .do(this.unsetWillChange.bind(this))
+      .do(this.renewEventListeners.bind(this))
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
 
@@ -285,14 +287,10 @@ export default C => class extends componentCore(C) {
   }
 
   responseToHTML(response) {
-    const documentFragment = this.fragmentFromString(response);
+    const documentFragment = fragmentFromString(response);
     const title = this.getTitleFromDocumentFragment(documentFragment);
     const content = this.getContentFromDocumentFragment(documentFragment);
     return { title, content };
-  }
-
-  fragmentFromString(strHTML) {
-    return document.createRange().createContextualFragment(strHTML);
   }
 
   onBefore() {

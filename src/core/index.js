@@ -35,6 +35,7 @@ import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/throw';
+import 'rxjs/add/observable/timer';
 
 import 'rxjs/add/observable/dom/ajax';
 
@@ -94,7 +95,7 @@ export default C => class extends componentCore(C) {
   startHistory() {
     this.checkPreCondition();
     this.setupScrollRestoration();
-    this.resetScrollPostion();
+    // this.resetScrollPostion();
     this.cacheTitleElement();
     this.setupObservables();
     return this;
@@ -113,8 +114,7 @@ export default C => class extends componentCore(C) {
 
   setupScrollRestoration() {
     if ('scrollRestoration' in history) {
-      if (this.scrollRestoration) history.scrollRestoration = 'manual';
-      else history.scrollRestoration = 'auto';
+      history.scrollRestoration = this.scrollRestoration ? 'manual' : 'auto';
     }
 
     if (this.scrollRestoration) {
@@ -142,9 +142,9 @@ export default C => class extends componentCore(C) {
   bindHintEvents(link$) {
     return Observable.merge(
         this.fromEvents(link$, 'mouseenter'),
-        this.fromEvents(link$, 'touchstart'))
-      .merge(
-        this.fromEvents(link$, 'focus'))
+        this.fromEvents(link$, 'touchstart'),
+        this.fromEvents(link$, 'focus'),
+      )
       .map(event => new Hint(event))
       .filter(kind => this.isPageChangeAnchor(kind));
   }
@@ -207,6 +207,7 @@ export default C => class extends componentCore(C) {
     // Wait at least as long as it takes for the animation to finish before changing the DOM
     // (default = 0ms)
     this.animation$ = this.page$.delay(this.duration);
+    // this.animation$ = this.page$.map(() => Observable.timer(this.duration));
 
     // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
     // while a _definitive_ page load is going on => `pauser$` stream.
@@ -226,10 +227,8 @@ export default C => class extends componentCore(C) {
     // Dream syntax (not supported, yet): `this.hint$$.switch().pauseable(pauser$)`
     this.hint$ = this.hint$$.switch()
       .withLatestFrom(pauser$)
-      .switchMap(([hint, paused]) => (paused ?
-        Observable.empty() :
-        Observable.of(hint)),
-      );
+      .filter(([, paused]) => paused === false)
+      .map(([x]) => x);
 
     // The stream of (pre-)fetch events.
     // Includes definitive page change events do deal with unexpected page changes.
@@ -240,22 +239,22 @@ export default C => class extends componentCore(C) {
       .share();
 
     this.render$ = this.page$
-      .do(this.setWillChange.bind(this))
-      .do(this.onBefore.bind(this))
+      .do(this.onStart.bind(this))
       .withLatestFrom(prefetch$)
       .switchMap(([kind, prefetch]) => (kind.href === prefetch.href ?
           // Prefetch already complete, use result
-          Observable.of([kind, prefetch]) :
+          Observable.of(Object.assign(kind, { response: prefetch.response })).delay(this.duration) :
           // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
-          prefetch$.take(1).map(fetch => [kind, fetch])
-      ))
-      // ensure `duration` ms have passed since the event
-      .zip(this.animation$, x => x)
-      .do(([kind, prefetch]) => this.updateDOM(kind, prefetch))
-      .do(this.onAfter.bind(this))
+          prefetch$.take(1)
+            .map(fetch => Object.assign(kind, { response: fetch.response }))
+            .zip(Observable.timer(this.duration), x => x)
+        ))
+      .map(this.responseToHTML.bind(this))
+      .do(this.onReady.bind(this))
+      .do(this.updateDOM.bind(this))
       // Push renewing event listeners out after layout/painting is complete
       .observeOn(asap)
-      .do(this.unsetWillChange.bind(this))
+      .do(this.onAfter.bind(this))
       .do(this.renewEventListeners.bind(this))
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
@@ -273,11 +272,20 @@ export default C => class extends componentCore(C) {
     this.hint$$.next(this.bindHintEvents(link$));
   }
 
-  updateDOM(kind, { response }) {
-    const { href } = kind;
-    const { title, content } = this.responseToHTML(response);
+  responseToHTML(sponge) {
+    const { response } = sponge;
 
-    if (kind instanceof Push) {
+    const documentFragment = fragmentFromString(response);
+    const title = this.getTitleFromDocumentFragment(documentFragment);
+    const content = this.getContentFromDocumentFragment(documentFragment);
+
+    return Object.assign(sponge, { title, content });
+  }
+
+  updateDOM(sponge) {
+    const { href, title, content } = sponge;
+
+    if (sponge instanceof Push) {
       window.history.pushState({ id: this.componentName }, title, href);
     }
 
@@ -286,19 +294,18 @@ export default C => class extends componentCore(C) {
     this.replaceContent(content);
   }
 
-  responseToHTML(response) {
-    const documentFragment = fragmentFromString(response);
-    const title = this.getTitleFromDocumentFragment(documentFragment);
-    const content = this.getContentFromDocumentFragment(documentFragment);
-    return { title, content };
+  onStart(sponge) {
+    this.fireEvent('start', { detail: sponge });
   }
 
-  onBefore() {
-    this.fireEvent('before');
+  onReady(sponge) {
+    this.setWillChange();
+    this.fireEvent('ready', { detail: sponge });
   }
 
-  onAfter() {
-    this.fireEvent('after');
+  onAfter(sponge) {
+    this.unsetWillChange();
+    this.fireEvent('after', { detail: sponge });
   }
 
   // onError() {
@@ -308,13 +315,13 @@ export default C => class extends componentCore(C) {
   // }
 
   setWillChange() {
-    this.el.style.willChange = 'content';
-    document.body.style.willChange = 'scroll-position';
+    // this.el.style.willChange = 'content';
+    // document.body.style.willChange = 'scroll-position';
   }
 
   unsetWillChange() {
-    this.el.style.willChange = '';
-    document.body.style.willChange = '';
+    // this.el.style.willChange = '';
+    // document.body.style.willChange = '';
   }
 
   isPageChangeEvent(kind) {

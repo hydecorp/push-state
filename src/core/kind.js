@@ -9,6 +9,8 @@ export class Push extends Kind {
     super(event);
     this.href = event.currentTarget.href;
   }
+
+  get type() { return 'push'; }
 }
 
 export class Hint extends Kind {
@@ -16,6 +18,8 @@ export class Hint extends Kind {
     super(event);
     this.href = event.currentTarget.href;
   }
+
+  get type() { return 'hint'; }
 }
 
 export class Pop extends Kind {
@@ -23,4 +27,6 @@ export class Pop extends Kind {
     super(event);
     this.href = window.location.href;
   }
+
+  get type() { return 'pop'; }
 }

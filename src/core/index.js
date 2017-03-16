@@ -238,7 +238,7 @@ export default C => class extends componentCore(C) {
       .do(this.onStart.bind(this))
       .withLatestFrom(prefetch$)
       .switchMap(([kind, prefetch]) => {
-        const timer$ = Observable.timer(this.duration).share();
+        const timer$ = Observable.timer(this.duration); // .share();
 
         const response$ = kind.href === prefetch.href ?
             // Prefetch already complete, use result
@@ -247,7 +247,7 @@ export default C => class extends componentCore(C) {
             // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
             prefetch$.take(1)
               .map(fetch => Object.assign(kind, { response: fetch.response }))
-              .zip(timer$, x => x)
+              // .zip(timer$, x => x)
           .share();
 
         timer$.takeUntil(response$).subscribe(() => this.onProgress(kind));

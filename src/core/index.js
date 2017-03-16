@@ -271,10 +271,18 @@ export default C => class extends componentCore(C) {
     this.renewEventListeners();
   }
 
-  renewEventListeners() {
-    const link$ = this.linkObservable();
-    this.push$$.next(this.bindPushEvents(link$));
-    this.hint$$.next(this.bindHintEvents(link$));
+  onStart(sponge) {
+    const { href } = sponge;
+
+    if (sponge instanceof Push) {
+      window.history.pushState({ id: this.componentName }, '', href);
+    }
+
+    this.fireEvent('start', { detail: sponge });
+  }
+
+  onProgress(sponge) {
+    this.fireEvent('progress', { detail: sponge });
   }
 
   responseToHTML(sponge) {
@@ -287,11 +295,16 @@ export default C => class extends componentCore(C) {
     return Object.assign(sponge, { title, content });
   }
 
+  onReady(sponge) {
+    this.setWillChange();
+    this.fireEvent('ready', { detail: sponge });
+  }
+
   updateDOM(sponge) {
     const { href, title, content } = sponge;
 
     if (sponge instanceof Push) {
-      window.history.pushState({ id: this.componentName }, title, href);
+      window.history.replaceState({ id: this.componentName }, title, href);
     }
 
     this.titleElement.textContent = title;
@@ -299,22 +312,15 @@ export default C => class extends componentCore(C) {
     this.replaceContent(content);
   }
 
-  onStart(sponge) {
-    this.fireEvent('start', { detail: sponge });
-  }
-
-  onProgress(sponge) {
-    this.fireEvent('progress', { detail: sponge });
-  }
-
-  onReady(sponge) {
-    this.setWillChange();
-    this.fireEvent('ready', { detail: sponge });
-  }
-
   onAfter(sponge) {
     this.unsetWillChange();
     this.fireEvent('after', { detail: sponge });
+  }
+
+  renewEventListeners() {
+    const link$ = this.linkObservable();
+    this.push$$.next(this.bindPushEvents(link$));
+    this.hint$$.next(this.bindHintEvents(link$));
   }
 
   // onError() {
@@ -324,11 +330,13 @@ export default C => class extends componentCore(C) {
   // }
 
   setWillChange() {
+    // TODO
     // this.el.style.willChange = 'content';
     // document.body.style.willChange = 'scroll-position';
   }
 
   unsetWillChange() {
+    // TODO
     // this.el.style.willChange = '';
     // document.body.style.willChange = '';
   }

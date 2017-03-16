@@ -53,6 +53,7 @@ import 'rxjs/add/operator/startWith';
 import 'rxjs/add/operator/switch';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/takeUntil';
 import 'rxjs/add/operator/withLatestFrom';
 import 'rxjs/add/operator/zip';
 
@@ -204,11 +205,6 @@ export default C => class extends componentCore(C) {
     // Definitive page change (i.e. either push or pop event)
     this.page$ = Observable.merge(push$, pop$);
 
-    // Wait at least as long as it takes for the animation to finish before changing the DOM
-    // (default = 0ms)
-    this.animation$ = this.page$.delay(this.duration);
-    // this.animation$ = this.page$.map(() => Observable.timer(this.duration));
-
     // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
     // while a _definitive_ page load is going on => `pauser$` stream.
     // Needs to be deferred b/c of "cyclical" dependency.
@@ -241,14 +237,23 @@ export default C => class extends componentCore(C) {
     this.render$ = this.page$
       .do(this.onStart.bind(this))
       .withLatestFrom(prefetch$)
-      .switchMap(([kind, prefetch]) => (kind.href === prefetch.href ?
-          // Prefetch already complete, use result
-          Observable.of(Object.assign(kind, { response: prefetch.response })).delay(this.duration) :
-          // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
-          prefetch$.take(1)
-            .map(fetch => Object.assign(kind, { response: fetch.response }))
-            .zip(Observable.timer(this.duration), x => x)
-        ))
+      .switchMap(([kind, prefetch]) => {
+        const timer$ = Observable.timer(this.duration).share();
+
+        const response$ = kind.href === prefetch.href ?
+            // Prefetch already complete, use result
+            Observable.of(Object.assign(kind, { response: prefetch.response })) :
+              // .delay(this.duration) :
+            // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
+            prefetch$.take(1)
+              .map(fetch => Object.assign(kind, { response: fetch.response }))
+              .zip(timer$, x => x)
+          .share();
+
+        timer$.takeUntil(response$).subscribe(() => this.onProgress(kind));
+
+        return response$;
+      })
       .map(this.responseToHTML.bind(this))
       .do(this.onReady.bind(this))
       .do(this.updateDOM.bind(this))
@@ -296,6 +301,10 @@ export default C => class extends componentCore(C) {
 
   onStart(sponge) {
     this.fireEvent('start', { detail: sponge });
+  }
+
+  onProgress(sponge) {
+    this.fireEvent('progress', { detail: sponge });
   }
 
   onReady(sponge) {

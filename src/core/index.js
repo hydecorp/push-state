@@ -27,7 +27,9 @@
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+
 import { asap } from 'rxjs/scheduler/asap';
+import { animationFrame } from 'rxjs/scheduler/animationFrame';
 
 import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/empty';
@@ -54,6 +56,7 @@ import 'rxjs/add/operator/switch';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/take';
 import 'rxjs/add/operator/takeUntil';
+import 'rxjs/add/operator/throttleTime';
 import 'rxjs/add/operator/withLatestFrom';
 import 'rxjs/add/operator/zip';
 
@@ -96,7 +99,6 @@ export default C => class extends componentCore(C) {
   startHistory() {
     this.checkPreCondition();
     this.setupScrollRestoration();
-    // this.resetScrollPostion();
     this.cacheTitleElement();
     this.setupObservables();
     return this;
@@ -199,7 +201,13 @@ export default C => class extends componentCore(C) {
     this.push$$ = new Subject();
     this.hint$$ = new Subject();
 
-    const push$ = this.push$$.switch();
+    const push$ = this.push$$.switch()
+      // TODO: This prevents a whole class of concurrency bugs,
+      // This is not an issue for fast animations (and prevents accidential double tapping)
+      // Ideally the UI is fully repsonsive at all times though..
+      // Note that spamming the back/forward button is still possible (only affects `push$`)
+      .throttleTime(this.duration);
+
     const pop$ = this.bindPopstateEvent();
 
     // Definitive page change (i.e. either push or pop event)
@@ -236,6 +244,7 @@ export default C => class extends componentCore(C) {
 
     this.render$ = this.page$
       .do(this.onStart.bind(this))
+      .observeOn(asap)
       .withLatestFrom(prefetch$)
       .switchMap(([kind, prefetch]) => {
         const timer$ = Observable.timer(this.duration); // .share();
@@ -256,16 +265,20 @@ export default C => class extends componentCore(C) {
       })
       .map(this.responseToHTML.bind(this))
       .do(this.onReady.bind(this))
+      .observeOn(animationFrame)
       .do(this.updateDOM.bind(this))
-      // Push renewing event listeners out after layout/painting is complete
+
+      // Renewing event listeners after DOM update/layout/painting is complete
+      // TODO: even delay buy `duration` instead?
       .observeOn(asap)
       .do(this.onAfter.bind(this))
       .do(this.renewEventListeners.bind(this))
+
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
 
     // Start pulling values
-    this.render$.subscribe(() => {});
+    this.render$.subscribe();
 
     // Push streams into `push$$` and `hint$$`
     this.renewEventListeners();
@@ -330,15 +343,11 @@ export default C => class extends componentCore(C) {
   // }
 
   setWillChange() {
-    // TODO
-    // this.el.style.willChange = 'content';
-    // document.body.style.willChange = 'scroll-position';
+    this.el.style.willChange = 'contents';
   }
 
   unsetWillChange() {
-    // TODO
-    // this.el.style.willChange = '';
-    // document.body.style.willChange = '';
+    this.el.style.willChange = '';
   }
 
   isPageChangeEvent(kind) {

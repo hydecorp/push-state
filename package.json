@@ -1,6 +1,6 @@
 {
   "name": "y-push-state",
-  "version": "3.0.0",
+  "version": "5.0.0",
   "description": "Y push state?",
   "config": {
     "port": "8081"

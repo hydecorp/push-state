@@ -167,14 +167,13 @@ export default C => class extends componentCore(C) {
   }
 
   fetchPage(kind) {
-    const requestData = this.hrefToRequestData(kind);
     return Observable
-      .ajax(requestData)
+      .ajax(this.hrefToAjax(kind))
       .map(({ response }) => Object.assign(kind, { response }))
       .catch(error => this.recoverWhenResponse(kind, error));
   }
 
-  hrefToRequestData({ href }) {
+  hrefToAjax({ href }) {
     return {
       method: 'GET',
       url: href,
@@ -185,14 +184,13 @@ export default C => class extends componentCore(C) {
   recoverWhenResponse(kind, error) {
     const { status, xhr } = error;
 
-    if (status && status > 400 && xhr) {
+    if (xhr && status && status > 400) {
       // Recover with error page returned from server.
-      // Assumes error page contains the same ids as other pages.
+      // NOTE: This assumes error page contains the same ids as other pages...
       return Observable.of(Object.assign(kind, { response: xhr.response }));
     }
 
-    // TODO: Don't throw here?
-    return Observable.throw(error);
+    return Observable.throw(Object.assign(kind, error));
   }
 
   setupObservables() {
@@ -211,7 +209,7 @@ export default C => class extends componentCore(C) {
     const pop$ = this.bindPopstateEvent();
 
     // Definitive page change (i.e. either push or pop event)
-    this.page$ = Observable.merge(push$, pop$);
+    this.page$ = Observable.merge(push$, pop$).share();
 
     // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
     // while a _definitive_ page load is going on => `pauser$` stream.
@@ -239,6 +237,10 @@ export default C => class extends componentCore(C) {
     const prefetch$ = Observable.merge(this.hint$, this.page$)
       .distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
       .switchMap(kind => this.fetchPage(kind))
+      .catch((err, caught) => {
+        this.onError(err);
+        return caught;
+      })
       .startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
       .share();
 
@@ -254,8 +256,7 @@ export default C => class extends componentCore(C) {
             Observable.of(Object.assign(kind, { response: prefetch.response })) :
               // .delay(this.duration) :
             // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
-            prefetch$.take(1)
-              .map(fetch => Object.assign(kind, { response: fetch.response }))
+            prefetch$.take(1).map(fetch => Object.assign(kind, { response: fetch.response }))
               // .zip(timer$, x => x)
           .share();
 
@@ -336,11 +337,10 @@ export default C => class extends componentCore(C) {
     this.hint$$.next(this.bindHintEvents(link$));
   }
 
-  // onError() {
-  //   this.el.style.willChange = '';
-  //   document.body.style.willChange = '';
-  //   this.fireEvent('error');
-  // }
+  onError(err) {
+    this.el.style.willChange = '';
+    this.fireEvent('error', { detail: err });
+  }
 
   setWillChange() {
     this.el.style.willChange = 'contents';
@@ -395,14 +395,14 @@ export default C => class extends componentCore(C) {
     }
   }
 
-  replaceContentByIds(content) {
+  replaceContentByIds(elements) {
     const oldElements = this.replaceIds
       .map(id => document.getElementById(id));
 
-    this.checkCondition(oldElements, content);
+    this.checkCondition(oldElements, elements);
 
     Array.prototype.forEach.call(oldElements, (oldElement) => {
-      oldElement.parentNode.replaceChild(content.shift(), oldElement);
+      oldElement.parentNode.replaceChild(elements.shift(), oldElement);
     });
   }
 

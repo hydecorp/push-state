@@ -50,6 +50,7 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/merge';
 import 'rxjs/add/operator/mergeAll';
 import 'rxjs/add/operator/observeOn';
+import 'rxjs/add/operator/retryWhen';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/startWith';
 import 'rxjs/add/operator/switch';
@@ -62,7 +63,7 @@ import 'rxjs/add/operator/zip';
 
 import componentCore from 'y-component/src/component-core';
 
-import { shouldLoadAnchor, getScrollTop, getScrollHeight } from '../common';
+import { shouldLoadAnchor, getScrollTop, getScrollHeight, expInterval } from '../common';
 import { Push, Hint, Pop } from './kind';
 
 const def = Object.defineProperty.bind(Object);
@@ -170,7 +171,11 @@ export default C => class extends componentCore(C) {
     return Observable
       .ajax(this.hrefToAjax(kind))
       .map(({ response }) => Object.assign(kind, { response }))
-      .catch(error => this.recoverWhenResponse(kind, error));
+      .catch(error => this.recoverIfResponse(kind, error))
+      .retryWhen(() => Observable.merge(
+          Observable.fromEvent(window, 'online'),
+          expInterval(1000, 2))
+        .do(this.onRetry.bind(this, kind)));
   }
 
   hrefToAjax({ href }) {
@@ -181,7 +186,7 @@ export default C => class extends componentCore(C) {
     };
   }
 
-  recoverWhenResponse(kind, error) {
+  recoverIfResponse(kind, error) {
     const { status, xhr } = error;
 
     if (xhr && status && status > 400) {
@@ -190,7 +195,9 @@ export default C => class extends componentCore(C) {
       return Observable.of(Object.assign(kind, { response: xhr.response }));
     }
 
-    return Observable.throw(Object.assign(kind, error));
+    // else
+    this.onError(Object.assign(kind, error));
+    return Observable.throw(error);
   }
 
   setupObservables() {
@@ -234,37 +241,20 @@ export default C => class extends componentCore(C) {
 
     // The stream of (pre-)fetch events.
     // Includes definitive page change events do deal with unexpected page changes.
-    const prefetch$ = Observable.merge(this.hint$, this.page$)
+    this.prefetch$ = Observable.merge(this.hint$, this.page$)
       .distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
       .switchMap(kind => this.fetchPage(kind))
-      .catch((err, caught) => {
-        this.onError(err);
-        return caught;
-      })
+      .catch((err, caught) => caught)
       .startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
       .share();
 
     this.render$ = this.page$
       .do(this.onStart.bind(this))
       .observeOn(asap)
-      .withLatestFrom(prefetch$)
-      .switchMap(([kind, prefetch]) => {
-        const timer$ = Observable.timer(this.duration); // .share();
-
-        const response$ = kind.href === prefetch.href ?
-            // Prefetch already complete, use result
-            Observable.of(Object.assign(kind, { response: prefetch.response })) :
-              // .delay(this.duration) :
-            // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
-            prefetch$.take(1).map(fetch => Object.assign(kind, { response: fetch.response }))
-              // .zip(timer$, x => x)
-          .share();
-
-        timer$.takeUntil(response$).subscribe(() => this.onProgress(kind));
-
-        return response$;
-      })
+      .withLatestFrom(this.prefetch$)
+      .switchMap(this.getResponse.bind(this))
       .map(this.responseToHTML.bind(this))
+      .do(this.setWillChange.bind(this))
       .do(this.onReady.bind(this))
       .observeOn(animationFrame)
       .do(this.updateDOM.bind(this))
@@ -273,16 +263,48 @@ export default C => class extends componentCore(C) {
       // TODO: even delay buy `duration` instead?
       .observeOn(asap)
       .do(this.onAfter.bind(this))
+      .do(this.unsetWillChange.bind(this))
       .do(this.renewEventListeners.bind(this))
 
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
+
+    // fire `progress` event when fetching takes longer than `this.duration`.
+    this.page$
+      // HACK: add some time, jtbs
+      .switchMap(() => Observable.timer(this.duration + 100).takeUntil(this.render$))
+      .subscribe(this.onProgress.bind(this));
 
     // Start pulling values
     this.render$.subscribe();
 
     // Push streams into `push$$` and `hint$$`
     this.renewEventListeners();
+  }
+
+  getResponse([kind, prefetch]) {
+    let res;
+
+    // Prefetch already complete, use result
+    if (kind.href === prefetch.href) {
+      res = Observable.of(Object.assign(kind, { response: prefetch.response }));
+
+      // TODO: make configurable?
+      if (kind instanceof Push) {
+        res = res.delay(this.duration);
+      }
+    // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
+    } else {
+      res = this.prefetch$.take(1)
+        .map(fetch => Object.assign(kind, { response: fetch.response }));
+
+      // TODO: make configurable?
+      if (kind instanceof Push) {
+        res = res.zip(Observable.timer(this.duration), x => x);
+      }
+    }
+
+    return res;
   }
 
   onStart(sponge) {
@@ -310,7 +332,6 @@ export default C => class extends componentCore(C) {
   }
 
   onReady(sponge) {
-    this.setWillChange();
     this.fireEvent('ready', { detail: sponge });
   }
 
@@ -340,6 +361,10 @@ export default C => class extends componentCore(C) {
   onError(err) {
     this.el.style.willChange = '';
     this.fireEvent('error', { detail: err });
+  }
+
+  onRetry(kind) {
+    this.fireEvent('retry', { detail: kind });
   }
 
   setWillChange() {

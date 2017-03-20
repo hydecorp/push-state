@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs/Observable';
+
 /**
  * Checks to see if the url is external
  *
@@ -101,6 +103,29 @@ export function getScrollHeight() {
   return h[sh] || b[sh];
 }
 
+export function getScrollLeft() {
+  return window.pageXOffset || document.body.scrollLeft;
+}
+
 export function getScrollTop() {
-  return window.pageYOffset;
+  return window.pageYOffset || document.body.scrollTop;
+}
+
+export function expInterval(init, exp) {
+  return Observable.create((observer) => {
+    let n = init;
+    let id;
+
+    function next() {
+      observer.next(n);
+      n *= exp;
+      id = setTimeout(next, n);
+    }
+
+    id = setTimeout(next, n);
+
+    return () => {
+      clearTimeout(id);
+    };
+  });
 }

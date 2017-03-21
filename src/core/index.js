@@ -66,8 +66,6 @@ import componentCore from 'y-component/src/component-core';
 import { shouldLoadAnchor, getScrollTop, getScrollHeight, expInterval } from '../common';
 import { Push, Hint, Pop } from './kind';
 
-const def = Object.defineProperty.bind(Object);
-
 function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);
 }
@@ -89,6 +87,7 @@ export default C => class extends componentCore(C) {
       hrefRegex: null,
       blacklist: null,
       duration: 0,
+      noPopDuration: true,
     };
   }
 
@@ -121,16 +120,14 @@ export default C => class extends componentCore(C) {
       history.scrollRestoration = this.scrollRestoration ? 'manual' : 'auto';
     }
 
-    if (this.scrollRestoration) {
-      this.resetScrollPostion();
-      window.addEventListener('beforeunload', () => {
-        this.updateHistoryState();
-      });
-    }
+    this.resetScrollPostion();
+    window.addEventListener('beforeunload', () => {
+      this.updateHistoryState();
+    });
   }
 
   cacheTitleElement() {
-    def(this, 'titleElement', { value: document.querySelector('title') || {} });
+    this.titleElement = document.querySelector('title') || {};
   }
 
   bindPushEvents(link$) {
@@ -289,8 +286,7 @@ export default C => class extends componentCore(C) {
     if (kind.href === prefetch.href) {
       res = Observable.of(Object.assign(kind, { response: prefetch.response }));
 
-      // TODO: make configurable?
-      if (kind instanceof Push) {
+      if (kind instanceof Push || !this.noPopDuration) {
         res = res.delay(this.duration);
       }
     // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
@@ -298,8 +294,7 @@ export default C => class extends componentCore(C) {
       res = this.prefetch$.take(1)
         .map(fetch => Object.assign(kind, { response: fetch.response }));
 
-      // TODO: make configurable?
-      if (kind instanceof Push) {
+      if (kind instanceof Push || !this.noPopDuration) {
         res = res.zip(Observable.timer(this.duration), x => x);
       }
     }
@@ -436,19 +431,16 @@ export default C => class extends componentCore(C) {
   }
 
   saveScrollPosition(state) {
-    if (this.scrollRestoration) {
-      return Object.assign(state, {
-        scrollTop: getScrollTop(),
-        scrollHeight: getScrollHeight(),
-      });
-    }
-    return state;
+    return Object.assign(state, {
+      scrollTop: getScrollTop(),
+      scrollHeight: getScrollHeight(),
+    });
   }
 
   updateHistoryState() {
-    const state = history.state || { id: this.componentName };
-    const stateWithScrollPosition = this.saveScrollPosition(state);
-    history.replaceState(stateWithScrollPosition, document.title, window.location.href);
+    let state = history.state || { id: this.componentName };
+    state = this.scrollRestoration ? this.saveScrollPosition(state) : state;
+    history.replaceState(state, document.title, window.location.href);
   }
 
   resetScrollPostion() {

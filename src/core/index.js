@@ -29,7 +29,6 @@ import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
 import { asap } from 'rxjs/scheduler/asap';
-import { animationFrame } from 'rxjs/scheduler/animationFrame';
 
 import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/empty';
@@ -247,20 +246,19 @@ export default C => class extends componentCore(C) {
 
     this.render$ = this.page$
       .do(this.onStart.bind(this))
-      .observeOn(asap)
       .withLatestFrom(this.prefetch$)
       .switchMap(this.getResponse.bind(this))
-      .map(this.responseToHTML.bind(this))
       .do(this.setWillChange.bind(this))
+      .map(this.responseToHTML.bind(this))
+      .observeOn(asap)
       .do(this.onReady.bind(this))
-      .observeOn(animationFrame)
       .do(this.updateDOM.bind(this))
+      .do(this.onAfter.bind(this))
+      .do(this.unsetWillChange.bind(this))
 
       // Renewing event listeners after DOM update/layout/painting is complete
       // TODO: even delay buy `duration` instead?
       .observeOn(asap)
-      .do(this.onAfter.bind(this))
-      .do(this.unsetWillChange.bind(this))
       .do(this.renewEventListeners.bind(this))
 
       // `share`ing the stream between the subscription below and `pauser$`.
@@ -364,10 +362,12 @@ export default C => class extends componentCore(C) {
 
   setWillChange() {
     this.el.style.willChange = 'contents';
+    document.body.style.willChange = 'scroll-position';
   }
 
   unsetWillChange() {
     this.el.style.willChange = '';
+    document.body.style.willChange = '';
   }
 
   isPageChangeEvent(kind) {

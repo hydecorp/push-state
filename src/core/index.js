@@ -5,7 +5,14 @@
  * Copyright (c) 2016 Florian Klampfer
  * Licensed under MIT
  */
-/* eslint-disable import/no-extraneous-dependencies, import/no-unresolved, import/extensions */
+
+/*
+eslint-disable
+import/no-extraneous-dependencies,
+import/no-unresolved,
+import/extensions,
+no-console
+*/
 
 // const JS_FEATURES = [
 //   'fn/array/for-each',
@@ -31,7 +38,6 @@ import { Subject } from 'rxjs/Subject';
 import { asap } from 'rxjs/scheduler/asap';
 
 import 'rxjs/add/observable/defer';
-import 'rxjs/add/observable/empty';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/of';
@@ -46,7 +52,6 @@ import 'rxjs/add/operator/distinctUntilKeyChanged';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/merge';
 import 'rxjs/add/operator/mergeAll';
 import 'rxjs/add/operator/observeOn';
 import 'rxjs/add/operator/retryWhen';
@@ -64,10 +69,6 @@ import componentCore from 'y-component/src/component-core';
 
 import { shouldLoadAnchor, getScrollTop, getScrollHeight, expInterval } from '../common';
 import { Push, Hint, Pop } from './kind';
-
-function fragmentFromString(strHTML) {
-  return document.createRange().createContextualFragment(strHTML);
-}
 
 // ~ mixin pushStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
@@ -107,9 +108,9 @@ export default C => class extends componentCore(C) {
     if (this.replaceIds.length === 0) {
       const id = this.el.id;
       if (id) {
-        console.warn(`No replace ids provided. Will replace entire content of #${id}`); // eslint-disable-line no-console
+        console.warn(`No replace ids provided. Will replace entire content of #${id}`);
       } else {
-        throw Error('No replace ids provided nor does this component have and id'); // eslint-disable-line no-console
+        throw Error('No replace ids provided nor does this component have and id');
       }
     }
   }
@@ -178,7 +179,7 @@ export default C => class extends componentCore(C) {
     return {
       method: 'GET',
       url: href,
-      responseType: 'text',
+      responseType: 'document',
     };
   }
 
@@ -249,9 +250,10 @@ export default C => class extends componentCore(C) {
       .withLatestFrom(this.prefetch$)
       .switchMap(this.getResponse.bind(this))
       .do(this.setWillChange.bind(this))
-      .map(this.responseToHTML.bind(this))
+      .map(this.responseToContent.bind(this))
       .observeOn(asap)
       .do(this.onReady.bind(this))
+      .do(this.resetScrollPostion.bind(this))
       .do(this.updateDOM.bind(this))
       .do(this.onAfter.bind(this))
       .do(this.unsetWillChange.bind(this))
@@ -260,6 +262,10 @@ export default C => class extends componentCore(C) {
       // TODO: even delay buy `duration` instead?
       .observeOn(asap)
       .do(this.renewEventListeners.bind(this))
+      .catch((error, caught) => {
+        this.onError(error);
+        return caught;
+      })
 
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
@@ -314,12 +320,11 @@ export default C => class extends componentCore(C) {
     this.fireEvent('progress', { detail: sponge });
   }
 
-  responseToHTML(sponge) {
+  responseToContent(sponge) {
     const { response } = sponge;
 
-    const documentFragment = fragmentFromString(response);
-    const title = this.getTitleFromDocumentFragment(documentFragment);
-    const content = this.getContentFromDocumentFragment(documentFragment);
+    const { title } = response;
+    const content = this.getContentFromDocumentFragment(response);
 
     return Object.assign(sponge, { title, content });
   }
@@ -329,15 +334,18 @@ export default C => class extends componentCore(C) {
   }
 
   updateDOM(sponge) {
-    const { href, title, content } = sponge;
+    try {
+      const { href, title, content } = sponge;
 
-    if (sponge instanceof Push) {
-      window.history.replaceState({ id: this.componentName }, title, href);
+      if (sponge instanceof Push) {
+        window.history.replaceState({ id: this.componentName }, title, href);
+      }
+
+      this.titleElement.textContent = title;
+      this.replaceContent(content);
+    } catch (error) {
+      throw Object.assign(sponge, { error });
     }
-
-    this.titleElement.textContent = title;
-    this.resetScrollPostion();
-    this.replaceContent(content);
   }
 
   onAfter(sponge) {
@@ -362,12 +370,10 @@ export default C => class extends componentCore(C) {
 
   setWillChange() {
     this.el.style.willChange = 'contents';
-    document.body.style.willChange = 'scroll-position';
   }
 
   unsetWillChange() {
     this.el.style.willChange = '';
-    document.body.style.willChange = '';
   }
 
   isPageChangeEvent(kind) {
@@ -386,13 +392,9 @@ export default C => class extends componentCore(C) {
     );
   }
 
-  getTitleFromDocumentFragment(documentFragment) {
-    return (documentFragment.querySelector('title') || {}).textContent;
-  }
-
   getContentFromDocumentFragment(documentFragment) {
     if (this.replaceIds.length > 0) {
-      return this.replaceIds.map(id => documentFragment.querySelector(`#${id}`));
+      return this.replaceIds.map(id => documentFragment.getElementById(id));
     }
 
     return documentFragment.getElementById(this.el.id);
@@ -406,20 +408,9 @@ export default C => class extends componentCore(C) {
     }
   }
 
-  // TODO: Rename
-  checkCondition(oldElements, content) {
-    // TODO: Just replace existing ids, remove missing ides
-    // TODO: Remove in production builds
-    if (content.length !== oldElements.length) {
-      throw Error("New document doesn't contain the same number of ids");
-    }
-  }
-
   replaceContentByIds(elements) {
     const oldElements = this.replaceIds
       .map(id => document.getElementById(id));
-
-    this.checkCondition(oldElements, elements);
 
     Array.prototype.forEach.call(oldElements, (oldElement) => {
       oldElement.parentNode.replaceChild(elements.shift(), oldElement);

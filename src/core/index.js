@@ -67,7 +67,14 @@ import 'rxjs/add/operator/zip';
 
 import componentCore from 'y-component/src/component-core';
 
-import { shouldLoadAnchor, getScrollTop, getScrollHeight, expInterval } from '../common';
+import {
+  shouldLoadAnchor,
+  getScrollTop,
+  getScrollHeight,
+  expInterval,
+  fragmentFromString,
+} from '../common';
+
 import { Push, Hint, Pop } from './kind';
 
 // ~ mixin pushStateCore with componentCore { ...
@@ -179,7 +186,7 @@ export default C => class extends componentCore(C) {
     return {
       method: 'GET',
       url: href,
-      responseType: 'document',
+      responseType: 'text',
     };
   }
 
@@ -324,8 +331,9 @@ export default C => class extends componentCore(C) {
   responseToContent(sponge) {
     const { response } = sponge;
 
-    const { title } = response;
-    const content = this.getContentFromDocumentFragment(response);
+    const documentFragment = fragmentFromString(response);
+    const title = this.getTitleFromDocumentFragment(documentFragment);
+    const content = this.getContentFromDocumentFragment(documentFragment);
 
     return Object.assign(sponge, { title, content });
   }
@@ -391,6 +399,10 @@ export default C => class extends componentCore(C) {
       anchor != null &&
       shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
     );
+  }
+
+  getTitleFromDocumentFragment(documentFragment) {
+    return (documentFragment.querySelector('title') || {}).textContent;
   }
 
   getContentFromDocumentFragment(documentFragment) {

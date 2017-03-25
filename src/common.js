@@ -129,3 +129,7 @@ export function expInterval(init, exp) {
     };
   });
 }
+
+export function fragmentFromString(strHTML) {
+  return document.createRange().createContextualFragment(strHTML);
+}

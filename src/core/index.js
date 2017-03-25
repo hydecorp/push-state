@@ -253,8 +253,8 @@ export default C => class extends componentCore(C) {
       .map(this.responseToContent.bind(this))
       .observeOn(asap)
       .do(this.onReady.bind(this))
-      .do(this.resetScrollPostion.bind(this))
       .do(this.updateDOM.bind(this))
+      .do(this.resetScrollPostion.bind(this))
       .do(this.onAfter.bind(this))
       .do(this.unsetWillChange.bind(this))
 
@@ -272,8 +272,9 @@ export default C => class extends componentCore(C) {
 
     // fire `progress` event when fetching takes longer than `this.duration`.
     this.page$
-      // HACK: add some time, jtbs
-      .switchMap(() => Observable.timer(this.duration + 100).takeUntil(this.render$))
+      .switchMap(() =>
+        // HACK: add some time, jtbs
+        Observable.timer(this.duration + 100).takeUntil(this.render$))
       .subscribe(this.onProgress.bind(this));
 
     // Start pulling values
@@ -434,11 +435,15 @@ export default C => class extends componentCore(C) {
     history.replaceState(state, document.title, window.location.href);
   }
 
-  resetScrollPostion() {
+  resetScrollPostion(sponge) {
     if (this.scrollRestoration) {
-      const state = history.state || {};
-      document.body.style.minHeight = `${state.scrollHeight || 0}px`;
-      window.scrollTo(window.pageXOffset, state.scrollTop || 0);
+      if (sponge instanceof Push) {
+        document.body.style.minHeight = '';
+      } else {
+        const state = history.state || {};
+        document.body.style.minHeight = `${state.scrollHeight || 0}px`;
+        if (state.scrollTop != null) window.scroll(window.pageXOffset, state.scrollTop);
+      }
     }
   }
 };

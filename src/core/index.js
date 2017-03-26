@@ -35,8 +35,6 @@ no-console
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
-import { asap } from 'rxjs/scheduler/asap';
-
 import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
@@ -53,7 +51,6 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeAll';
-import 'rxjs/add/operator/observeOn';
 import 'rxjs/add/operator/retryWhen';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/startWith';
@@ -103,6 +100,7 @@ export default C => class extends componentCore(C) {
     return {};
   }
 
+  // @override
   startHistory() {
     this.checkPreCondition();
     this.setupScrollRestoration();
@@ -195,7 +193,7 @@ export default C => class extends componentCore(C) {
 
     if (xhr && status && status > 400) {
       // Recover with error page returned from server.
-      // NOTE: This assumes error page contains the same ids as other pages...
+      // NOTE: This assumes error page contains the same ids as the other pages...
       return Observable.of(Object.assign(kind, { response: xhr.response }));
     }
 
@@ -258,7 +256,7 @@ export default C => class extends componentCore(C) {
       .switchMap(this.getResponse.bind(this))
       .do(this.setWillChange.bind(this))
       .map(this.responseToContent.bind(this))
-      .observeOn(asap)
+
       .do(this.onReady.bind(this))
       .do(this.updateDOM.bind(this))
       .do(this.resetScrollPostion.bind(this))
@@ -266,8 +264,8 @@ export default C => class extends componentCore(C) {
       .do(this.unsetWillChange.bind(this))
 
       // Renewing event listeners after DOM update/layout/painting is complete
-      // TODO: even delay buy `duration` instead?
-      .observeOn(asap)
+      // HACK: don't use time, use outside observable instead?
+      .throttleTime(this.duration + 100)
       .do(this.renewEventListeners.bind(this))
       .catch((error, caught) => {
         this.onError(error);
@@ -281,7 +279,7 @@ export default C => class extends componentCore(C) {
     this.page$
       .switchMap(() =>
         // HACK: add some time, jtbs
-        Observable.timer(this.duration + 100).takeUntil(this.render$))
+        Observable.timer(this.duration + 200).takeUntil(this.render$))
       .subscribe(this.onProgress.bind(this));
 
     // Start pulling values
@@ -299,7 +297,7 @@ export default C => class extends componentCore(C) {
       res = Observable.of(Object.assign(kind, { response: prefetch.response }));
 
       if (kind instanceof Push || !this.noPopDuration) {
-        res = res.delay(this.duration + 100);
+        res = res.delay(this.duration + 100); // HACK
       }
     // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
     } else {
@@ -307,7 +305,7 @@ export default C => class extends componentCore(C) {
         .map(fetch => Object.assign(kind, { response: fetch.response }));
 
       if (kind instanceof Push || !this.noPopDuration) {
-        res = res.zip(Observable.timer(this.duration + 100), x => x);
+        res = res.zip(Observable.timer(this.duration + 100), x => x); // HACK
       }
     }
 

@@ -215,7 +215,7 @@ export default C => class extends componentCore(C) {
       // This is not an issue for fast animations (and prevents accidential double tapping)
       // Ideally the UI is fully repsonsive at all times though..
       // Note that spamming the back/forward button is still possible (only affects `push$`)
-      .throttleTime(this.duration);
+      .throttleTime(this.duration + 100);
 
     const pop$ = this.bindPopstateEvent();
 
@@ -299,7 +299,7 @@ export default C => class extends componentCore(C) {
       res = Observable.of(Object.assign(kind, { response: prefetch.response }));
 
       if (kind instanceof Push || !this.noPopDuration) {
-        res = res.delay(this.duration);
+        res = res.delay(this.duration + 100);
       }
     // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
     } else {
@@ -307,7 +307,7 @@ export default C => class extends componentCore(C) {
         .map(fetch => Object.assign(kind, { response: fetch.response }));
 
       if (kind instanceof Push || !this.noPopDuration) {
-        res = res.zip(Observable.timer(this.duration), x => x);
+        res = res.zip(Observable.timer(this.duration + 100), x => x);
       }
     }
 

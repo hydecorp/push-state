@@ -45,6 +45,7 @@ import 'rxjs/add/observable/timer';
 import 'rxjs/add/observable/dom/ajax';
 
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/delay';
 import 'rxjs/add/operator/distinctUntilKeyChanged';
 import 'rxjs/add/operator/do';
@@ -254,32 +255,29 @@ export default C => class extends componentCore(C) {
       .do(this.onStart.bind(this))
       .withLatestFrom(this.prefetch$)
       .switchMap(this.getResponse.bind(this))
-      .do(this.setWillChange.bind(this))
       .map(this.responseToContent.bind(this))
-
       .do(this.onReady.bind(this))
       .do(this.updateDOM.bind(this))
       .do(this.resetScrollPostion.bind(this))
       .do(this.onAfter.bind(this))
-      .do(this.unsetWillChange.bind(this))
-
-      // Renewing event listeners after DOM update/layout/painting is complete
-      // HACK: don't use time, use outside observable instead?
-      .throttleTime(this.duration + 100)
-      .do(this.renewEventListeners.bind(this))
       .catch((error, caught) => {
         this.onError(error);
         return caught;
       })
-
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
 
+    this.render$
+      // Renewing event listeners after DOM update/layout/painting is complete
+      // HACK: don't use time, use outside observable instead?
+      .debounceTime(this.duration)
+      .do(this.renewEventListeners.bind(this))
+      .subscribe();
+
     // fire `progress` event when fetching takes longer than `this.duration`.
     this.page$
-      .switchMap(() =>
-        // HACK: add some time, jtbs
-        Observable.timer(this.duration + 200).takeUntil(this.render$))
+      // HACK: add some time, jtbs
+      .switchMap(() => Observable.timer(this.duration + 200).takeUntil(this.render$))
       .subscribe(this.onProgress.bind(this));
 
     // Start pulling values
@@ -297,7 +295,9 @@ export default C => class extends componentCore(C) {
       res = Observable.of(Object.assign(kind, { response: prefetch.response }));
 
       if (kind instanceof Push || !this.noPopDuration) {
-        res = res.delay(this.duration + 100); // HACK
+        // HACK: add some extra time to prevent 'flickering'
+        // ideally, we'd like to take an animation observable as input instead
+        res = res.delay(this.duration + 100);
       }
     // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
     } else {
@@ -305,7 +305,9 @@ export default C => class extends componentCore(C) {
         .map(fetch => Object.assign(kind, { response: fetch.response }));
 
       if (kind instanceof Push || !this.noPopDuration) {
-        res = res.zip(Observable.timer(this.duration + 100), x => x); // HACK
+        // HACK: add some extra time to prevent 'flickering'
+        // ideally, we'd like to take an animation observable as input instead
+        res = res.zip(Observable.timer(this.duration + 100), x => x);
       }
     }
 
@@ -356,7 +358,6 @@ export default C => class extends componentCore(C) {
   }
 
   onAfter(sponge) {
-    this.unsetWillChange();
     this.fireEvent('after', { detail: sponge });
   }
 
@@ -373,14 +374,6 @@ export default C => class extends componentCore(C) {
 
   onRetry(kind) {
     this.fireEvent('retry', { detail: kind });
-  }
-
-  setWillChange() {
-    this.el.style.willChange = 'contents';
-  }
-
-  unsetWillChange() {
-    this.el.style.willChange = '';
   }
 
   isPageChangeEvent(kind) {

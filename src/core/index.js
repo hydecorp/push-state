@@ -90,7 +90,7 @@ export default C => class extends componentCore(C) {
       linkSelector: 'a[href]',
       scrollRestoration: false,
       hrefRegex: null,
-      blacklist: null,
+      blacklist: '.no-push-state',
       duration: 0,
       noPopDuration: true,
     };

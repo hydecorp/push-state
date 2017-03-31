@@ -398,10 +398,10 @@ export default C => class extends componentCore(C) {
 
   getContentFromDocumentFragment(documentFragment) {
     if (this.replaceIds.length > 0) {
-      return this.replaceIds.map(id => documentFragment.getElementById(id));
+      return this.replaceIds.map(id => documentFragment.querySelector(`#${id}`));
     }
 
-    return documentFragment.getElementById(this.el.id);
+    return documentFragment.querySelector(`#${this.el.id}`);
   }
 
   replaceContent(content) {

@@ -440,13 +440,13 @@ export default C => class extends componentCore(C) {
 
   resetScrollPostion(sponge) {
     if (this.scrollRestoration) {
-      if (sponge instanceof Push) {
-        document.body.style.minHeight = '';
-      } else {
+      if (sponge instanceof Pop) {
         const state = history.state || {};
         document.body.style.minHeight = `${state.scrollHeight || 0}px`;
         if (state.scrollTop != null) window.scroll(window.pageXOffset, state.scrollTop);
       }
+
+      document.body.style.minHeight = '';
     }
   }
 };

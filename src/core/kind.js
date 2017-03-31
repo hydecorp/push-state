@@ -1,3 +1,6 @@
+// Copyright (c) 2017 Florian Klampfer
+// Licensed under MIT
+
 export class Kind {
   constructor(event) {
     this.event = event;

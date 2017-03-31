@@ -1,10 +1,5 @@
-/*
- * Adapted from Miguel Ángel Pérez's smoothState.js
- * https://github.com/miguel-perez/smoothState.js
- *
- * Copyright (c) 2016 Florian Klampfer
- * Licensed under MIT
- */
+// Copyright (c) 2017 Florian Klampfer
+// Licensed under MIT
 
 /*
 eslint-disable

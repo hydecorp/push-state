@@ -121,10 +121,8 @@ export default C => class extends componentCore(C) {
       history.scrollRestoration = this.scrollRestoration ? 'manual' : 'auto';
     }
 
-    this.resetScrollPostion();
-    window.addEventListener('beforeunload', () => {
-      this.updateHistoryState();
-    });
+    this.setScrollPosition();
+    window.addEventListener('beforeunload', this.updateHistoryState.bind(this));
   }
 
   cacheTitleElement() {
@@ -433,15 +431,18 @@ export default C => class extends componentCore(C) {
     history.replaceState(state, document.title, window.location.href);
   }
 
+  setScrollPosition() {
+    const state = history.state || {};
+    document.body.style.minHeight = `${state.scrollHeight || 0}px`;
+    if (state.scrollTop != null) window.scroll(window.pageXOffset, state.scrollTop);
+    document.body.style.minHeight = '';
+  }
+
   resetScrollPostion(sponge) {
     if (this.scrollRestoration) {
       if (sponge instanceof Pop) {
-        const state = history.state || {};
-        document.body.style.minHeight = `${state.scrollHeight || 0}px`;
-        if (state.scrollTop != null) window.scroll(window.pageXOffset, state.scrollTop);
+        this.setScrollPosition();
       }
-
-      document.body.style.minHeight = '';
     }
   }
 };

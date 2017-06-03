@@ -31,6 +31,7 @@ import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
 import 'rxjs/add/observable/defer';
+import 'rxjs/add/observable/from';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/of';
@@ -40,13 +41,15 @@ import 'rxjs/add/observable/timer';
 import 'rxjs/add/observable/dom/ajax';
 
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/concatMap';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/delay';
 import 'rxjs/add/operator/distinctUntilKeyChanged';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/mergeAll';
+import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/partition';
 import 'rxjs/add/operator/retryWhen';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/startWith';
@@ -160,7 +163,7 @@ export default C => class extends componentCore(C) {
   }
 
   fromEvents(link$, event) {
-    return link$.map(link => Observable.fromEvent(link, event)).mergeAll();
+    return link$.mergeMap(link => Observable.fromEvent(link, event));
   }
 
   fetchPage(kind) {
@@ -249,12 +252,14 @@ export default C => class extends componentCore(C) {
       .withLatestFrom(this.prefetch$)
       .switchMap(this.getResponse.bind(this))
       .map(this.responseToContent.bind(this))
+      .map(this.tempRemoveScriptTags.bind(this))
       .do(this.onReady.bind(this))
       .do(this.updateDOM.bind(this))
       .do(this.resetScrollPostion.bind(this))
       .do(this.onAfter.bind(this))
       .catch((error, caught) => {
         this.onError(error);
+        console.error(error);
         return caught;
       })
       // `share`ing the stream between the subscription below and `pauser$`.
@@ -265,6 +270,10 @@ export default C => class extends componentCore(C) {
       // HACK: don't use time, use outside observable instead?
       .debounceTime(this.duration)
       .do(this.renewEventListeners.bind(this))
+      .subscribe();
+
+    this.render$
+      .switchMap(this.reinsertScriptTags.bind(this))
       .subscribe();
 
     // fire `progress` event when fetching takes longer than `this.duration`.
@@ -348,6 +357,50 @@ export default C => class extends componentCore(C) {
     } catch (error) {
       throw Object.assign(sponge, { error });
     }
+  }
+
+  tempRemoveScriptTags(sponge) {
+    const { content } = sponge;
+    const scripts = [];
+
+    content.forEach(docfrag =>
+      Array.prototype.forEach.call(docfrag.querySelectorAll('script'), (script) => {
+        const pair = [script, script.previousElementSibling];
+        script.parentNode.removeChild(script);
+        scripts.push(pair);
+      }));
+
+    return Object.assign(sponge, { scripts });
+  }
+
+  reinsertScriptTags({ scripts }) {
+    const [script$, asyncScript$] = Observable.from(scripts)
+      .partition(([script]) => script.async !== '');
+
+    function insertScript([script, ref]) {
+      return script.src !== '' ?
+        Observable.create((observer) => {
+          script.addEventListener('load', (x) => {
+            observer.next(x);
+            observer.complete();
+          });
+
+          script.addEventListener('error', (x) => {
+            observer.error(x);
+          });
+
+          ref.parentNode.insertBefore(script, ref.nextElementSibling);
+        }) :
+        Observable.of({})
+          .do(() => {
+            ref.parentNode.insertBefore(script, ref.nextElementSibling);
+          });
+    }
+
+    return Observable.merge(
+        script$.concatMap(insertScript),
+        asyncScript$.mergeMap(insertScript),
+      );
   }
 
   onAfter(sponge) {

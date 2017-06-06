@@ -73,6 +73,12 @@ import {
 
 import { Push, Hint, Pop } from './kind';
 
+Observable.prototype.pauseWith = function pauseWith(pauser$) {
+  return this.withLatestFrom(pauser$)
+      .filter(([, paused]) => paused === false)
+      .map(([x]) => x);
+};
+
 // ~ mixin pushStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
 
@@ -232,11 +238,7 @@ export default C => class extends componentCore(C) {
     );
 
     // The stream of hint (prefetch) events, possibly paused.
-    // Dream syntax (not supported, yet): `this.hint$$.switch().pauseable(pauser$)`
-    this.hint$ = this.hint$$.switch()
-      .withLatestFrom(pauser$)
-      .filter(([, paused]) => paused === false)
-      .map(([x]) => x);
+    this.hint$ = this.hint$$.switch().pauseWith(pauser$);
 
     // The stream of (pre-)fetch events.
     // Includes definitive page change events do deal with unexpected page changes.

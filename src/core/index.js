@@ -252,7 +252,6 @@ export default C => class extends componentCore(C) {
       .withLatestFrom(this.prefetch$)
       .switchMap(this.getResponse.bind(this))
       .map(this.responseToContent.bind(this))
-      .map(this.tempRemoveScriptTags.bind(this))
       .do(this.onReady.bind(this))
       .do(this.updateDOM.bind(this))
       .do(this.resetScrollPostion.bind(this))
@@ -272,18 +271,36 @@ export default C => class extends componentCore(C) {
       .do(this.renewEventListeners.bind(this))
       .subscribe();
 
+    // Add script tags one by one (unless they are marekd `async`)
+    // This simulates the behavior of a fresh page load
     this.render$
       .switchMap(this.reinsertScriptTags.bind(this))
+      .do(this.onLoad.bind(this))
+      .catch((error, caught) => {
+        this.onError(error);
+        console.error(error);
+        return caught;
+      })
       .subscribe();
 
-    // fire `progress` event when fetching takes longer than `this.duration`.
+    // Fire `progress` event when fetching takes longer than `this.duration`.
     this.page$
       // HACK: add some time, jtbs
-      .switchMap(() => Observable.timer(this.duration + 200).takeUntil(this.render$))
-      .subscribe(this.onProgress.bind(this));
+      .switchMap(() => Observable.timer(this.duration + 200)
+        .do(this.onAnimationEnd.bind(this))
+        .takeUntil(this.render$))
+      .do(this.onProgress.bind(this))
+      .catch((error, caught) => {
+        this.onError(error);
+        console.error(error);
+        return caught;
+      })
+      .subscribe();
 
     // Start pulling values
     this.render$.subscribe();
+
+    this.onLoad({});
 
     // Push streams into `push$$` and `hint$$`
     this.renewEventListeners();
@@ -316,32 +333,15 @@ export default C => class extends componentCore(C) {
     return res;
   }
 
-  onStart(sponge) {
-    const { href } = sponge;
-
-    if (sponge instanceof Push) {
-      window.history.pushState({ id: this.componentName }, '', href);
-    }
-
-    this.fireEvent('start', { detail: sponge });
-  }
-
-  onProgress(sponge) {
-    this.fireEvent('progress', { detail: sponge });
-  }
-
   responseToContent(sponge) {
     const { response } = sponge;
 
     const documentFragment = fragmentFromString(response);
     const title = this.getTitleFromDocumentFragment(documentFragment);
     const content = this.getContentFromDocumentFragment(documentFragment);
+    const scripts = this.tempRemoveScriptTags(content);
 
-    return Object.assign(sponge, { title, content });
-  }
-
-  onReady(sponge) {
-    this.fireEvent('ready', { detail: sponge });
+    return Object.assign(sponge, { title, content, scripts });
   }
 
   updateDOM(sponge) {
@@ -359,8 +359,7 @@ export default C => class extends componentCore(C) {
     }
   }
 
-  tempRemoveScriptTags(sponge) {
-    const { content } = sponge;
+  tempRemoveScriptTags(content) {
     const scripts = [];
 
     content.forEach(docfrag =>
@@ -370,56 +369,47 @@ export default C => class extends componentCore(C) {
         scripts.push(pair);
       }));
 
-    return Object.assign(sponge, { scripts });
+    return scripts;
+  }
+
+  insertScript([script, ref]) {
+    return script.src !== '' ?
+      Observable.create((observer) => {
+        script.addEventListener('load', (x) => {
+          observer.next(x);
+          observer.complete();
+        });
+
+        script.addEventListener('error', (x) => {
+          observer.error(x);
+        });
+
+        ref.parentNode.insertBefore(script, ref.nextElementSibling);
+      }) :
+      Observable.of({})
+        .do(() => {
+          ref.parentNode.insertBefore(script, ref.nextElementSibling);
+        });
   }
 
   reinsertScriptTags({ scripts }) {
-    const [script$, asyncScript$] = Observable.from(scripts)
-      .partition(([script]) => script.async !== '');
+    if (scripts.length === 0) return Observable.of({});
+    return Observable.from(scripts).concatMap(this.insertScript);
 
-    function insertScript([script, ref]) {
-      return script.src !== '' ?
-        Observable.create((observer) => {
-          script.addEventListener('load', (x) => {
-            observer.next(x);
-            observer.complete();
-          });
-
-          script.addEventListener('error', (x) => {
-            observer.error(x);
-          });
-
-          ref.parentNode.insertBefore(script, ref.nextElementSibling);
-        }) :
-        Observable.of({})
-          .do(() => {
-            ref.parentNode.insertBefore(script, ref.nextElementSibling);
-          });
-    }
-
-    return Observable.merge(
-        script$.concatMap(insertScript),
-        asyncScript$.mergeMap(insertScript),
-      );
-  }
-
-  onAfter(sponge) {
-    this.fireEvent('after', { detail: sponge });
+    // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
+    // const [script$, asyncScript$] = Observable.from(scripts)
+    //   .partition(([script]) => script.async !== '');
+    //
+    // return Observable.merge(
+    //     script$.concatMap(this.insertScript),
+    //     asyncScript$.mergeMap(this.insertScript),
+    //   );
   }
 
   renewEventListeners() {
     const link$ = this.linkObservable();
     this.push$$.next(this.bindPushEvents(link$));
     this.hint$$.next(this.bindHintEvents(link$));
-  }
-
-  onError(err) {
-    this.el.style.willChange = '';
-    this.fireEvent('error', { detail: err });
-  }
-
-  onRetry(kind) {
-    this.fireEvent('retry', { detail: kind });
   }
 
   isPageChangeEvent(kind) {
@@ -497,5 +487,43 @@ export default C => class extends componentCore(C) {
         this.setScrollPosition();
       }
     }
+  }
+
+  onStart(sponge) {
+    const { href } = sponge;
+
+    if (sponge instanceof Push) {
+      window.history.pushState({ id: this.componentName }, '', href);
+    }
+
+    this.fireEvent('start', { detail: sponge });
+  }
+
+  onReady(sponge) {
+    this.fireEvent('ready', { detail: sponge });
+  }
+
+  onAfter(sponge) {
+    this.fireEvent('after', { detail: sponge });
+  }
+
+  onError(err) {
+    this.fireEvent('error', { detail: err });
+  }
+
+  onProgress(sponge) {
+    this.fireEvent('progress', { detail: sponge });
+  }
+
+  onRetry(sponge) {
+    this.fireEvent('retry', { detail: sponge });
+  }
+
+  onAnimationEnd(x) {
+    this.fireEvent('animationend', { detail: x });
+  }
+
+  onLoad(x) {
+    this.fireEvent('load', { detail: x });
   }
 };

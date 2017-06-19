@@ -92,6 +92,7 @@ export default C => class extends componentCore(C) {
     return {
       replaceIds: [],
       linkSelector: 'a[href]',
+      scriptSelector: 'script',
       scrollRestoration: false,
       hrefRegex: null,
       blacklist: '.no-push-state',
@@ -365,7 +366,7 @@ export default C => class extends componentCore(C) {
     const scripts = [];
 
     content.forEach(docfrag =>
-      Array.prototype.forEach.call(docfrag.querySelectorAll('script'), (script) => {
+      Array.prototype.forEach.call(docfrag.querySelectorAll(this.scriptSelector), (script) => {
         const pair = [script, script.previousElementSibling];
         script.parentNode.removeChild(script);
         scripts.push(pair);

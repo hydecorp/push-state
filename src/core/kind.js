@@ -13,35 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-export class Kind {
-  constructor(event) {
-    this.event = event;
-  }
-}
-
-export class Push extends Kind {
-  constructor(event) {
-    super(event);
-    this.href = event.currentTarget.href;
-  }
-
-  get type() { return 'push'; }
-}
-
-export class Hint extends Kind {
-  constructor(event) {
-    super(event);
-    this.href = event.currentTarget.href;
-  }
-
-  get type() { return 'hint'; }
-}
-
-export class Pop extends Kind {
-  constructor(event) {
-    super(event);
-    this.href = window.location.href;
-  }
-
-  get type() { return 'pop'; }
-}
+export const PUSH = 'push';
+export const HINT = 'hint';
+export const POP = 'pop';

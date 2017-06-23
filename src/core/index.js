@@ -83,7 +83,7 @@ import {
   fragmentFromString,
 } from '../common';
 
-import { Push, Hint, Pop } from './kind';
+import { PUSH, HINT, POP } from './kind';
 
 Observable.prototype.pauseWith = function pauseWith(pauser$) {
   return this.withLatestFrom(pauser$)
@@ -153,7 +153,7 @@ export default C => class extends componentCore(C) {
 
   bindPushEvents(link$) {
     return this.fromEvents(link$, 'click')
-      .map(event => new Push(event))
+      .map(event => ({ event, type: PUSH, href: event.currentTarget.href }))
       .filter(kind => this.isPageChangeEvent(kind))
       .do(({ event }) => {
         this.updateHistoryState();
@@ -167,13 +167,13 @@ export default C => class extends componentCore(C) {
         this.fromEvents(link$, 'touchstart'),
         this.fromEvents(link$, 'focus'),
       )
-      .map(event => new Hint(event))
+      .map(event => ({ event, type: HINT, href: event.currentTarget.href }))
       .filter(kind => this.isPageChangeAnchor(kind));
   }
 
   bindPopstateEvent() {
     return Observable.fromEvent(window, 'popstate')
-      .map(event => new Pop(event))
+      .map(event => ({ event, type: POP, href: window.location.href }))
       .filter(() => window.history.state != null);
   }
 
@@ -328,7 +328,7 @@ export default C => class extends componentCore(C) {
     if (kind.href === prefetch.href) {
       res = Observable.of(Object.assign(kind, { response: prefetch.response }));
 
-      if (kind instanceof Push || !this.noPopDuration) {
+      if (kind.type === PUSH || !this.noPopDuration) {
         // HACK: add some extra time to prevent 'flickering'
         // ideally, we'd like to take an animation observable as input instead
         res = res.delay(this.duration + 100);
@@ -338,7 +338,7 @@ export default C => class extends componentCore(C) {
       res = this.prefetch$.take(1)
         .map(fetch => Object.assign(kind, { response: fetch.response }));
 
-      if (kind instanceof Push || !this.noPopDuration) {
+      if (kind.type === PUSH || !this.noPopDuration) {
         // HACK: add some extra time to prevent 'flickering'
         // ideally, we'd like to take an animation observable as input instead
         res = res.zip(Observable.timer(this.duration + 100), x => x);
@@ -363,7 +363,7 @@ export default C => class extends componentCore(C) {
     try {
       const { href, title, content } = sponge;
 
-      if (sponge instanceof Push) {
+      if (sponge.type === PUSH) {
         window.history.replaceState({ id: this.componentName }, title, href);
       }
 
@@ -498,7 +498,7 @@ export default C => class extends componentCore(C) {
 
   resetScrollPostion(sponge) {
     if (this.scrollRestoration) {
-      if (sponge instanceof Pop) {
+      if (sponge.type === POP) {
         this.setScrollPosition();
       }
     }
@@ -507,7 +507,7 @@ export default C => class extends componentCore(C) {
   onStart(sponge) {
     const { href } = sponge;
 
-    if (sponge instanceof Push) {
+    if (sponge.type === PUSH) {
       window.history.pushState({ id: this.componentName }, '', href);
     }
 

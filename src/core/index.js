@@ -17,8 +17,7 @@
 eslint-disable
 import/no-extraneous-dependencies,
 import/no-unresolved,
-import/extensions,
-no-console
+import/extensions
 */
 
 // const JS_FEATURES = [
@@ -79,17 +78,17 @@ import {
   shouldLoadAnchor,
   getScrollTop,
   getScrollHeight,
-  expInterval,
+  // expInterval,
   fragmentFromString,
 } from '../common';
 
 import { PUSH, HINT, POP } from './kind';
 
-Observable.prototype.pauseWith = function pauseWith(pauser$) {
+function pauseWith(pauser$) {
   return this.withLatestFrom(pauser$)
       .filter(([, paused]) => paused === false)
       .map(([x]) => x);
-};
+}
 
 // ~ mixin pushStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
@@ -128,13 +127,8 @@ export default C => class extends componentCore(C) {
   }
 
   checkPreCondition() {
-    if (this.replaceIds.length === 0) {
-      const id = this.el.id;
-      if (id) {
-        console.warn(`No replace ids provided. Will replace entire content of #${id}`);
-      } else {
-        throw Error('No replace ids provided nor does this component have and id');
-      }
+    if (this.replaceIds.length === 0 && !this.el.id) {
+      throw Error('No replace ids provided nor does this component have and id');
     }
   }
 
@@ -189,11 +183,12 @@ export default C => class extends componentCore(C) {
     return Observable
       .ajax(this.hrefToAjax(kind))
       .map(({ response }) => Object.assign(kind, { response }))
-      .catch(error => this.recoverIfResponse(kind, error))
-      .retryWhen(() => Observable.merge(
-          Observable.fromEvent(window, 'online'),
-          expInterval(1000, 2))
-        .do(this.onRetry.bind(this, kind)));
+      .catch(error => this.recoverIfResponse(kind, error));
+      // TODO: make this available via option?
+      // .retryWhen(() => Observable.merge(
+      //     Observable.fromEvent(window, 'online'),
+      //     expInterval(1000, 2))
+      //   .do(this.onRetry.bind(this, kind)));
   }
 
   hrefToAjax({ href }) {
@@ -214,8 +209,9 @@ export default C => class extends componentCore(C) {
     }
 
     // else
-    this.onError(Object.assign(kind, error));
-    return Observable.throw(error);
+    const wat = Object.assign(kind, { error });
+    this.onPreFetchError(wat);
+    return Observable.throw(wat);
   }
 
   setupObservables() {
@@ -251,31 +247,28 @@ export default C => class extends componentCore(C) {
     );
 
     // The stream of hint (prefetch) events, possibly paused.
-    this.hint$ = this.hint$$.switch().pauseWith(pauser$);
+    this.hint$ = pauseWith.call(this.hint$$.switch(), pauser$);
 
     // The stream of (pre-)fetch events.
     // Includes definitive page change events do deal with unexpected page changes.
     this.prefetch$ = Observable.merge(this.hint$, this.page$)
       .distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
       .switchMap(kind => this.fetchPage(kind))
-      .catch((err, caught) => caught)
       .startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
       .share();
 
     this.render$ = this.page$
       .do(this.onStart.bind(this))
       .withLatestFrom(this.prefetch$)
+      .catch((e, caught) => { this.onFetchError(e); return caught; })
       .switchMap(this.getResponse.bind(this))
       .map(this.responseToContent.bind(this))
+      .catch((e, caught) => { this.onContentError(e); return caught; })
       .do(this.onReady.bind(this))
       .do(this.updateDOM.bind(this))
       .do(this.resetScrollPostion.bind(this))
       .do(this.onAfter.bind(this))
-      .catch((error, caught) => {
-        this.onError(error);
-        console.error(error);
-        return caught;
-      })
+      .catch((e, caught) => { this.onDOMError(e); return caught; })
       // `share`ing the stream between the subscription below and `pauser$`.
       .share();
 
@@ -286,16 +279,12 @@ export default C => class extends componentCore(C) {
       .do(this.renewEventListeners.bind(this))
       .subscribe();
 
-    // Add script tags one by one (unless they are marekd `async`)
+    // Add script tags one by one
     // This simulates the behavior of a fresh page load
     this.render$
       .switchMap(this.reinsertScriptTags.bind(this))
+      .catch((e, caught) => { this.onScriptError(e); return caught; })
       .do(this.onLoad.bind(this))
-      .catch((error, caught) => {
-        this.onError(error);
-        console.error(error);
-        return caught;
-      })
       .subscribe();
 
     // Fire `progress` event when fetching takes longer than `this.duration`.
@@ -305,11 +294,6 @@ export default C => class extends componentCore(C) {
         .do(this.onAnimationEnd.bind(this))
         .takeUntil(this.render$))
       .do(this.onProgress.bind(this))
-      .catch((error, caught) => {
-        this.onError(error);
-        console.error(error);
-        return caught;
-      })
       .subscribe();
 
     // Start pulling values
@@ -354,6 +338,11 @@ export default C => class extends componentCore(C) {
     const documentFragment = fragmentFromString(response);
     const title = this.getTitleFromDocumentFragment(documentFragment);
     const content = this.getContentFromDocumentFragment(documentFragment);
+
+    if (content.some(x => x == null)) {
+      throw Object.assign(sponge, { title, content });
+    }
+
     const scripts = this.tempRemoveScriptTags(content);
 
     return Object.assign(sponge, { title, content, scripts });
@@ -407,9 +396,14 @@ export default C => class extends componentCore(C) {
         });
   }
 
-  reinsertScriptTags({ scripts }) {
+  reinsertScriptTags(sponge) {
+    const { scripts } = sponge;
+
     if (scripts.length === 0) return Observable.of({});
-    return Observable.from(scripts).concatMap(this.insertScript);
+
+    return Observable.from(scripts)
+      .concatMap(this.insertScript)
+      .catch(error => Observable.throw(Object.assign(sponge, { error })));
 
     // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
     // const [script$, asyncScript$] = Observable.from(scripts)
@@ -452,7 +446,7 @@ export default C => class extends componentCore(C) {
       return this.replaceIds.map(id => documentFragment.querySelector(`#${id}`));
     }
 
-    return documentFragment.querySelector(`#${this.el.id}`);
+    return [documentFragment.querySelector(`#${this.el.id}`)];
   }
 
   replaceContent(content) {
@@ -522,10 +516,6 @@ export default C => class extends componentCore(C) {
     this.fireEvent('after', { detail: sponge });
   }
 
-  onError(err) {
-    this.fireEvent('error', { detail: err });
-  }
-
   onProgress(sponge) {
     this.fireEvent('progress', { detail: sponge });
   }
@@ -540,5 +530,25 @@ export default C => class extends componentCore(C) {
 
   onLoad(x) {
     this.fireEvent('load', { detail: x });
+  }
+
+  onPreFetchError(err) {
+    this.fireEvent('prefetch-error', { detail: err });
+  }
+
+  onFetchError(err) {
+    this.fireEvent('fetch-error', { detail: err });
+  }
+
+  onContentError(err) {
+    this.fireEvent('content-error', { detail: err });
+  }
+
+  onDOMError(err) {
+    this.fireEvent('dom-error', { detail: err });
+  }
+
+  onScriptError(err) {
+    this.fireEvent('script-error', { detail: err });
   }
 };

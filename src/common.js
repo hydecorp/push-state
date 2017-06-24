@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from 'rxjs/Observable';
+// import { Observable } from 'rxjs/Observable';
 
 /**
  * Checks to see if the url is external
@@ -126,24 +126,24 @@ export function getScrollTop() {
   return window.pageYOffset || document.body.scrollTop;
 }
 
-export function expInterval(init, exp) {
-  return Observable.create((observer) => {
-    let n = init;
-    let id;
-
-    function next() {
-      observer.next(n);
-      n *= exp;
-      id = setTimeout(next, n);
-    }
-
-    id = setTimeout(next, n);
-
-    return () => {
-      clearTimeout(id);
-    };
-  });
-}
+// export function expInterval(init, exp) {
+//   return Observable.create((observer) => {
+//     let n = init;
+//     let id;
+//
+//     function next() {
+//       observer.next(n);
+//       n *= exp;
+//       id = setTimeout(next, n);
+//     }
+//
+//     id = setTimeout(next, n);
+//
+//     return () => {
+//       clearTimeout(id);
+//     };
+//   });
+// }
 
 export function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);

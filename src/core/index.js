@@ -46,7 +46,6 @@ import 'rxjs/add/observable/from';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/throw';
 import 'rxjs/add/observable/timer';
 
 import 'rxjs/add/observable/dom/ajax';
@@ -209,9 +208,7 @@ export default C => class extends componentCore(C) {
     }
 
     // else
-    const wat = Object.assign(kind, { error });
-    this.onPreFetchError(wat);
-    return Observable.throw(wat);
+    return Observable.of(Object.assign(kind, { error }));
   }
 
   setupObservables() {
@@ -257,11 +254,16 @@ export default C => class extends componentCore(C) {
       .startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
       .share();
 
-    this.render$ = this.page$
+    const response$ = this.page$
       .do(this.onStart.bind(this))
       .withLatestFrom(this.prefetch$)
-      .catch((e, caught) => { this.onFetchError(e); return caught; })
       .switchMap(this.getResponse.bind(this))
+      .share();
+
+    const [noError$, error$] = response$
+      .partition(({ error }) => error == null);
+
+    this.render$ = noError$
       .map(this.responseToContent.bind(this))
       .catch((e, caught) => { this.onContentError(e); return caught; })
       .do(this.onReady.bind(this))
@@ -287,17 +289,16 @@ export default C => class extends componentCore(C) {
       .do(this.onLoad.bind(this))
       .subscribe();
 
+    error$
+      .do(this.onFetchError.bind(this))
+      .subscribe();
+
     // Fire `progress` event when fetching takes longer than `this.duration`.
     this.page$
       // HACK: add some time, jtbs
-      .switchMap(() => Observable.timer(this.duration + 200)
-        .do(this.onAnimationEnd.bind(this))
-        .takeUntil(this.render$))
+      .switchMap(() => Observable.timer(this.duration + 200).takeUntil(response$))
       .do(this.onProgress.bind(this))
       .subscribe();
-
-    // Start pulling values
-    this.render$.subscribe();
 
     this.onLoad({});
 
@@ -310,7 +311,7 @@ export default C => class extends componentCore(C) {
 
     // Prefetch already complete, use result
     if (kind.href === prefetch.href) {
-      res = Observable.of(Object.assign(kind, { response: prefetch.response }));
+      res = Observable.of(Object.assign(prefetch, kind));
 
       if (kind.type === PUSH || !this.noPopDuration) {
         // HACK: add some extra time to prevent 'flickering'
@@ -320,7 +321,7 @@ export default C => class extends componentCore(C) {
     // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
     } else {
       res = this.prefetch$.take(1)
-        .map(fetch => Object.assign(kind, { response: fetch.response }));
+        .map(fetch => Object.assign(fetch, kind));
 
       if (kind.type === PUSH || !this.noPopDuration) {
         // HACK: add some extra time to prevent 'flickering'
@@ -403,7 +404,7 @@ export default C => class extends componentCore(C) {
 
     return Observable.from(scripts)
       .concatMap(this.insertScript)
-      .catch(error => Observable.throw(Object.assign(sponge, { error })));
+      .catch((error) => { throw Object.assign(sponge, { error }); });
 
     // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
     // const [script$, asyncScript$] = Observable.from(scripts)
@@ -524,16 +525,8 @@ export default C => class extends componentCore(C) {
     this.fireEvent('retry', { detail: sponge });
   }
 
-  onAnimationEnd(x) {
-    this.fireEvent('animationend', { detail: x });
-  }
-
   onLoad(x) {
     this.fireEvent('load', { detail: x });
-  }
-
-  onPreFetchError(err) {
-    this.fireEvent('prefetch-error', { detail: err });
   }
 
   onFetchError(err) {

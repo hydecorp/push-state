@@ -41,35 +41,35 @@ import/extensions
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
-import 'rxjs/add/observable/defer';
-import 'rxjs/add/observable/from';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/timer';
+import { defer } from 'rxjs/observable/defer';
+import { from } from 'rxjs/observable/from';
+import { fromEvent } from 'rxjs/observable/fromEvent';
+import { merge } from 'rxjs/observable/merge';
+import { never } from 'rxjs/observable/never';
+import { of } from 'rxjs/observable/of';
+import { timer } from 'rxjs/observable/timer';
 
-import 'rxjs/add/observable/dom/ajax';
+import { ajax } from 'rxjs/observable/dom/ajax';
 
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/concatMap';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/delay';
-import 'rxjs/add/operator/distinctUntilKeyChanged';
-import 'rxjs/add/operator/do';
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/partition';
-import 'rxjs/add/operator/retryWhen';
-import 'rxjs/add/operator/share';
-import 'rxjs/add/operator/startWith';
-import 'rxjs/add/operator/switch';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/take';
-import 'rxjs/add/operator/takeUntil';
-import 'rxjs/add/operator/throttleTime';
-import 'rxjs/add/operator/withLatestFrom';
-import 'rxjs/add/operator/zip';
+import { _catch as recover } from 'rxjs/operator/catch';
+import { concatMap } from 'rxjs/operator/concatMap';
+import { debounceTime } from 'rxjs/operator/debounceTime';
+import { delay } from 'rxjs/operator/delay';
+import { distinctUntilKeyChanged } from 'rxjs/operator/distinctUntilKeyChanged';
+import { _do as effect } from 'rxjs/operator/do';
+import { filter } from 'rxjs/operator/filter';
+import { first } from 'rxjs/operator/first';
+import { map } from 'rxjs/operator/map';
+import { mergeMap } from 'rxjs/operator/mergeMap';
+import { partition } from 'rxjs/operator/partition';
+import { share } from 'rxjs/operator/share';
+import { startWith } from 'rxjs/operator/startWith';
+import { _switch as switchAll } from 'rxjs/operator/switch';
+import { switchMap } from 'rxjs/operator/switchMap';
+import { takeUntil } from 'rxjs/operator/takeUntil';
+import { throttleTime } from 'rxjs/operator/throttleTime';
+import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
+import { zipProto as zipWith } from 'rxjs/operator/zip';
 
 import componentCore from 'y-component/src/component-core';
 
@@ -83,11 +83,20 @@ import {
 
 import { PUSH, HINT, POP } from './kind';
 
+const { forEach: aForEach } = Array.prototype;
+
+// function pauseWith(pauser$) {
+//   return this::withLatestFrom(pauser$)
+//       ::filter(([, paused]) => paused === false)
+//       ::map(([x]) => x);
+// }
+
 function pauseWith(pauser$) {
-  return this.withLatestFrom(pauser$)
-      .filter(([, paused]) => paused === false)
-      .map(([x]) => x);
+  return pauser$::switchMap(paused => (paused ? Observable::never() : this));
 }
+
+DocumentFragment.prototype.getElementById = DocumentFragment.prototype.getElementById ||
+  function getElementById(id) { this.querySelector(`#${id}`); };
 
 // ~ mixin pushStateCore with componentCore { ...
 export default C => class extends componentCore(C) {
@@ -137,7 +146,7 @@ export default C => class extends componentCore(C) {
     }
 
     this.setScrollPosition();
-    window.addEventListener('beforeunload', this.updateHistoryState.bind(this));
+    window.addEventListener('beforeunload', ::this.updateHistoryState);
   }
 
   cacheTitleElement() {
@@ -146,43 +155,42 @@ export default C => class extends componentCore(C) {
 
   bindPushEvents(link$) {
     return this.fromEvents(link$, 'click')
-      .map(event => ({ event, type: PUSH, href: event.currentTarget.href }))
-      .filter(kind => this.isPageChangeEvent(kind))
-      .do(({ event }) => {
+      ::map(event => ({ event, type: PUSH, href: event.currentTarget.href }))
+      ::filter(kind => this.isPageChangeEvent(kind))
+      ::effect(({ event }) => {
         this.updateHistoryState();
         event.preventDefault();
       });
   }
 
   bindHintEvents(link$) {
-    return Observable.merge(
+    return Observable::merge(
         this.fromEvents(link$, 'mouseenter'),
         this.fromEvents(link$, 'touchstart'),
         this.fromEvents(link$, 'focus'),
       )
-      .map(event => ({ event, type: HINT, href: event.currentTarget.href }))
-      .filter(kind => this.isPageChangeAnchor(kind));
+      ::map(event => ({ event, type: HINT, href: event.currentTarget.href }))
+      ::filter(kind => this.isPageChangeAnchor(kind));
   }
 
   bindPopstateEvent() {
-    return Observable.fromEvent(window, 'popstate')
-      .map(event => ({ event, type: POP, href: window.location.href }))
-      .filter(() => window.history.state != null);
+    return Observable::fromEvent(window, 'popstate')
+      ::map(event => ({ event, type: POP, href: window.location.href }))
+      ::filter(() => window.history.state != null);
   }
 
   linkObservable() {
-    return Observable.of(this.el.querySelectorAll(this.linkSelector));
+    return Observable::of(this.el.querySelectorAll(this.linkSelector));
   }
 
   fromEvents(link$, event) {
-    return link$.mergeMap(link => Observable.fromEvent(link, event));
+    return link$::mergeMap(link => Observable::fromEvent(link, event));
   }
 
   fetchPage(kind) {
-    return Observable
-      .ajax(this.hrefToAjax(kind))
-      .map(({ response }) => Object.assign(kind, { response }))
-      .catch(error => this.recoverIfResponse(kind, error));
+    return Observable::ajax(this.hrefToAjax(kind))
+      ::map(({ response }) => Object.assign(kind, { response }))
+      ::recover(error => this.recoverIfResponse(kind, error));
       // TODO: make this available via option?
       // .retryWhen(() => Observable.merge(
       //     Observable.fromEvent(window, 'online'),
@@ -204,11 +212,11 @@ export default C => class extends componentCore(C) {
     if (xhr && status && status > 400) {
       // Recover with error page returned from server.
       // NOTE: This assumes error page contains the same ids as the other pages...
-      return Observable.of(Object.assign(kind, { response: xhr.response }));
+      return Observable::of(Object.assign(kind, { response: xhr.response }));
     }
 
     // else
-    return Observable.of(Object.assign(kind, { error }));
+    return Observable::of(Object.assign(kind, { error }));
   }
 
   setupObservables() {
@@ -217,87 +225,87 @@ export default C => class extends componentCore(C) {
     this.push$$ = new Subject();
     this.hint$$ = new Subject();
 
-    const push$ = this.push$$.switch()
+    const push$ = this.push$$::switchAll()
       // TODO: This prevents a whole class of concurrency bugs,
       // This is not an issue for fast animations (and prevents accidential double tapping)
       // Ideally the UI is fully repsonsive at all times though..
       // Note that spamming the back/forward button is still possible (only affects `push$`)
-      .throttleTime(this.duration + 100);
+      ::throttleTime(this.duration + 100);
 
     const pop$ = this.bindPopstateEvent();
 
     // Definitive page change (i.e. either push or pop event)
-    this.page$ = Observable.merge(push$, pop$).share();
+    this.page$ = Observable::merge(push$, pop$)::share();
 
     // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
     // while a _definitive_ page load is going on => `pauser$` stream.
     // Needs to be deferred b/c of "cyclical" dependency.
-    const pauser$ = Observable.defer(() =>
-      Observable.merge(
+    const pauser$ = Observable::defer(() =>
+      Observable::merge(
         // A page change event means we want to pause prefetching
-        this.page$.map(() => true),
+        this.page$::map(() => true),
         // A render complete event means we want to resume prefetching
-        this.render$.map(() => false),
+        this.render$::map(() => false),
       )
         // Start with prefetching
-        .startWith(false),
+        ::startWith(false),
     );
 
     // The stream of hint (prefetch) events, possibly paused.
-    this.hint$ = pauseWith.call(this.hint$$.switch(), pauser$);
+    this.hint$ = this.hint$$::switchAll()::pauseWith(pauser$);
 
     // The stream of (pre-)fetch events.
     // Includes definitive page change events do deal with unexpected page changes.
-    this.prefetch$ = Observable.merge(this.hint$, this.page$)
-      .distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
-      .switchMap(kind => this.fetchPage(kind))
-      .startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
-      .share();
+    this.prefetch$ = Observable::merge(this.hint$, this.page$)
+      ::distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
+      ::switchMap(kind => this.fetchPage(kind))
+      ::startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
+      ::share();
 
     const response$ = this.page$
-      .do(this.onStart.bind(this))
-      .withLatestFrom(this.prefetch$)
-      .switchMap(this.getResponse.bind(this))
-      .share();
+      ::effect(::this.onStart)
+      ::withLatestFrom(this.prefetch$)
+      ::switchMap(::this.getResponse)
+      ::share();
 
     const [noError$, error$] = response$
-      .partition(({ error }) => error == null);
+      ::partition(({ error }) => error == null);
 
     this.render$ = noError$
-      .map(this.responseToContent.bind(this))
-      .catch((e, caught) => { this.onContentError(e); return caught; })
-      .do(this.onReady.bind(this))
-      .do(this.updateDOM.bind(this))
-      .do(this.resetScrollPostion.bind(this))
-      .do(this.onAfter.bind(this))
-      .catch((e, caught) => { this.onDOMError(e); return caught; })
+      ::map(::this.responseToContent)
+      ::recover((e, caught) => { this.onContentError(e); return caught; })
+      ::effect(::this.onReady)
+      ::effect(::this.updateDOM)
+      ::effect(::this.resetScrollPostion)
+      ::effect(::this.onAfter)
+      ::recover((e, caught) => { this.onDOMError(e); return caught; })
       // `share`ing the stream between the subscription below and `pauser$`.
-      .share();
+      ::share();
 
     this.render$
       // Renewing event listeners after DOM update/layout/painting is complete
       // HACK: don't use time, use outside observable instead?
-      .debounceTime(this.duration)
-      .do(this.renewEventListeners.bind(this))
+      ::debounceTime(this.duration)
+      ::effect(::this.renewEventListeners)
       .subscribe();
 
     // Add script tags one by one
     // This simulates the behavior of a fresh page load
     this.render$
-      .switchMap(this.reinsertScriptTags.bind(this))
-      .catch((e, caught) => { this.onScriptError(e); return caught; })
-      .do(this.onLoad.bind(this))
+      ::switchMap(::this.reinsertScriptTags)
+      ::recover((e, caught) => { this.onScriptError(e); return caught; })
+      ::effect(::this.onLoad)
       .subscribe();
 
     error$
-      .do(this.onFetchError.bind(this))
+      ::effect(::this.onFetchError)
       .subscribe();
 
     // Fire `progress` event when fetching takes longer than `this.duration`.
     this.page$
       // HACK: add some time, jtbs
-      .switchMap(() => Observable.timer(this.duration + 200).takeUntil(response$))
-      .do(this.onProgress.bind(this))
+      ::switchMap(() => Observable::timer(this.duration + 200)::takeUntil(response$))
+      ::effect(::this.onProgress)
       .subscribe();
 
     this.onLoad({});
@@ -311,22 +319,21 @@ export default C => class extends componentCore(C) {
 
     // Prefetch already complete, use result
     if (kind.href === prefetch.href) {
-      res = Observable.of(Object.assign(prefetch, kind));
+      res = Observable::of(Object.assign(prefetch, kind));
 
       if (kind.type === PUSH || !this.noPopDuration) {
         // HACK: add some extra time to prevent 'flickering'
         // ideally, we'd like to take an animation observable as input instead
-        res = res.delay(this.duration + 100);
+        res = res::delay(this.duration + 100);
       }
     // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
     } else {
-      res = this.prefetch$.take(1)
-        .map(fetch => Object.assign(fetch, kind));
+      res = this.prefetch$::first()::map(fetch => Object.assign(fetch, kind));
 
       if (kind.type === PUSH || !this.noPopDuration) {
         // HACK: add some extra time to prevent 'flickering'
         // ideally, we'd like to take an animation observable as input instead
-        res = res.zip(Observable.timer(this.duration + 100), x => x);
+        res = res::zipWith(Observable::timer(this.duration + 100), x => x);
       }
     }
 
@@ -368,7 +375,7 @@ export default C => class extends componentCore(C) {
     const scripts = [];
 
     content.forEach(docfrag =>
-      Array.prototype.forEach.call(docfrag.querySelectorAll(this.scriptSelector), (script) => {
+      docfrag.querySelectorAll(this.scriptSelector)::aForEach((script) => {
         const pair = [script, script.previousElementSibling];
         script.parentNode.removeChild(script);
         scripts.push(pair);
@@ -391,8 +398,8 @@ export default C => class extends componentCore(C) {
 
         ref.parentNode.insertBefore(script, ref.nextElementSibling);
       }) :
-      Observable.of({})
-        .do(() => {
+      Observable::of({})
+        ::effect(() => {
           ref.parentNode.insertBefore(script, ref.nextElementSibling);
         });
   }
@@ -400,11 +407,11 @@ export default C => class extends componentCore(C) {
   reinsertScriptTags(sponge) {
     const { scripts } = sponge;
 
-    if (scripts.length === 0) return Observable.of({});
+    if (scripts.length === 0) return Observable::of({});
 
-    return Observable.from(scripts)
-      .concatMap(this.insertScript)
-      .catch((error) => { throw Object.assign(sponge, { error }); });
+    return Observable::from(scripts)
+      ::concatMap(this.insertScript)
+      ::recover((error) => { throw Object.assign(sponge, { error }); });
 
     // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
     // const [script$, asyncScript$] = Observable.from(scripts)
@@ -444,10 +451,10 @@ export default C => class extends componentCore(C) {
 
   getContentFromDocumentFragment(documentFragment) {
     if (this.replaceIds.length > 0) {
-      return this.replaceIds.map(id => documentFragment.querySelector(`#${id}`));
+      return this.replaceIds.map(id => documentFragment.getElementById(id));
     }
 
-    return [documentFragment.querySelector(`#${this.el.id}`)];
+    return [documentFragment.getElementById(this.el.id)];
   }
 
   replaceContent(content) {
@@ -459,15 +466,14 @@ export default C => class extends componentCore(C) {
   }
 
   replaceContentByIds(elements) {
-    const oldElements = this.replaceIds
-      .map(id => document.getElementById(id));
-
-    Array.prototype.forEach.call(oldElements, (oldElement) => {
-      oldElement.parentNode.replaceChild(elements.shift(), oldElement);
-    });
+    this.replaceIds
+      .map(id => document.getElementById(id))
+      .forEach((oldElement) => {
+        oldElement.parentNode.replaceChild(elements.shift(), oldElement);
+      });
   }
 
-  replaceContentWholesale(content) {
+  replaceContentWholesale([content]) {
     this.el.innerHTML = content.innerHTML;
   }
 

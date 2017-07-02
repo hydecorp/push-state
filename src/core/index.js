@@ -58,7 +58,6 @@ import { delay } from 'rxjs/operator/delay';
 import { distinctUntilKeyChanged } from 'rxjs/operator/distinctUntilKeyChanged';
 import { _do as effect } from 'rxjs/operator/do';
 import { filter } from 'rxjs/operator/filter';
-import { first } from 'rxjs/operator/first';
 import { map } from 'rxjs/operator/map';
 import { mergeMap } from 'rxjs/operator/mergeMap';
 import { partition } from 'rxjs/operator/partition';
@@ -66,6 +65,7 @@ import { share } from 'rxjs/operator/share';
 import { startWith } from 'rxjs/operator/startWith';
 import { _switch as switchAll } from 'rxjs/operator/switch';
 import { switchMap } from 'rxjs/operator/switchMap';
+import { take } from 'rxjs/operator/take';
 import { takeUntil } from 'rxjs/operator/takeUntil';
 import { throttleTime } from 'rxjs/operator/throttleTime';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
@@ -83,7 +83,8 @@ import {
 
 import { PUSH, HINT, POP } from './kind';
 
-const { forEach: aForEach } = Array.prototype;
+const { forEach } = Array.prototype;
+const assign = ::Object.assign;
 
 DocumentFragment.prototype.getElementById = DocumentFragment.prototype.getElementById ||
   function getElementById(id) { this.querySelector(`#${id}`); };
@@ -120,7 +121,7 @@ function resetScrollPostion(sponge) {
 }
 
 function saveScrollPosition(state) {
-  return Object.assign(state, {
+  return assign(state, {
     scrollTop: getScrollTop(),
     scrollHeight: getScrollHeight(),
   });
@@ -210,17 +211,17 @@ function recoverIfResponse(kind, error) {
   if (xhr && status && status > 400) {
     // Recover with error page returned from server.
     // NOTE: This assumes error page contains the same ids as the other pages...
-    return Observable::of(Object.assign(kind, { response: xhr.response }));
+    return Observable::of(assign(kind, { response: xhr.response }));
   }
 
   // else
-  return Observable::of(Object.assign(kind, { error }));
+  return Observable::of(assign(kind, { error }));
 }
 
 
 function fetchPage(kind) {
   return Observable::ajax(hrefToAjax(kind))
-    ::map(({ response }) => Object.assign(kind, { response }))
+    ::map(({ response }) => assign(kind, { response }))
     ::recover(error => this::recoverIfResponse(kind, error));
     // TODO: make this available via option?
     // .retryWhen(() => Observable.merge(
@@ -234,7 +235,7 @@ function getResponse([kind, prefetch]) {
 
   // Prefetch already complete, use result
   if (kind.href === prefetch.href) {
-    res = Observable::of(Object.assign(prefetch, kind));
+    res = Observable::of(assign(prefetch, kind));
 
     if (kind.type === PUSH || !this.instantPop) {
       // HACK: add some extra time to prevent 'flickering'
@@ -243,7 +244,7 @@ function getResponse([kind, prefetch]) {
     }
   // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
   } else {
-    res = this.prefetch$::first()::map(fetch => Object.assign(fetch, kind));
+    res = this.prefetch$::take(1)::map(fetch => assign(fetch, kind));
 
     if (kind.type === PUSH || !this.instantPop) {
       // HACK: add some extra time to prevent 'flickering'
@@ -271,7 +272,7 @@ function tempRemoveScriptTags(content) {
   const scripts = [];
 
   content.forEach(docfrag =>
-    docfrag.querySelectorAll(this.scriptSelector)::aForEach((script) => {
+    docfrag.querySelectorAll(this.scriptSelector)::forEach((script) => {
       const pair = [script, script.previousElementSibling];
       script.parentNode.removeChild(script);
       scripts.push(pair);
@@ -307,7 +308,7 @@ function reinsertScriptTags(sponge) {
 
   return Observable::from(scripts)
     ::concatMap(insertScript)
-    ::recover((error) => { throw Object.assign(sponge, { error }); });
+    ::recover((error) => { throw assign(sponge, { error }); });
 
   // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
   // const [script$, asyncScript$] = Observable.from(scripts)
@@ -327,12 +328,12 @@ function responseToContent(sponge) {
   const content = this::getContentFromFragment(fragment);
 
   if (content.some(x => x == null)) {
-    throw Object.assign(sponge, { title, content });
+    throw assign(sponge, { title, content });
   }
 
   const scripts = this::tempRemoveScriptTags(content);
 
-  return Object.assign(sponge, { title, content, scripts });
+  return assign(sponge, { title, content, scripts });
 }
 
 function bindEvents() {
@@ -372,7 +373,7 @@ function updateDOM(sponge) {
     this.titleElement.textContent = title;
     this::replaceContent(content);
   } catch (error) {
-    throw Object.assign(sponge, { error });
+    throw assign(sponge, { error });
   }
 }
 

@@ -236,7 +236,7 @@ function getResponse([kind, prefetch]) {
   if (kind.href === prefetch.href) {
     res = Observable::of(Object.assign(prefetch, kind));
 
-    if (kind.type === PUSH || !this.noPopDuration) {
+    if (kind.type === PUSH || !this.instantPop) {
       // HACK: add some extra time to prevent 'flickering'
       // ideally, we'd like to take an animation observable as input instead
       res = res::delay(this.duration + 100);
@@ -245,7 +245,7 @@ function getResponse([kind, prefetch]) {
   } else {
     res = this.prefetch$::first()::map(fetch => Object.assign(fetch, kind));
 
-    if (kind.type === PUSH || !this.noPopDuration) {
+    if (kind.type === PUSH || !this.instantPop) {
       // HACK: add some extra time to prevent 'flickering'
       // ideally, we'd like to take an animation observable as input instead
       res = res::zipWith(Observable::timer(this.duration + 100), x => x);
@@ -535,7 +535,7 @@ export default C => class extends componentCore(C) {
       hrefRegex: null,
       blacklist: '.no-push-state',
       duration: 0,
-      noPopDuration: true,
+      instantPop: true,
     };
   }
 

@@ -426,8 +426,11 @@ function onScriptError(err) {
 function setupObservables() {
   // See `bindEvents`
   // TODO: Possible without subjects?
+  // UPDATE: Probably yes using `repeatWhen`
   this.push$$ = new Subject();
   this.hint$$ = new Subject();
+
+  const temp = {};
 
   const push$ = this.push$$::switchAll()
     // TODO: This prevents a whole class of concurrency bugs,
@@ -439,7 +442,7 @@ function setupObservables() {
   const pop$ = this::bindPopstateEvent();
 
   // Definitive page change (i.e. either push or pop event)
-  this.page$ = Observable::merge(push$, pop$)::share();
+  temp.page$ = Observable::merge(push$, pop$)::share();
 
   // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
   // while a _definitive_ page load is going on => `pauser$` stream.
@@ -447,20 +450,20 @@ function setupObservables() {
   const pauser$ = Observable::defer(() =>
     Observable::merge(
       // A page change event means we want to pause prefetching
-      this.page$::map(() => true),
+      temp.page$::map(() => true),
       // A render complete event means we want to resume prefetching
-      this.render$::map(() => false),
+      temp.render$::map(() => false),
     )
       // Start with prefetching
       ::startWith(false),
   );
 
   // The stream of hint (prefetch) events, possibly paused.
-  this.hint$ = this.hint$$::switchAll()::pauseWith(pauser$);
+  temp.hint$ = this.hint$$::switchAll()::pauseWith(pauser$);
 
   // The stream of (pre-)fetch events.
   // Includes definitive page change events do deal with unexpected page changes.
-  this.prefetch$ = Observable::merge(this.hint$, this.page$)
+  temp.prefetch$ = Observable::merge(temp.hint$, temp.page$)
     ::distinctUntilKeyChanged('href') // Don't abort a request if the user "jiggles" over a link
     ::switchMap(this::fetchPage)
     ::startWith({}) // Start with some value so `withLatestFrom` below doesn't "block"
@@ -475,7 +478,7 @@ function setupObservables() {
   const [noError$, error$] = response$
     ::partition(({ error }) => error == null);
 
-  this.render$ = noError$
+  temp.render$ = noError$
     ::map(this::responseToContent)
     ::recover((e, caught) => { this::onContentError(e); return caught; })
     ::effect(this::onReady)
@@ -486,7 +489,7 @@ function setupObservables() {
     // `share`ing the stream between the subscription below and `pauser$`.
     ::share();
 
-  this.render$
+  temp.render$
     // Renewing event listeners after DOM update/layout/painting is complete
     // HACK: don't use time, use outside observable instead?
     ::debounceTime(this.duration)
@@ -495,7 +498,7 @@ function setupObservables() {
 
   // Add script tags one by one
   // This simulates the behavior of a fresh page load
-  this.render$
+  temp.render$
     ::switchMap(this::reinsertScriptTags)
     ::recover((e, caught) => { this::onScriptError(e); return caught; })
     ::effect(this::onLoad)
@@ -506,7 +509,7 @@ function setupObservables() {
     .subscribe();
 
   // Fire `progress` event when fetching takes longer than `this.duration`.
-  this.page$
+  temp.page$
     // HACK: add some time, jtbs
     ::switchMap(() => Observable::timer(this.duration + 200)::takeUntil(response$))
     ::effect(this::onProgress)

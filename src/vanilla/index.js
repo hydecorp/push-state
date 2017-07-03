@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import pushStateCore from '../core';
+import pushStateMixin from '../core';
 
-export default class PushState extends pushStateCore() {
+export default class PushState extends pushStateMixin() {
   constructor(el, props) {
     super();
     this.setupComponent(el, props);

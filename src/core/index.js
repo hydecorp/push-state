@@ -38,6 +38,8 @@ no-else-return,
 //   'queryselector',
 // ];
 
+import { componentMixin } from 'y-component';
+
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
@@ -70,8 +72,6 @@ import { takeUntil } from 'rxjs/operator/takeUntil';
 import { throttleTime } from 'rxjs/operator/throttleTime';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zipWith } from 'rxjs/operator/zip';
-
-import componentCore from 'y-component/src/component-core';
 
 import {
   shouldLoadAnchor,
@@ -521,8 +521,7 @@ function setupObservables() {
   this::bindEvents();
 }
 
-// ~ mixin pushStateCore with componentCore { ...
-export default C => class extends componentCore(C) {
+export default C => class extends componentMixin(C) {
 
   // @override
   getComponentName() {

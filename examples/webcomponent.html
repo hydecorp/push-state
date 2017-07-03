@@ -3,9 +3,11 @@
   <head>
     <!-- @include examples/includes/head-content.html -->
 
+    <script src="https://unpkg.com/@webcomponents/webcomponentsjs"></script>
+    <link rel="import" href="dist/webcomponent/y-push-state.html">
   </head>
   <body>
-    <y-push-state id="push-state">
+    <y-push-state id="pushState">
       <aside>
         <!-- @include examples/includes/drawer-content.html -->
       </aside>
@@ -15,16 +17,7 @@
     </y-push-state>
 
     <script>
-      const elem = document.getElementById('push-state');
-
-      function setup() {
-        elem.startHistory();
-        elem.removeEventListener('y-push-state-attached', setup);
-      }
-
-      elem.addEventListener('y-push-state-attached', setup);
+      pushState.startHistory();
     </script>
-
-    <link rel="import" href="dist/webcomponent/y-push-state.html">
   </body>
 </html>

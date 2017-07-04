@@ -13,13 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-/* eslint-disable
-import/no-extraneous-dependencies,
-import/no-unresolved,
-import/extensions,
-no-else-return,
-*/
-
 // const JS_FEATURES = [
 //   'fn/array/for-each',
 //   'fn/function/bind',

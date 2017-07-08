@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Florian Klampfer
+// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-export const PUSH = 'push';
-export const HINT = 'hint';
-export const POP = 'pop';
+import { customElementMixin, CustomElement } from 'y-component/src/custom-element';
+import { pushStateMixin } from '../mixin';
+
+import template from './template.ejs'; // eslint-disable-line
+
+function fragmentFromString(strHTML) {
+  return document.createRange().createContextualFragment(strHTML);
+}
+
+export class DrawerHTMLElement extends customElementMixin(pushStateMixin(CustomElement)) {
+  // @override
+  getTemplateInstance() { return fragmentFromString(template); }
+}

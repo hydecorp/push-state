@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Florian Klampfer
+// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,26 +13,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import HTMLYPushStateElement from './y-push-state';
+import { defineJQueryComponent } from 'y-component/src/define-jquery-component';
 
-const templateV1 = `
-  <!-- @include ./template-v1.html -->
-`;
+import { pushStateMixin } from '../mixin';
+import '../style.css';
 
-const templateV0 = `
-  <!-- @include ./template-v0.html -->
-`;
-
-function fragmentFromString(strHTML) {
-  return document.createRange().createContextualFragment(strHTML);
-}
-
-export default class extends HTMLYPushStateElement {
-  getTemplateInstance(version) {
-    switch (version) {
-      case 'v1': return fragmentFromString(templateV1);
-      case 'v0': return fragmentFromString(templateV0);
-      default: throw Error();
-    }
+defineJQueryComponent('pushState', class extends pushStateMixin() {
+  constructor(el, props) {
+    super();
+    this.setupComponent(el, props);
   }
-}
+
+  // @override
+  setupDOM(el) {
+    // const $el = $(el);
+
+    // TODO: ....
+
+    return el;
+  }
+});

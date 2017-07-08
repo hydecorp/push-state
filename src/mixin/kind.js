@@ -13,17 +13,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { pushStateMixin } from '../mixin';
-
-export class PushState extends pushStateMixin() {
-  constructor(el, props) {
-    super();
-    this.setupComponent(el, props);
-  }
-
-  // @override
-  setupDOM(el) {
-    if (!el) throw Error('No element provided');
-    return el;
-  }
-}
+export const PUSH = 'push';
+export const HINT = 'hint';
+export const POP = 'pop';

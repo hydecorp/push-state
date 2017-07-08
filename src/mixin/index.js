@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Florian Klampfer
+// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 //   'queryselector',
 // ];
 
-import { componentMixin } from 'y-component';
+import { componentMixin } from 'y-component/src/component';
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -512,38 +512,43 @@ function setupObservables() {
   this::bindEvents();
 }
 
-export default C => class extends componentMixin(C) {
+export function pushStateMixin(C) {
+  return class extends componentMixin(C) {
 
-  // @override
-  getComponentName() {
-    return 'y-push-state';
-  }
+    // @override
+    getComponentName() {
+      return 'y-push-state';
+    }
 
-  // @override
-  defaults() {
-    return {
-      replaceIds: [],
-      linkSelector: 'a[href]',
-      scriptSelector: 'script',
-      scrollRestoration: false,
-      hrefRegex: null,
-      blacklist: '.no-push-state',
-      duration: 0,
-      instantPop: true,
-    };
-  }
+    // @override
+    defaults() {
+      return {
+        replaceIds: [],
+        linkSelector: 'a[href]',
+        scriptSelector: 'script',
+        scrollRestoration: false,
+        hrefRegex: null,
+        blacklist: '.no-push-state',
+        duration: 0,
+        instantPop: true,
+      };
+    }
 
-  // @override
-  sideEffects() {
-    return {};
-  }
+    // @override
+    sideEffects() {
+      return {};
+    }
 
-  // @override
-  startHistory() {
-    this::checkPreCondition();
-    this::setupScrollRestoration();
-    this::cacheTitleElement();
-    this::setupObservables();
-    return this;
-  }
-};
+    // @override
+    setupComponent(el, props) {
+      super.setupComponent(el, props);
+
+      this::checkPreCondition();
+      this::setupScrollRestoration();
+      this::cacheTitleElement();
+      this::setupObservables();
+
+      return this;
+    }
+  };
+}

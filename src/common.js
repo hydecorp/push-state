@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Florian Klampfer
+// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -97,14 +97,14 @@ export function querySelectorInv(el, selector) {
  * @param   {string}    blacklist - jquery selector
  */
 export function shouldLoadAnchor(anchor, blacklist, hrefRegex) {
-  const href = anchor.href;
+  const { href, target } = anchor;
   // URL will only be loaded if it's not an external link, hash, or
   // blacklisted
   return (
     !isExternal(href) &&
     !isHash(href) &&
     !matches(anchor, blacklist) &&
-    anchor.target === '' && (
+    target === '' && (
       hrefRegex === null ||
       href.search(hrefRegex) !== -1
     )

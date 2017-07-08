@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Florian Klampfer
+// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,12 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { customElementMixin, CustomElement } from 'y-component';
-import pushStateMixin from '../core';
+import { customElementMixin, CustomElement } from 'y-component/src/custom-element';
+import { pushStateMixin } from '../mixin';
 
-export default class extends customElementMixin(pushStateMixin(CustomElement)) {
-  // @override
-  setupDOM(el) { // prevents shadow DOM creation
-    return el;
-  }
+if ('customElements' in window) {
+  customElements.define('y-push-state', customElementMixin(pushStateMixin(CustomElement)));
+} else if (process.env.DEBUG) {
+  console.warn('Couldn\'t register y-drawer component. Did you forget to include the custom elements polyfill?');
 }

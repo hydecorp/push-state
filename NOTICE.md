@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Licenses
-Parts of software are provided under separate licenses.
+Parts of this program are provided under separate licenses.
 
 ### smoothState
 This software also uses portions of the smoothState project,

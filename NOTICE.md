@@ -39,6 +39,15 @@ No `NOTICE` file was provided.
 Find a copy of the [Apache License](licenses/Apache-2.0.md)
 as part of this distribution.
 
+### corejs
+This software also uses portions of the corejs project, which is
+MIT licensed with the following copyright:
+
+> Copyright (c) 2014-2016 Denis Pushkarev
+
+Find a copy of the [MIT license](licenses/MIT.md)
+as part of this distribution.
+
 ### y-component
 This software also uses portions of the y-component project,
 which is MIT licensed with the following copyright
@@ -52,7 +61,7 @@ as part of this distribution.
 This software also uses portions of the camelcase project,
 which is MIT licensed with the following copyright
 
-> Copyright (c) Sindre Sorhus \<sindresorhus@gmail.com\> (sindresorhus.com)
+> Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
 
 Find a copy of the [MIT license](licenses/MIT.md)
 as part of this distribution.
@@ -61,7 +70,7 @@ as part of this distribution.
 This software also uses portions of the decamelize project,
 which is MIT licensed with the following copyright
 
-> Copyright (c) Sindre Sorhus \<sindresorhus@gmail.com\> (sindresorhus.com)
+> Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
 
 Find a copy of the [MIT license](licenses/MIT.md)
 as part of this distribution.

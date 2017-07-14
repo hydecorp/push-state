@@ -34,5 +34,8 @@ node_modules
 _site
 .sass-cache
 
-# Build
+react
+
+# exclude dist from git, not npm
 dist
+lib

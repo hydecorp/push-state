@@ -13,16 +13,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { pushStateMixin } from '../mixin';
+import { VanillaComponent, setupDOM } from 'y-component/src/vanilla';
+import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
+// import '../style.css';
 
-export class PushState extends pushStateMixin() {
-  constructor(el, props) {
-    super();
-    this.setupComponent(el, props);
-  }
+export const MODERNIZR_TESTS = [
+  ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,
+];
 
+export class PushState extends pushStateMixin(VanillaComponent) {
   // @override
-  setupDOM(el) {
+  [setupDOM](el) {
     if (!el) throw Error('No element provided');
     return el;
   }

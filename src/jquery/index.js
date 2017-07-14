@@ -13,23 +13,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { defineJQueryComponent } from 'y-component/src/define-jquery-component';
+import { JQueryComponent, defineJQueryComponent, setupDOM }
+from 'y-component/src/define-jquery-component';
 
-import { pushStateMixin } from '../mixin';
-import '../style.css';
+import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
+// import '../style.css';
 
-defineJQueryComponent('pushState', class extends pushStateMixin() {
-  constructor(el, props) {
-    super();
-    this.setupComponent(el, props);
-  }
+export const MODERNIZR_TESTS = [
+  ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,
+];
 
-  // @override
-  setupDOM(el) {
-    // const $el = $(el);
+// TODO: rename? check how jQuery UI does it
+export const pushStateJQueryPlugin = defineJQueryComponent('pushState',
+  class extends pushStateMixin(JQueryComponent) {
+    /* @override */
+    [setupDOM](el) {
+      /* const $el = $(el); */
 
-    // TODO: ....
+      // TODO: ....
 
-    return el;
-  }
-});
+      return el;
+    }
+  },
+);

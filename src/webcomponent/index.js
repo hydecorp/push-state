@@ -19,7 +19,7 @@ import {
   getTemplate,
   fragmentFromString,
   MODERNIZR_TESTS as CUSTOM_ELEMENT_MODERNIZER_TESTS,
-} from 'y-component/src/custom-element';
+} from 'hy-component/src/custom-element';
 
 import { pushStateMixin, MODERNIZR_TESTS as DRAWER_MIXIN_MODERNIZR_TESTS } from '../mixin';
 

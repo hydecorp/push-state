@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { JQueryComponent, defineJQueryComponent, setupDOM }
-from 'y-component/src/define-jquery-component';
+from 'hy-component/src/define-jquery-component';
 
 import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
 // import '../style.css';

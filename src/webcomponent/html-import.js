@@ -17,7 +17,7 @@ import {
   customElementMixin,
   CustomElement,
   MODERNIZR_TESTS as CUSTOM_ELEMENT_MODERNIZER_TESTS,
-} from 'y-component/src/custom-element';
+} from 'hy-component/src/custom-element';
 
 import { pushStateMixin, MODERNIZR_TESTS as DRAWER_MIXIN_MODERNIZR_TESTS } from '../mixin';
 
@@ -28,9 +28,9 @@ export const MODERNIZR_TESTS = [
 ];
 
 if ('customElements' in window) {
-  customElements.define('y-push-state', class extends customElementMixin(pushStateMixin(CustomElement)) {
+  customElements.define('hy-push-state', class extends customElementMixin(pushStateMixin(CustomElement)) {
     static get observedAttributes() { return this.getObservedAttributes(); }
   });
 } else if (process.env.DEBUG) {
-  console.warn('Couldn\'t register y-drawer component. Did you forget to include the custom elements polyfill?');
+  console.warn('Couldn\'t register hy-drawer component. Did you forget to include the custom elements polyfill?');
 }

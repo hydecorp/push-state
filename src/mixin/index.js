@@ -18,7 +18,7 @@ import 'core-js/fn/function/bind';
 import 'core-js/fn/object/assign';
 
 import { componentMixin, setup, fire,
-  MODERNIZR_TESTS as COMPONENT_MODERNIZER_TESTS } from 'y-component/src/component';
+  MODERNIZR_TESTS as COMPONENT_MODERNIZER_TESTS } from 'hy-component/src/component';
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -368,43 +368,43 @@ function onStart(sponge) {
     window.history.pushState({ id: this.componentName }, '', href);
   }
 
-  this[fire]('start', { detail: sponge });
+  this[fire]('start', sponge);
 }
 
 function onReady(sponge) {
-  this[fire]('ready', { detail: sponge });
+  this[fire]('ready', sponge);
 }
 
 function onAfter(sponge) {
-  this[fire]('after', { detail: sponge });
+  this[fire]('after', sponge);
 }
 
 function onProgress(sponge) {
-  this[fire]('progress', { detail: sponge });
+  this[fire]('progress', sponge);
 }
 
 // function onRetry(sponge) {
-//   this[fire]('retry', { detail: sponge });
+//   this[fire]('retry', sponge);
 // }
 
 function onLoad(x) {
-  this[fire]('load', { detail: x });
+  this[fire]('load', x);
 }
 
 function onFetchError(err) {
-  this[fire]('fetch-error', { detail: err });
+  this[fire]('fetch-error', err);
 }
 
 function onContentError(err) {
-  this[fire]('content-error', { detail: err });
+  this[fire]('content-error', err);
 }
 
 function onDOMError(err) {
-  this[fire]('dom-error', { detail: err });
+  this[fire]('dom-error', err);
 }
 
 function onScriptError(err) {
-  this[fire]('script-error', { detail: err });
+  this[fire]('script-error', err);
 }
 
 function setupObservables() {
@@ -413,6 +413,23 @@ function setupObservables() {
   // UPDATE: Probably yes using `repeatWhen`
   this.push$$ = new Subject();
   this.hint$$ = new Subject();
+
+  // create an observer instance
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      console.log(mutation);
+    });
+  });
+
+  // pass in the target node, as well as the observer options
+  observer.observe(this.el, {
+    attributes: true,
+    childList: true,
+    characterData: true,
+  });
+
+  // later, you can stop observing
+  // observer.disconnect();
 
   const push$ = this.push$$::switchAll()
     // TODO: This prevents a whole class of concurrency bugs,
@@ -506,7 +523,7 @@ function setupObservables() {
 
 export function pushStateMixin(C) {
   return class extends componentMixin(C) {
-    static get componentName() { return 'y-push-state'; }
+    static get componentName() { return 'hy-push-state'; }
 
     static get defaults() {
       return {

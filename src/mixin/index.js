@@ -36,20 +36,22 @@ import { ajax } from 'rxjs/observable/dom/ajax';
 import { _catch as recover } from 'rxjs/operator/catch';
 import { concatMap } from 'rxjs/operator/concatMap';
 import { debounceTime } from 'rxjs/operator/debounceTime';
-import { delay } from 'rxjs/operator/delay';
+// import { delay } from 'rxjs/operator/delay';
+// import { delayWhen } from 'rxjs/operator/delayWhen';
 import { distinctUntilKeyChanged } from 'rxjs/operator/distinctUntilKeyChanged';
 import { _do as effect } from 'rxjs/operator/do';
 import { filter } from 'rxjs/operator/filter';
 import { map } from 'rxjs/operator/map';
+import { mapTo } from 'rxjs/operator/mapTo';
 import { mergeMap } from 'rxjs/operator/mergeMap';
-import { partition } from 'rxjs/operator/partition';
+// import { partition } from 'rxjs/operator/partition';
 import { share } from 'rxjs/operator/share';
 import { startWith } from 'rxjs/operator/startWith';
 import { _switch as switchAll } from 'rxjs/operator/switch';
 import { switchMap } from 'rxjs/operator/switchMap';
 import { take } from 'rxjs/operator/take';
 import { takeUntil } from 'rxjs/operator/takeUntil';
-import { throttleTime } from 'rxjs/operator/throttleTime';
+// import { throttleTime } from 'rxjs/operator/throttleTime';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zipWith } from 'rxjs/operator/zip';
 
@@ -73,6 +75,8 @@ const PUSH = 'push';
 const HINT = 'hint';
 const POP = 'pop';
 
+const DEJITTER = 100;
+
 const { forEach } = Array.prototype;
 const assign = ::Object.assign;
 
@@ -82,6 +86,10 @@ DocumentFragment.prototype.getElementById = DocumentFragment.prototype.getElemen
 function pauseWith(pauser$) {
   if (process.env.DEBUG && !pauser$) throw Error();
   return pauser$::switchMap(paused => (paused ? Observable::never() : this));
+}
+
+function waitUntil(observable) {
+  return this::zipWith(observable, x => x);
 }
 
 function checkPreCondition() {
@@ -214,30 +222,22 @@ function fetchPage(kind) {
     //   .do(this.onRetry.bind(this, kind)));
 }
 
+function getFetch(kind, prefetch, prefetch$) {
+  return kind.href === prefetch.href ? Observable::of(prefetch) : prefetch$::take(1);
+}
+
+function getAnimationDuration() {
+  return this.duration === 'manual' ?
+    this.ready$ :
+    Observable::timer(this.duration + DEJITTER);
+}
+
 function getResponse([kind, prefetch]) {
-  let res;
-
-  // Prefetch already complete, use result
-  if (kind.href === prefetch.href) {
-    res = Observable::of(assign(prefetch, kind));
-
-    if (kind.type === PUSH || !this.instantPop) {
-      // HACK: add some extra time to prevent 'flickering'
-      // ideally, we'd like to take an animation observable as input instead
-      res = res::delay(this.duration + 100);
-    }
-  // Prefetch in progress, use next result (this is why `prefetch$` had to be `share`d)
-  } else {
-    res = this.prefetch$::take(1)::map(fetch => assign(fetch, kind));
-
-    if (kind.type === PUSH || !this.instantPop) {
-      // HACK: add some extra time to prevent 'flickering'
-      // ideally, we'd like to take an animation observable as input instead
-      res = res::zipWith(Observable::timer(this.duration + 100), x => x);
-    }
-  }
-
-  return res;
+  return getFetch(kind, prefetch, this.prefetch$)
+    ::map(fetch => assign(fetch, kind))
+    ::waitUntil(kind.type === PUSH || !this.instantPop ?
+      this::getAnimationDuration() :
+      Observable::of(true));
 }
 
 function getTitleFromFragment(fragment) {
@@ -391,13 +391,13 @@ function onLoad(x) {
   this[fire]('load', x);
 }
 
-function onFetchError(err) {
-  this[fire]('fetch-error', err);
-}
-
-function onContentError(err) {
-  this[fire]('content-error', err);
-}
+// function onFetchError(err) {
+//   this[fire]('fetch-error', err);
+// }
+//
+// function onContentError(err) {
+//   this[fire]('content-error', err);
+// }
 
 function onDOMError(err) {
   this[fire]('dom-error', err);
@@ -410,33 +410,34 @@ function onScriptError(err) {
 function setupObservables() {
   // See `bindEvents`
   // TODO: Possible without subjects?
-  // UPDATE: Probably yes using `repeatWhen`
   this.push$$ = new Subject();
   this.hint$$ = new Subject();
+  this.fready$ = new Subject();
+  this.ready$ = this.fready$::share();
 
-  // create an observer instance
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      console.log(mutation);
-    });
-  });
-
-  // pass in the target node, as well as the observer options
-  observer.observe(this.el, {
-    attributes: true,
-    childList: true,
-    characterData: true,
-  });
+  // // create an observer instance
+  // const observer = new MutationObserver((mutations) => {
+  //   mutations.forEach((mutation) => {
+  //     console.log(mutation);
+  //   });
+  // });
+  //
+  // // pass in the target node, as well as the observer options
+  // observer.observe(this.el, {
+  //   attributes: true,
+  //   childList: true,
+  //   characterData: true,
+  // });
 
   // later, you can stop observing
   // observer.disconnect();
 
-  const push$ = this.push$$::switchAll()
+  const push$ = this.push$$::switchAll();
     // TODO: This prevents a whole class of concurrency bugs,
     // This is not an issue for fast animations (and prevents accidential double tapping)
     // Ideally the UI is fully repsonsive at all times though..
     // Note that spamming the back/forward button is still possible (only affects `push$`)
-    ::throttleTime(this.duration + 100);
+    // ::throttleTime(this.duration + DEJITTER); // TODO: generalize
 
   const pop$ = this::bindPopstateEvent();
 
@@ -447,14 +448,13 @@ function setupObservables() {
   // while a _definitive_ page load is going on => `pauser$` stream.
   // Needs to be deferred b/c of "cyclical" dependency.
   const pauser$ = Observable::defer(() =>
-    Observable::merge(
+      Observable::merge(
         // A page change event means we want to pause prefetching
-        this.page$::map(() => true),
+        this.page$::mapTo(true),
         // A render complete event means we want to resume prefetching
-        this.render$::map(() => false))
-      // Start with prefetching
-      ::startWith(false),
-  );
+        this.render$::mapTo(false)))
+    // Start with prefetching
+    ::startWith(false);
 
   // The stream of hint (prefetch) events, possibly paused.
   this.hint$ = this.hint$$::switchAll()::pauseWith(pauser$);
@@ -469,21 +469,15 @@ function setupObservables() {
     ::startWith({})
     ::share();
 
-  const response$ = this.page$
+  this.render$ = this.page$
     ::effect(this::onStart)
     ::withLatestFrom(this.prefetch$)
     ::switchMap(this::getResponse)
-    ::share();
-
-  const [noError$, error$] = response$
-    ::partition(({ error }) => error == null);
-
-  this.render$ = noError$
     ::map(this::responseToContent)
-    ::recover((e, caught) => { this::onContentError(e); return caught; })
     ::effect(this::onReady)
     ::effect(this::updateDOM)
     ::effect(this::resetScrollPostion)
+    // ::delay(50)
     ::effect(this::onAfter)
     ::recover((e, caught) => { this::onDOMError(e); return caught; })
     // `share`ing the stream between the subscription below and `pauser$`.
@@ -492,7 +486,7 @@ function setupObservables() {
   this.render$
     // Renewing event listeners after DOM update/layout/painting is complete
     // HACK: don't use time, use outside observable instead?
-    ::debounceTime(this.duration)
+    ::debounceTime(500)
     ::effect(this::bindEvents)
     .subscribe();
 
@@ -504,14 +498,10 @@ function setupObservables() {
     ::effect(this::onLoad)
     .subscribe();
 
-  error$
-    ::effect(this::onFetchError)
-    .subscribe();
-
   // Fire `progress` event when fetching takes longer than `this.duration`.
   this.page$
     // HACK: add some time, jtbs
-    ::switchMap(() => Observable::timer(this.duration + 200)::takeUntil(response$))
+    ::switchMap(() => this::getAnimationDuration()::takeUntil(this.render$))
     ::effect(this::onProgress)
     .subscribe();
 
@@ -552,6 +542,14 @@ export function pushStateMixin(C) {
       this::setupObservables();
 
       return this;
+    }
+
+    _ready1() {
+      this.fready$.next(true);
+    }
+
+    _ready2() {
+      // this.fready$.next(false);
     }
   };
 }

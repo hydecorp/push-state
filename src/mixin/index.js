@@ -124,16 +124,16 @@ function resetScrollPostion(sponge) {
 }
 
 function saveScrollPosition(state) {
-  return assign(state, {
+  return this.scrollRestoration ? assign(state, {
     scrollTop: getScrollTop(),
     scrollHeight: getScrollHeight(),
-  });
+  }) : state;
 }
 
 function updateHistoryState() {
-  let state = history.state || { id: this.componentName };
-  state = this.scrollRestoration ? saveScrollPosition(state) : state;
-  history.replaceState(state, document.title, window.location.href);
+  const state = this::saveScrollPosition(history.state || { id: this.el.id });
+  // console.log('replaceState', window.location.href);
+  history.replaceState(state, document.title, window.location);
 }
 
 function setupScrollRestoration() {
@@ -149,7 +149,7 @@ function cacheTitleElement() {
   this.titleElement = document.querySelector('title') || {};
 }
 
-// URL will only be loaded if it's not an external link, hash, `<a target="_blank"/>`,
+// URL will only be loaded if it's not an external link, hash, `_blank` target (or similar),
 // or blacklisted.
 function shouldLoadAnchor(anchor, url, blacklist, hrefRegex) {
   const { target } = anchor;
@@ -168,22 +168,11 @@ function isPageChangeEvent(kind) {
   return !metaKey && !ctrlKey && this::isPageChangeAnchor(kind);
 }
 
-function bindPopstateEvent() {
-  return Observable::fromEvent(window, 'popstate')
-    ::filter(() => window.history.state != null);
-    ::map(event => ({
-      type: POP,
-      href: window.location.href,
-      url: new URL(window.location),
-      event,
-    }));
-}
-
-function hrefToAjax({ href }) {
+function hrefToAjax({ url }) {
   return {
     method: 'GET',
-    url: href,
-    responseType: 'text',
+    responseType: 'text', // TODO: what was the reason for this again?
+    url,
   };
 }
 
@@ -212,8 +201,8 @@ function fetchPage(kind) {
     //   .do(this.onRetry.bind(this, kind)));
 }
 
-function getFetch(kind, prefetch, prefetch$) {
-  return kind.href === prefetch.href ? Observable::of(prefetch) : prefetch$::take(1);
+function getFetch({ url: { href } }, prefetch, prefetch$) {
+  return href === prefetch.url.href ? Observable::of(prefetch) : prefetch$::take(1);
 }
 
 function getAnimationDuration() {
@@ -332,10 +321,10 @@ function replaceContent(content) {
 
 function updateDOM(sponge) {
   try {
-    const { href, title, content } = sponge;
+    const { url, title, content } = sponge;
 
     if (sponge.type === PUSH) {
-      window.history.replaceState({ id: this.componentName }, title, href);
+      window.history.replaceState({ id: this.el.id }, title, url);
     }
 
     this.titleElement.textContent = title;
@@ -346,10 +335,10 @@ function updateDOM(sponge) {
 }
 
 function onStart(sponge) {
-  const { href } = sponge;
+  const { url } = sponge;
 
   if (sponge.type === PUSH) {
-    window.history.pushState({ id: this.componentName }, '', href);
+    window.history.pushState({ id: this.el.id }, '', url);
   }
 
   this[fire]('start', sponge);
@@ -394,16 +383,15 @@ function onScriptError(err) {
 function setupObservables() {
   this.fready$ = new Subject();
   this.ready$ = this.fready$::share();
-  const lolPush$ = new Subject();
-  const lolHint$ = new Subject();
+  const pushSubject = new Subject();
+  const hintSubject = new Subject();
   // this.fready$ = new Subject();
   // this.ready$ = this.fready$::share();
 
-  const push$ = lolPush$
+  const push$ = pushSubject
     ::map(event => ({
       type: PUSH,
       anchor: event.currentTarget,
-      href: event.currentTarget.href,
       url: new URL(event.currentTarget.href),
       event,
     }))
@@ -412,13 +400,15 @@ function setupObservables() {
       event.preventDefault();
       this::updateHistoryState();
     });
-    // TODO: This prevents a whole class of concurrency bugs,
-    // This is not an issue for fast animations (and prevents accidential double tapping)
-    // Ideally the UI is fully repsonsive at all times though..
-    // Note that spamming the back/forward button is still possible (only affects `push$`)
     // ::throttleTime(this.duration + DEJITTER); // TODO: generalize
 
-  const pop$ = this::bindPopstateEvent();
+  const pop$ = Observable::fromEvent(window, 'popstate')
+    ::filter(() => history.state && history.state.id === this.el.id)
+    ::map(event => ({
+      type: POP,
+      url: new URL(window.location),
+      event,
+    }));
 
   // Definitive page change (i.e. either push or pop event)
   const page$ = Observable::merge(push$, pop$)
@@ -434,12 +424,11 @@ function setupObservables() {
     // Start with `false`, i.e. we want to prefetch
     ::startWith(false);
 
-  const hint$ = lolHint$
+  const hint$ = hintSubject
     ::pauseWith(pauser$)
     ::map(event => ({
       type: HINT,
       anchor: event.currentTarget,
-      href: event.currentTarget.href,
       url: new URL(event.currentTarget.href),
       event,
     }))
@@ -498,8 +487,8 @@ function setupObservables() {
 
     // Binding the `next` functions to their `Subject`,
     // so that we can pass them as callbacks directly.
-    const pushNext = ::lolPush$.next;
-    const hintNext = ::lolHint$.next;
+    const pushNext = ::pushSubject.next;
+    const hintNext = ::hintSubject.next;
 
     // We don't use `Observable.fromEvent` here to avoid creating too many observables.
     // Registering an unknown number of event listeners is bad enough,
@@ -566,7 +555,7 @@ function setupObservables() {
       const anchor = event.target::matchesAncestors(this.linkSelector);
       if (anchor && anchor.href) {
         event.currentTarget = anchor; // eslint-disable-line no-param-reassign
-        lolPush$.next(event);
+        pushSubject.next(event);
       }
     });
   }

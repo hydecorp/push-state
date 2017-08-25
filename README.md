@@ -1,4 +1,4 @@
-# y-push-state
+# hy-push-state
 
 ## Examples
 * [Mixin Example](example/mixin/index.html)

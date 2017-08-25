@@ -479,7 +479,8 @@ function setupObservables() {
     ::effect(this::resetScrollPostion)
     // ::delay(50)
     ::effect(this::onAfter)
-    ::recover((e, caught) => { this::onDOMError(e); return caught; })
+    ::effect({ error: this::onDOMError })
+    ::recover((e, c) => c)
     // `share`ing the stream between the subscription below and `pauser$`.
     ::share();
 
@@ -494,7 +495,8 @@ function setupObservables() {
   // This simulates the behavior of a fresh page load
   this.render$
     ::switchMap(this::reinsertScriptTags)
-    ::recover((e, caught) => { this::onScriptError(e); return caught; })
+    ::effect({ error: this::onScriptError })
+    ::recover((e, c) => c)
     ::effect(this::onLoad)
     .subscribe();
 

@@ -57,7 +57,15 @@ import { takeUntil } from 'rxjs/operator/takeUntil';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zipWith } from 'rxjs/operator/zip';
 
-import { shouldLoadAnchor, getScrollTop, getScrollHeight, fragmentFromString } from '../common';
+import {
+  fragmentFromString,
+  getScrollTop,
+  getScrollHeight,
+  isExternal,
+  isHash,
+  matches,
+  matchesAncestors,
+} from '../common';
 
 // TODO: explain `MODERNIZR_TESTS`
 export const MODERNIZR_TESTS = [
@@ -141,54 +149,34 @@ function cacheTitleElement() {
   this.titleElement = document.querySelector('title') || {};
 }
 
-function isPageChangeAnchor({ event: { currentTarget: anchor } }) {
-  return (
-    anchor != null &&
-    shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
-  );
+// URL will only be loaded if it's not an external link, hash, `<a target="_blank"/>`,
+// or blacklisted.
+function shouldLoadAnchor(anchor, url, blacklist, hrefRegex) {
+  const { target } = anchor;
+  return !isExternal(url) && !isHash(url)
+    && target === ''
+    && !anchor::matches(blacklist)
+    && (!hrefRegex || url.href.search(hrefRegex) !== -1);
+}
+
+function isPageChangeAnchor({ url, anchor }) {
+  return anchor && anchor.href && shouldLoadAnchor(anchor, url, this.blacklist, this.hrefRegex);
 }
 
 function isPageChangeEvent(kind) {
-  const { event } = kind;
-  return (
-    !event.metaKey &&
-    !event.ctrlKey &&
-    this::isPageChangeAnchor(kind)
-  );
-}
-
-function findLinks() {
-  return Observable::of(this.el.querySelectorAll(this.linkSelector));
-}
-
-// takes an observable of HTML elements and turns them into an observable of `eventName` events
-function toEvents(eventName) {
-  return this::mergeMap(target => Observable::fromEvent(target, eventName));
-}
-
-function bindPushEvents(link$) {
-  return link$::toEvents('click')
-    ::map(event => ({ event, type: PUSH, href: event.currentTarget.href }))
-    ::filter(this::isPageChangeEvent)
-    ::effect(({ event }) => {
-      event.preventDefault();
-      this::updateHistoryState();
-    });
-}
-
-function bindHintEvents(link$) {
-  return Observable::merge(
-      link$::toEvents('mouseenter'),
-      link$::toEvents('touchstart'),
-      link$::toEvents('focus'))
-    ::map(event => ({ event, type: HINT, href: event.currentTarget.href }))
-    ::filter(this::isPageChangeAnchor);
+  const { event: { metaKey, ctrlKey } } = kind;
+  return !metaKey && !ctrlKey && this::isPageChangeAnchor(kind);
 }
 
 function bindPopstateEvent() {
   return Observable::fromEvent(window, 'popstate')
-    ::map(event => ({ event, type: POP, href: window.location.href }))
     ::filter(() => window.history.state != null);
+    ::map(event => ({
+      type: POP,
+      href: window.location.href,
+      url: new URL(window.location),
+      event,
+    }));
 }
 
 function hrefToAjax({ href }) {
@@ -322,12 +310,6 @@ function responseToContent(sponge) {
   return assign(sponge, { title, content, scripts });
 }
 
-function bindEvents() {
-  const link$ = this::findLinks();
-  this.push$$.next(this::bindPushEvents(link$));
-  this.hint$$.next(this::bindHintEvents(link$));
-}
-
 function replaceContentByIds(elements) {
   this.replaceIds
     .map(id => document.getElementById(id))
@@ -410,31 +392,26 @@ function onScriptError(err) {
 }
 
 function setupObservables() {
-  // See `bindEvents`
-  // TODO: Possible without subjects?
-  this.push$$ = new Subject();
-  this.hint$$ = new Subject();
   this.fready$ = new Subject();
   this.ready$ = this.fready$::share();
+  const lolPush$ = new Subject();
+  const lolHint$ = new Subject();
+  // this.fready$ = new Subject();
+  // this.ready$ = this.fready$::share();
 
-  // // create an observer instance
-  // const observer = new MutationObserver((mutations) => {
-  //   mutations.forEach((mutation) => {
-  //     console.log(mutation);
-  //   });
-  // });
-  //
-  // // pass in the target node, as well as the observer options
-  // observer.observe(this.el, {
-  //   attributes: true,
-  //   childList: true,
-  //   characterData: true,
-  // });
-
-  // later, you can stop observing
-  // observer.disconnect();
-
-  const push$ = this.push$$::switchAll();
+  const push$ = lolPush$
+    ::map(event => ({
+      type: PUSH,
+      anchor: event.currentTarget,
+      href: event.currentTarget.href,
+      url: new URL(event.currentTarget.href),
+      event,
+    }))
+    ::filter(this::isPageChangeEvent)
+    ::effect(({ event }) => {
+      event.preventDefault();
+      this::updateHistoryState();
+    });
     // TODO: This prevents a whole class of concurrency bugs,
     // This is not an issue for fast animations (and prevents accidential double tapping)
     // Ideally the UI is fully repsonsive at all times though..
@@ -444,26 +421,33 @@ function setupObservables() {
   const pop$ = this::bindPopstateEvent();
 
   // Definitive page change (i.e. either push or pop event)
-  this.page$ = Observable::merge(push$, pop$)::share();
+  const page$ = Observable::merge(push$, pop$)
+    ::share();
 
   // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
   // while a _definitive_ page load is going on => `pauser$` stream.
   // Needs to be deferred b/c of "cyclical" dependency.
   const pauser$ = Observable::defer(() =>
-      Observable::merge(
-        // A page change event means we want to pause prefetching
-        this.page$::mapTo(true),
-        // A render complete event means we want to resume prefetching
-        this.render$::mapTo(false)))
-    // Start with prefetching
+      // A page change event means we want to pause prefetching, while
+      // a render event means we want to resume prefetching.
+      Observable::merge(page$::mapTo(true), this.render$::mapTo(false)))
+    // Start with `false`, i.e. we want to prefetch
     ::startWith(false);
 
-  // The stream of hint (prefetch) events, possibly paused.
-  this.hint$ = this.hint$$::switchAll()::pauseWith(pauser$);
+  const hint$ = lolHint$
+    ::pauseWith(pauser$)
+    ::map(event => ({
+      type: HINT,
+      anchor: event.currentTarget,
+      href: event.currentTarget.href,
+      url: new URL(event.currentTarget.href),
+      event,
+    }))
+    ::filter(this::isPageChangeAnchor);
 
   // The stream of (pre-)fetch events.
   // Includes definitive page change events do deal with unexpected page changes.
-  this.prefetch$ = Observable::merge(this.hint$, this.page$)
+  this.prefetch$ = Observable::merge(hint$, page$)
     // Don't abort a request if the user "jiggles" over a link
     ::distinctUntilKeyChanged('href')
     ::switchMap(this::fetchPage)
@@ -471,7 +455,7 @@ function setupObservables() {
     ::startWith({})
     ::share();
 
-  this.render$ = this.page$
+  this.render$ = page$
     ::effect(this::onStart)
     ::withLatestFrom(this.prefetch$)
     ::switchMap(this::getResponse)
@@ -486,13 +470,6 @@ function setupObservables() {
     // `share`ing the stream between the subscription below and `pauser$`.
     ::share();
 
-  this.render$
-    // Renewing event listeners after DOM update/layout/painting is complete
-    // HACK: don't use time, use outside observable instead?
-    ::debounceTime(500)
-    ::effect(this::bindEvents)
-    .subscribe();
-
   // Add script tags one by one
   // This simulates the behavior of a fresh page load
   this.render$
@@ -502,17 +479,100 @@ function setupObservables() {
     ::effect(this::onLoad)
     .subscribe();
 
-  // Fire `progress` event when fetching takes longer than `this.duration`.
-  this.page$
-    // HACK: add some time, jtbs
+  // Fire `progress` event when fetching takes longer than expected.
+  page$
     ::switchMap(() => this::getAnimationDuration()::takeUntil(this.render$))
     ::effect(this::onProgress)
     .subscribe();
 
-  this::onLoad({});
+  // We use a `MutationObserver` to keep track of all the links inside the component,
+  // but first we need to check if it is available.
+  if ('MutationObserver' in window && 'Set' in window) {
+    // An observable of mutations. The `MutationObserver` will put mutations onto it.
+    const mutation$ = new Subject();
 
-  // Push streams into `push$$` and `hint$$`
-  this::bindEvents();
+    // A `Set` of `Element`s.
+    // We use this to keep track of which links already have their event listeners registered.
+    // TODO: can we guarantee that we won't find the same link twice?
+    const set = new Set();
+
+    // Binding the `next` functions to their `Subject`,
+    // so that we can pass them as callbacks directly.
+    const pushNext = ::lolPush$.next;
+    const hintNext = ::lolHint$.next;
+
+    // We don't use `Observable.fromEvent` here to avoid creating too many observables.
+    // Registering an unknown number of event listeners is bad enough,
+    // so we don't want to make it wrose.
+    // The number could be brought down by using an `IntersectionObserver` in the future.
+    // Also note that typically there will be an animation playing while this is happening,
+    // so the effects are not easily noticed.
+    //
+    // In any case, the `MutationObserver` and `Set` help us keep track of which links are children
+    // of this component, so that we can reliably add and remove the event listeners.
+    const addListeners = (addedNode) => {
+      addedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
+        if (!set.has(link)) {
+          set.add(link);
+          link.addEventListener('click', pushNext);
+          link.addEventListener('mouseenter', hintNext, { passive: true });
+          link.addEventListener('touchstart', hintNext, { passive: true });
+          link.addEventListener('focus', hintNext, { passive: true });
+        }
+      });
+    };
+
+    // Usually the elments will be removed from the document altogher
+    // when they are removed from this component,
+    // but since we can't be sure, we remove the event listners anyway.
+    const removeListeners = (removedNode) => {
+      removedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
+        set.delete(link);
+        link.removeEventListener('click', pushNext);
+        link.removeEventListener('mouseenter', hintNext, { passive: true });
+        link.removeEventListener('touchstart', hintNext, { passive: true });
+        link.removeEventListener('focus', hintNext, { passive: true });
+      });
+    };
+
+    // The mutation observer simply puts all mutations on the `mutation$` observable.
+    const observer = new MutationObserver(mutations => mutations.forEach(::mutation$.next));
+
+    // For every mutation, we remove the event listeners of elements that go out of the component
+    // (if any), and add event listeners for all elements that make it into the compnent (if any).
+    mutation$
+      ::pauseWith(pauser$)
+      ::effect(({ addedNodes, removedNodes }) => {
+        removedNodes.forEach(this::removeListeners);
+        addedNodes.forEach(this::addListeners);
+      })
+      ::effect({ error: ::console.error })
+      ::recover((e, c) => c)
+      .subscribe();
+
+    // We're interested in nodes entering and leaving the entire subtree of this component,
+    // but not attribute changes, etc...
+    observer.observe(this.el, { childList: true, subtree: true });
+
+    // The mutation observer does not pick up the links that are already on the page,
+    // so we add them manually here, once.
+    this::addListeners(this.el);
+
+  // If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
+  // on the entire component, and check if a click occurred on one of our links.
+  // Note that we can't reliably generate hints this way, so we don't.
+  } else {
+    this.el.addEventListener('click', (event) => {
+      const anchor = event.target::matchesAncestors(this.linkSelector);
+      if (anchor && anchor.href) {
+        event.currentTarget = anchor; // eslint-disable-line no-param-reassign
+        lolPush$.next(event);
+      }
+    });
+  }
+
+  // Finally, we fire our custom `load` event.
+  this::onLoad({});
 }
 
 export function pushStateMixin(C) {

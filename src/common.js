@@ -15,100 +15,33 @@
 
 // import { Observable } from 'rxjs/Observable';
 
-/**
- * Checks to see if the url is external
- *
- * @param   {string}    url - url being evaluated
- * @see     http://stackoverflow.com/questions/6238351/fastest-way-to-detect-external-urls
- */
-export function isExternal(url) {
-  const match = url.match(/^([^:\/?#]+:)?(?:\/\/([^\/?#]*))?([^?#]+)?(\?[^#]*)?(#.*)?/); // eslint-disable-line no-useless-escape
+export const matches =
+  Element.prototype.matches ||
+  Element.prototype.matchesSelector ||
+  Element.prototype.msMatchesSelector ||
+  Element.prototype.mozMatchesSelector ||
+  Element.prototype.webkitMatchesSelector ||
+  Element.prototype.oMatchesSelector;
 
-  if (typeof match[1] === 'string' &&
-      match[1].length > 0 &&
-      match[1].toLowerCase() !== window.location.protocol
-    ) {
-    return true;
-  }
-
-  const port = { http: 80, https: 443 }[window.location.protocol];
-
-  if (typeof match[2] === 'string' &&
-    match[2].length > 0 &&
-    match[2].replace(new RegExp(`:(${port})?$`), '') !== window.location.host) {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Strips the hash from a url and returns the new href
- *
- * @param   {string}    href - url being evaluated
- */
-export function stripHash(href) {
-  return href.replace(/#.*/, '');
-}
-
-/**
- * Checks to see if the url is an internal hash
- *
- * @param   {string}    href - url being evaluated
- * @param   {string}    prev - previous url (optional)
- */
-export function isHash(href, prev) {
-  const p = prev || window.location.href;
-
-  const hasHash = href.indexOf('#') > -1;
-  const samePath = stripHash(href) === stripHash(p);
-
-  return (hasHash && samePath);
-}
-
-export function matches(el, selector) {
-  return (el.matches || el.matchesSelector || el.msMatchesSelector || el.mozMatchesSelector ||
-    el.webkitMatchesSelector || el.oMatchesSelector).call(el, selector);
-  // if (!matches.memo) {
-  //   matches.memo =
-  //     el.matches ||
-  //     el.matchesSelector ||
-  //     el.msMatchesSelector ||
-  //     el.mozMatchesSelector ||
-  //     el.webkitMatchesSelector ||
-  //     el.oMatchesSelector;
-  // }
-  // return matches.memo.call(el, selector);
-}
-
-export function querySelectorInv(el, selector) {
-  let curr = el;
+export function matchesAncestors(selector) {
+  let curr = this;
   while (curr !== document && curr !== document.documentElement) {
-    if (matches(curr, selector)) return curr;
+    if (curr::matches(selector)) return curr;
     curr = curr.parentNode;
   }
   return null;
 }
 
-/**
- * Checks to see if we should be loading this URL
- *
- * @param   {string}    url - url being evaluated
- * @param   {string}    blacklist - jquery selector
- */
-export function shouldLoadAnchor(anchor, blacklist, hrefRegex) {
-  const { href, target } = anchor;
-  // URL will only be loaded if it's not an external link, hash, or
-  // blacklisted
-  return (
-    !isExternal(href) &&
-    !isHash(href) &&
-    !matches(anchor, blacklist) &&
-    target === '' && (
-      hrefRegex === null ||
-      href.search(hrefRegex) !== -1
-    )
-  );
+// If you consider a URL being external if either the protocol, hostname or port is different.
+export function isExternal({ protocol, host }) {
+  return protocol !== window.location.protocol
+    && host !== window.location.host;
+}
+
+export function isHash({ hash, origin, pathname }) {
+  return hash !== ''
+    && origin === window.location.origin
+    && pathname === window.location.pathname;
 }
 
 export function getScrollHeight() {
@@ -124,6 +57,10 @@ export function getScrollLeft() {
 
 export function getScrollTop() {
   return window.pageYOffset || document.body.scrollTop;
+}
+
+export function fragmentFromString(strHTML) {
+  return document.createRange().createContextualFragment(strHTML);
 }
 
 // export function expInterval(init, exp) {
@@ -144,7 +81,3 @@ export function getScrollTop() {
 //     };
 //   });
 // }
-
-export function fragmentFromString(strHTML) {
-  return document.createRange().createContextualFragment(strHTML);
-}

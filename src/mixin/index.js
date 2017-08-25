@@ -115,9 +115,9 @@ function setScrollPosition() {
   document.body.style.minHeight = '';
 }
 
-function resetScrollPostion(sponge) {
+function resetScrollPostion(snowball) {
   if (this.scrollRestoration) {
-    if (sponge.type === POP) {
+    if (snowball.type === POP) {
       setScrollPosition();
     }
   }
@@ -163,9 +163,9 @@ function isPageChangeAnchor({ url, anchor }) {
   return anchor && anchor.href && shouldLoadAnchor(anchor, url, this.blacklist, this.hrefRegex);
 }
 
-function isPageChangeEvent(kind) {
-  const { event: { metaKey, ctrlKey } } = kind;
-  return !metaKey && !ctrlKey && this::isPageChangeAnchor(kind);
+function isPageChangeEvent(snowball) {
+  const { event: { metaKey, ctrlKey } } = snowball;
+  return !metaKey && !ctrlKey && this::isPageChangeAnchor(snowball);
 }
 
 function hrefToAjax({ url }) {
@@ -176,29 +176,29 @@ function hrefToAjax({ url }) {
   };
 }
 
-function recoverIfResponse(kind, error) {
+function recoverIfResponse(snowball, error) {
   const { status, xhr } = error;
 
   if (xhr && status && status > 400) {
     // Recover with error page returned from server.
     // NOTE: This assumes error page contains the same ids as the other pages...
-    return Observable::of(assign(kind, { response: xhr.response }));
+    return Observable::of(assign(snowball, { response: xhr.response }));
   }
 
   // else
-  return Observable::of(assign(kind, { error }));
+  return Observable::of(assign(snowball, { error }));
 }
 
 
-function fetchPage(kind) {
-  return Observable::ajax(hrefToAjax(kind))
-    ::map(({ response }) => assign(kind, { response }))
-    ::recover(error => this::recoverIfResponse(kind, error));
+function fetchPage(snowball) {
+  return Observable::ajax(hrefToAjax(snowball))
+    ::map(({ response }) => assign(snowball, { response }))
+    ::recover(error => this::recoverIfResponse(snowball, error));
     // TODO: make this available via option?
     // .retryWhen(() => Observable.merge(
     //     Observable.fromEvent(window, 'online'),
     //     expInterval(1000, 2))
-    //   .do(this.onRetry.bind(this, kind)));
+    //   .do(this.onRetry.bind(this, snowball)));
 }
 
 function getFetch({ url: { href } }, prefetch, prefetch$) {
@@ -211,10 +211,10 @@ function getAnimationDuration() {
     Observable::timer(this.duration + DEJITTER);
 }
 
-function getResponse([kind, prefetch]) {
-  return getFetch(kind, prefetch, this.prefetch$)
-    ::map(fetch => assign(fetch, kind))
-    ::waitUntil(kind.type === PUSH || !this.instantPop ?
+function getResponse([snowball, prefetch]) {
+  return getFetch(snowball, prefetch, this.prefetch$)
+    ::map(fetch => assign(fetch, snowball))
+    ::waitUntil(snowball.type === PUSH || !this.instantPop ?
       this::getAnimationDuration() :
       Observable::of(true));
 }
@@ -264,14 +264,14 @@ function insertScript([script, ref]) {
       });
 }
 
-function reinsertScriptTags(sponge) {
-  const { scripts } = sponge;
+function reinsertScriptTags(snowball) {
+  const { scripts } = snowball;
 
   if (scripts.length === 0) return Observable::of({});
 
   return Observable::from(scripts)
     ::concatMap(insertScript)
-    ::recover((error) => { throw assign(sponge, { error }); });
+    ::recover((error) => { throw assign(snowball, { error }); });
 
   // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
   // const [script$, asyncScript$] = Observable.from(scripts)
@@ -283,20 +283,20 @@ function reinsertScriptTags(sponge) {
   //   );
 }
 
-function responseToContent(sponge) {
-  const { response } = sponge;
+function responseToContent(snowball) {
+  const { response } = snowball;
 
   const fragment = fragmentFromString(response);
   const title = this::getTitleFromFragment(fragment);
   const content = this::getContentFromFragment(fragment);
 
   if (content.some(x => x == null)) {
-    throw assign(sponge, { title, content });
+    throw assign(snowball, { title, content });
   }
 
   const scripts = this::tempRemoveScriptTags(content);
 
-  return assign(sponge, { title, content, scripts });
+  return assign(snowball, { title, content, scripts });
 }
 
 function replaceContentByIds(elements) {
@@ -319,45 +319,45 @@ function replaceContent(content) {
   }
 }
 
-function updateDOM(sponge) {
+function updateDOM(snowball) {
   try {
-    const { url, title, content } = sponge;
+    const { url, title, content } = snowball;
 
-    if (sponge.type === PUSH) {
+    if (snowball.type === PUSH) {
       window.history.replaceState({ id: this.el.id }, title, url);
     }
 
     this.titleElement.textContent = title;
     this::replaceContent(content);
   } catch (error) {
-    throw assign(sponge, { error });
+    throw assign(snowball, { error });
   }
 }
 
-function onStart(sponge) {
-  const { url } = sponge;
+function onStart(snowball) {
+  const { url } = snowball;
 
-  if (sponge.type === PUSH) {
+  if (snowball.type === PUSH) {
     window.history.pushState({ id: this.el.id }, '', url);
   }
 
-  this[fire]('start', sponge);
+  this[fire]('start', snowball);
 }
 
-function onReady(sponge) {
-  this[fire]('ready', sponge);
+function onReady(snowball) {
+  this[fire]('ready', snowball);
 }
 
-function onAfter(sponge) {
-  this[fire]('after', sponge);
+function onAfter(snowball) {
+  this[fire]('after', snowball);
 }
 
-function onProgress(sponge) {
-  this[fire]('progress', sponge);
+function onProgress(snowball) {
+  this[fire]('progress', snowball);
 }
 
-// function onRetry(sponge) {
-//   this[fire]('retry', sponge);
+// function onRetry(snowball) {
+//   this[fire]('retry', snowball);
 // }
 
 function onLoad(x) {

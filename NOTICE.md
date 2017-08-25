@@ -45,6 +45,17 @@ MIT licensed with the following copyright:
 
 A copy of the [MIT] license is provided as part of this distribution.
 
+### DOM-URL-Polyfill
+This software also uses portions of the DOM-URL-Polyfill project, which is
+which is Apache-2.0 licensed with the following copyright
+
+> Copyright 2013 Erik Arvidsson
+
+No substantial changes to the software were made.
+No `NOTICE` file was provided.
+
+A copy of the [Apache-2.0] license is provided as part of this distribution.
+
 ### hy-component
 This software also uses portions of the hy-component project,
 which is MIT licensed with the following copyright

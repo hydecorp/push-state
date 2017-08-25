@@ -438,7 +438,7 @@ function setupObservables() {
   // Includes definitive page change events do deal with unexpected page changes.
   this.prefetch$ = Observable::merge(hint$, page$)
     // Don't abort a request if the user "jiggles" over a link
-    ::distinctUntilKeyChanged('href')
+    ::distinctUntilChanged((p, q) => p.url.href === q.url.href)
     ::switchMap(this::fetchPage)
     // Start with some value so `withLatestFrom` below doesn't "block"
     ::startWith({})

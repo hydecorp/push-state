@@ -17,6 +17,8 @@ import 'core-js/fn/array/for-each';
 import 'core-js/fn/function/bind';
 import 'core-js/fn/object/assign';
 
+import 'url-api-polyfill';
+
 import { componentMixin, setup, fire,
   MODERNIZR_TESTS as COMPONENT_MODERNIZER_TESTS } from 'hy-component/src/component';
 

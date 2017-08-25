@@ -50,7 +50,7 @@ function envConfig() {
     // same as prod, but does not bundle core-js polyfills
     case 'lite':
       return {
-        externals: [/core-js/],
+        externals: [/core-js/, /url-api-polyfill/],
         plugins: [
           new BannerPlugin({ banner }),
           new EnvironmentPlugin({ DEBUG: false }),

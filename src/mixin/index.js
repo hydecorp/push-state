@@ -81,7 +81,7 @@ const { forEach } = Array.prototype;
 const assign = ::Object.assign;
 
 DocumentFragment.prototype.getElementById = DocumentFragment.prototype.getElementById ||
-  function getElementById(id) { this.querySelector(`#${id}`); };
+  function getElementById(id) { return this.querySelector(`#${id}`); };
 
 function pauseWith(pauser$) {
   if (process.env.DEBUG && !pauser$) throw Error();

@@ -420,8 +420,8 @@ function setupObservables() {
   // Needs to be deferred b/c of "cyclical" dependency.
   const pauser$ = Observable::defer(() =>
       // A page change event means we want to pause prefetching, while
-      // a render event means we want to resume prefetching.
-      Observable::merge(page$::mapTo(true), this.render$::mapTo(false)))
+      // a response event means we want to resume prefetching.
+      Observable::merge(page$::mapTo(true), this.response$::mapTo(false)))
     // Start with `false`, i.e. we want to prefetch
     ::startWith(false);
 
@@ -445,34 +445,35 @@ function setupObservables() {
     ::startWith({})
     ::share();
 
-  this.render$ = page$
+  this.response$ = page$
     ::effect(this::onStart)
     ::withLatestFrom(this.prefetch$)
     ::switchMap(this::getResponse)
+    // `share`ing the stream between the subscriptions below and `pauser$`.
+    ::share();
+
+  // Fire `progress` event when fetching takes longer than expected.
+  page$
+    ::switchMap(() => this::getAnimationDuration()::takeUntil(this.response$))
+    ::effect(this::onProgress)
+    .subscribe();
+
+  this.response$
     ::map(this::responseToContent)
     ::effect(this::onReady)
     ::effect(this::updateDOM)
     ::effect(this::resetScrollPostion)
-    // ::delay(50)
+    /* ? ::delay(50) */
     ::effect(this::onAfter)
     ::effect({ error: this::onDOMError })
     ::recover((e, c) => c)
-    // `share`ing the stream between the subscription below and `pauser$`.
-    ::share();
 
-  // Add script tags one by one
-  // This simulates the behavior of a fresh page load
-  this.render$
+    // Add script tags one by one
+    // This simulates the behavior of a fresh page load
     ::switchMap(this::reinsertScriptTags)
     ::effect({ error: this::onScriptError })
     ::recover((e, c) => c)
     ::effect(this::onLoad)
-    .subscribe();
-
-  // Fire `progress` event when fetching takes longer than expected.
-  page$
-    ::switchMap(() => this::getAnimationDuration()::takeUntil(this.render$))
-    ::effect(this::onProgress)
     .subscribe();
 
   // We use a `MutationObserver` to keep track of all the links inside the component,

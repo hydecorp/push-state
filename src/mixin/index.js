@@ -146,10 +146,6 @@ function setupScrollRestoration() {
   window.addEventListener('beforeunload', this::updateHistoryState);
 }
 
-function cacheTitleElement() {
-  this.titleElement = document.querySelector('title') || {};
-}
-
 // URL will only be loaded if it's not an external link, hash, `_blank` target (or similar),
 // or blacklisted.
 function shouldLoadAnchor(anchor, url, blacklist, hrefRegex) {
@@ -212,8 +208,8 @@ function getAnimationDuration() {
     Observable::timer(this.duration + DEJITTER);
 }
 
-function getResponse([snowball, prefetch]) {
-  return getFetch(snowball, prefetch, this.prefetch$)
+function getResponse([snowball, prefetch], prefetch$) {
+  return getFetch(snowball, prefetch, prefetch$)
     ::map(fetch => assign(fetch, snowball))
     ::waitUntil(snowball.type === PUSH || !this.instantPop ?
       this::getAnimationDuration() :
@@ -328,7 +324,7 @@ function updateDOM(snowball) {
       window.history.replaceState({ id: this.el.id }, title, url);
     }
 
-    this.titleElement.textContent = title;
+    document.title = title;
     this::replaceContent(content);
   } catch (error) {
     throw assign(snowball, { error });
@@ -389,6 +385,8 @@ function setupObservables() {
   // this.fready$ = new Subject();
   // this.ready$ = this.fready$::share();
 
+  const ref = {};
+
   const push$ = pushSubject
     ::map(event => ({
       type: PUSH,
@@ -421,7 +419,7 @@ function setupObservables() {
   const pauser$ = Observable::defer(() =>
       // A page change event means we want to pause prefetching, while
       // a response event means we want to resume prefetching.
-      Observable::merge(page$::mapTo(true), this.response$::mapTo(false)))
+      Observable::merge(page$::mapTo(true), ref.response$::mapTo(false)))
     // Start with `false`, i.e. we want to prefetch
     ::startWith(false);
 
@@ -437,7 +435,7 @@ function setupObservables() {
 
   // The stream of (pre-)fetch events.
   // Includes definitive page change events do deal with unexpected page changes.
-  this.prefetch$ = Observable::merge(hint$, page$)
+  const prefetch$ = Observable::merge(hint$, page$)
     // Don't abort a request if the user "jiggles" over a link
     ::distinctUntilChanged((p, q) => p.url.href === q.url.href)
     ::switchMap(this::fetchPage)
@@ -445,20 +443,20 @@ function setupObservables() {
     ::startWith({})
     ::share();
 
-  this.response$ = page$
+  ref.response$ = page$
     ::effect(this::onStart)
-    ::withLatestFrom(this.prefetch$)
-    ::switchMap(this::getResponse)
+    ::withLatestFrom(prefetch$)
+    ::switchMap(x => this::getResponse(x, prefetch$))
     // `share`ing the stream between the subscriptions below and `pauser$`.
     ::share();
 
   // Fire `progress` event when fetching takes longer than expected.
   page$
-    ::switchMap(() => this::getAnimationDuration()::takeUntil(this.response$))
+    ::switchMap(() => this::getAnimationDuration()::takeUntil(ref.response$))
     ::effect(this::onProgress)
     .subscribe();
 
-  this.response$
+  ref.response$
     ::map(this::responseToContent)
     ::effect(this::onReady)
     ::effect(this::updateDOM)
@@ -593,7 +591,6 @@ export function pushStateMixin(C) {
 
       this::checkPreCondition();
       this::setupScrollRestoration();
-      this::cacheTitleElement();
       this::setupObservables();
 
       return this;

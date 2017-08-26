@@ -1,20 +1,23 @@
-// # common.js
-// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# common.js
+Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 
-// import { Observable } from 'rxjs/Observable';
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import { Observable } from 'rxjs/Observable';
+
+
+```js
 
 export const matches =
   Element.prototype.matches ||
@@ -32,8 +35,12 @@ export function matchesAncestors(selector) {
   }
   return null;
 }
+```
 
-// If you consider a URL being external if either the protocol, hostname or port is different.
+If you consider a URL being external if either the protocol, hostname or port is different.
+
+
+```js
 export function isExternal({ protocol, host }) {
   return protocol !== window.location.protocol
     && host !== window.location.host;
@@ -63,22 +70,25 @@ export function getScrollTop() {
 export function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);
 }
+```
 
-// export function expInterval(init, exp) {
-//   return Observable.create((observer) => {
-//     let n = init;
-//     let id;
-//
-//     function next() {
-//       observer.next(n);
-//       n *= exp;
-//       id = setTimeout(next, n);
-//     }
-//
-//     id = setTimeout(next, n);
-//
-//     return () => {
-//       clearTimeout(id);
-//     };
-//   });
-// }
+export function expInterval(init, exp) {
+  return Observable.create((observer) => {
+    let n = init;
+    let id;
+
+    function next() {
+      observer.next(n);
+      n *= exp;
+      id = setTimeout(next, n);
+    }
+
+    id = setTimeout(next, n);
+
+    return () => {
+      clearTimeout(id);
+    };
+  });
+}
+
+

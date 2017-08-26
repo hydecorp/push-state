@@ -1,18 +1,21 @@
-// # mixin / index.js
-// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# mixin / index.js
+Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+```js
 
 import 'core-js/fn/array/for-each';
 import 'core-js/fn/function/bind';
@@ -36,23 +39,44 @@ import { ajax } from 'rxjs/observable/dom/ajax';
 
 import { _catch as recover } from 'rxjs/operator/catch';
 import { concatMap } from 'rxjs/operator/concatMap';
+```
+
 import { debounceTime } from 'rxjs/operator/debounceTime';
-// import { delay } from 'rxjs/operator/delay';
-// import { delayWhen } from 'rxjs/operator/delayWhen';
-import { distinctUntilKeyChanged } from 'rxjs/operator/distinctUntilKeyChanged';
+import { delay } from 'rxjs/operator/delay';
+import { delayWhen } from 'rxjs/operator/delayWhen';
+
+
+```js
+import { distinctUntilChanged } from 'rxjs/operator/distinctUntilChanged';
 import { _do as effect } from 'rxjs/operator/do';
 import { filter } from 'rxjs/operator/filter';
 import { map } from 'rxjs/operator/map';
 import { mapTo } from 'rxjs/operator/mapTo';
+```
+
 import { mergeMap } from 'rxjs/operator/mergeMap';
-// import { partition } from 'rxjs/operator/partition';
+import { partition } from 'rxjs/operator/partition';
+import { pairwise } from 'rxjs/operator/pairwise';
+
+
+```js
 import { share } from 'rxjs/operator/share';
 import { startWith } from 'rxjs/operator/startWith';
+```
+
 import { _switch as switchAll } from 'rxjs/operator/switch';
+
+
+```js
 import { switchMap } from 'rxjs/operator/switchMap';
 import { take } from 'rxjs/operator/take';
 import { takeUntil } from 'rxjs/operator/takeUntil';
-// import { throttleTime } from 'rxjs/operator/throttleTime';
+```
+
+import { throttleTime } from 'rxjs/operator/throttleTime';
+
+
+```js
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zipWith } from 'rxjs/operator/zip';
 
@@ -67,8 +91,12 @@ import {
   matches,
   matchesAncestors,
 } from '../common';
+```
 
-// TODO: explain `MODERNIZR_TESTS`
+TODO: explain `MODERNIZR_TESTS`
+
+
+```js
 export const MODERNIZR_TESTS = [
   ...COMPONENT_MODERNIZER_TESTS,
   'documentfragment',
@@ -77,11 +105,19 @@ export const MODERNIZR_TESTS = [
   'requestanimationframe',
   'queryselector',
 ];
+```
 
-// TODO: export all symbols, always?
+TODO: export all symbols, always?
+
+
+```js
 export { setup };
+```
 
-// TODO
+TODO
+
+
+```js
 const PUSH = 'push';
 const HINT = 'hint';
 const POP = 'pop';
@@ -116,11 +152,21 @@ function setScrollPosition() {
   document.body.style.minHeight = '';
 }
 
-function resetScrollPostion(snowball) {
+function scrollHashIntoView(hash) {
+  const el = document.getElementById(hash.substr(1));
+  if (el) el.scrollIntoView();
+  else window.scroll(window.pageXOffset, 0);
+}
+
+function resetScrollPostion({ type, url: { hash } }) {
   if (this.scrollRestoration) {
-    if (snowball.type === POP) {
+    if (type === POP) {
       setScrollPosition();
     }
+  }
+
+  if (type === PUSH) {
+    scrollHashIntoView(hash);
   }
 }
 
@@ -133,7 +179,12 @@ function saveScrollPosition(state) {
 
 function updateHistoryState() {
   const state = this::saveScrollPosition(history.state || { id: this.el.id });
-  // console.log('replaceState', window.location.href);
+```
+
+console.log('replaceState', window.location.href);
+
+
+```js
   history.replaceState(state, document.title, window.location);
 }
 
@@ -149,9 +200,13 @@ function setupScrollRestoration() {
 function cacheTitleElement() {
   this.titleElement = document.querySelector('title') || {};
 }
+```
 
-// URL will only be loaded if it's not an external link, hash, `_blank` target (or similar),
-// or blacklisted.
+URL will only be loaded if it's not an external link, hash, `_blank` target (or similar),
+or blacklisted.
+
+
+```js
 function shouldLoadAnchor(anchor, url, blacklist, hrefRegex) {
   const { target } = anchor;
   return !isExternal(url) && !isHash(url)
@@ -181,12 +236,21 @@ function recoverIfResponse(snowball, error) {
   const { status, xhr } = error;
 
   if (xhr && status && status > 400) {
-    // Recover with error page returned from server.
-    // NOTE: This assumes error page contains the same ids as the other pages...
+```
+
+Recover with error page returned from server.
+NOTE: This assumes error page contains the same ids as the other pages...
+
+
+```js
     return Observable::of(assign(snowball, { response: xhr.response }));
   }
+```
 
-  // else
+else
+
+
+```js
   return Observable::of(assign(snowball, { error }));
 }
 
@@ -195,11 +259,16 @@ function fetchPage(snowball) {
   return Observable::ajax(hrefToAjax(snowball))
     ::map(({ response }) => assign(snowball, { response }))
     ::recover(error => this::recoverIfResponse(snowball, error));
-    // TODO: make this available via option?
-    // .retryWhen(() => Observable.merge(
-    //     Observable.fromEvent(window, 'online'),
-    //     expInterval(1000, 2))
-    //   .do(this.onRetry.bind(this, snowball)));
+```
+
+TODO: make this available via option?
+.retryWhen(() => Observable.merge(
+    Observable.fromEvent(window, 'online'),
+    expInterval(1000, 2))
+  .do(this.onRetry.bind(this, snowball)));
+
+
+```js
 }
 
 function getFetch({ url: { href } }, prefetch, prefetch$) {
@@ -207,9 +276,9 @@ function getFetch({ url: { href } }, prefetch, prefetch$) {
 }
 
 function getAnimationDuration() {
-  return this.duration === 'manual' ?
-    this.ready$ :
-    Observable::timer(this.duration + DEJITTER);
+  return (/* this.duration === 'manual' ?
+    this.ready$ : */
+    Observable::timer(this.duration + DEJITTER));
 }
 
 function getResponse([snowball, prefetch]) {
@@ -273,15 +342,19 @@ function reinsertScriptTags(snowball) {
   return Observable::from(scripts)
     ::concatMap(insertScript)
     ::recover((error) => { throw assign(snowball, { error }); });
+```
 
-  // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
-  // const [script$, asyncScript$] = Observable.from(scripts)
-  //   .partition(([script]) => script.async !== '');
-  //
-  // return Observable.merge(
-  //     script$.concatMap(this.insertScript),
-  //     asyncScript$.mergeMap(this.insertScript),
-  //   );
+TODO: the code below does not guarantee that a script tag has loaded before a `async` one
+const [script$, asyncScript$] = Observable.from(scripts)
+  .partition(([script]) => script.async !== '');
+
+return Observable.merge(
+    script$.concatMap(this.insertScript),
+    asyncScript$.mergeMap(this.insertScript),
+  );
+
+
+```js
 }
 
 function responseToContent(snowball) {
@@ -325,6 +398,12 @@ function updateDOM(snowball) {
     const { url, title, content } = snowball;
 
     if (snowball.type === PUSH) {
+```
+
+console.log('replaceState', url);
+
+
+```js
       window.history.replaceState({ id: this.el.id }, title, url);
     }
 
@@ -339,6 +418,12 @@ function onStart(snowball) {
   const { url } = snowball;
 
   if (snowball.type === PUSH) {
+```
+
+console.log('pushState', url);
+
+
+```js
     window.history.pushState({ id: this.el.id }, '', url);
   }
 
@@ -356,38 +441,51 @@ function onAfter(snowball) {
 function onProgress(snowball) {
   this[fire]('progress', snowball);
 }
+```
 
-// function onRetry(snowball) {
-//   this[fire]('retry', snowball);
-// }
+function onRetry(snowball) {
+  this[fire]('retry', snowball);
+}
+
+
+```js
 
 function onLoad(x) {
   this[fire]('load', x);
 }
+```
 
-// function onFetchError(err) {
-//   this[fire]('fetch-error', err);
-// }
-//
-// function onContentError(err) {
-//   this[fire]('content-error', err);
-// }
+function onFetchError(err) {
+  this[fire]('fetch-error', err);
+}
+
+function onContentError(err) {
+  this[fire]('content-error', err);
+}
+
+
+```js
 
 function onDOMError(err) {
+  console.error(err);
   this[fire]('dom-error', err);
 }
 
 function onScriptError(err) {
+  console.error(err);
   this[fire]('script-error', err);
 }
 
 function setupObservables() {
-  this.fready$ = new Subject();
-  this.ready$ = this.fready$::share();
   const pushSubject = new Subject();
   const hintSubject = new Subject();
-  // this.fready$ = new Subject();
-  // this.ready$ = this.fready$::share();
+```
+
+this.fready$ = new Subject();
+this.ready$ = this.fready$::share();
+
+
+```js
 
   const push$ = pushSubject
     ::map(event => ({
@@ -401,7 +499,12 @@ function setupObservables() {
       event.preventDefault();
       this::updateHistoryState();
     });
-    // ::throttleTime(this.duration + DEJITTER); // TODO: generalize
+```
+
+::throttleTime(this.duration + DEJITTER); // TODO: generalize
+
+
+```js
 
   const pop$ = Observable::fromEvent(window, 'popstate')
     ::filter(() => history.state && history.state.id === this.el.id)
@@ -410,19 +513,54 @@ function setupObservables() {
       url: new URL(window.location),
       event,
     }));
+```
 
-  // Definitive page change (i.e. either push or pop event)
+Definitive page change (i.e. either push or pop event)
+
+
+```js
   const page$ = Observable::merge(push$, pop$)
-    ::share();
+```
 
-  // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
-  // while a _definitive_ page load is going on => `pauser$` stream.
-  // Needs to be deferred b/c of "cyclical" dependency.
+::startWith({ url: new URL(window.location) })
+::pairwise()
+::filter(([{ url: prevUrl }, { event, url }]) => {
+  event.preventDefault();
+  console.log(prevUrl.pathname, url.pathname);
+  const samePage = prevUrl.pathname === url.pathname;
+  // HACK: filter shouldn't have side effects, but this is convenient...
+  // if (samePage) scrollHashIntoView(url.hash);
+  // We have a pop event if it's not the same page and the history state was pushed by us.
+  return !samePage && history.state && history.state.id === this.el.id;
+})
+::map(([, x]) => x)
+
+
+```js
+    ::share();
+```
+
+We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
+while a _definitive_ page load is going on => `pauser$` stream.
+Needs to be deferred b/c of "cyclical" dependency.
+
+
+```js
   const pauser$ = Observable::defer(() =>
-      // A page change event means we want to pause prefetching, while
-      // a render event means we want to resume prefetching.
+```
+
+A page change event means we want to pause prefetching, while
+a render event means we want to resume prefetching.
+
+
+```js
       Observable::merge(page$::mapTo(true), this.render$::mapTo(false)))
-    // Start with `false`, i.e. we want to prefetch
+```
+
+Start with `false`, i.e. we want to prefetch
+
+
+```js
     ::startWith(false);
 
   const hint$ = hintSubject
@@ -434,14 +572,28 @@ function setupObservables() {
       event,
     }))
     ::filter(this::isPageChangeAnchor);
+```
 
-  // The stream of (pre-)fetch events.
-  // Includes definitive page change events do deal with unexpected page changes.
+The stream of (pre-)fetch events.
+Includes definitive page change events do deal with unexpected page changes.
+
+
+```js
   this.prefetch$ = Observable::merge(hint$, page$)
-    // Don't abort a request if the user "jiggles" over a link
+```
+
+Don't abort a request if the user "jiggles" over a link
+
+
+```js
     ::distinctUntilChanged((p, q) => p.url.href === q.url.href)
     ::switchMap(this::fetchPage)
-    // Start with some value so `withLatestFrom` below doesn't "block"
+```
+
+Start with some value so `withLatestFrom` below doesn't "block"
+
+
+```js
     ::startWith({})
     ::share();
 
@@ -453,53 +605,92 @@ function setupObservables() {
     ::effect(this::onReady)
     ::effect(this::updateDOM)
     ::effect(this::resetScrollPostion)
-    // ::delay(50)
+```
+
+::delay(50)
+
+
+```js
     ::effect(this::onAfter)
     ::effect({ error: this::onDOMError })
     ::recover((e, c) => c)
-    // `share`ing the stream between the subscription below and `pauser$`.
-    ::share();
+```
 
-  // Add script tags one by one
-  // This simulates the behavior of a fresh page load
+`share`ing the stream between the subscription below and `pauser$`.
+
+
+```js
+    ::share();
+```
+
+Add script tags one by one
+This simulates the behavior of a fresh page load
+
+
+```js
   this.render$
     ::switchMap(this::reinsertScriptTags)
     ::effect({ error: this::onScriptError })
     ::recover((e, c) => c)
     ::effect(this::onLoad)
     .subscribe();
+```
 
-  // Fire `progress` event when fetching takes longer than expected.
+Fire `progress` event when fetching takes longer than expected.
+
+
+```js
   page$
     ::switchMap(() => this::getAnimationDuration()::takeUntil(this.render$))
     ::effect(this::onProgress)
     .subscribe();
+```
 
-  // We use a `MutationObserver` to keep track of all the links inside the component,
-  // but first we need to check if it is available.
+We use a `MutationObserver` to keep track of all the links inside the component,
+but first we need to check if it is available.
+
+
+```js
   if ('MutationObserver' in window && 'Set' in window) {
-    // An observable of mutations. The `MutationObserver` will put mutations onto it.
+```
+
+An observable of mutations. The `MutationObserver` will put mutations onto it.
+
+
+```js
     const mutation$ = new Subject();
+```
 
-    // A `Set` of `Element`s.
-    // We use this to keep track of which links already have their event listeners registered.
-    // TODO: can we guarantee that we won't find the same link twice?
+A `Set` of `Element`s.
+We use this to keep track of which links already have their event listeners registered.
+TODO: can we guarantee that we won't find the same link twice?
+
+
+```js
     const set = new Set();
+```
 
-    // Binding the `next` functions to their `Subject`,
-    // so that we can pass them as callbacks directly.
+Binding the `next` functions to their `Subject`,
+so that we can pass them as callbacks directly.
+
+
+```js
     const pushNext = ::pushSubject.next;
     const hintNext = ::hintSubject.next;
+```
 
-    // We don't use `Observable.fromEvent` here to avoid creating too many observables.
-    // Registering an unknown number of event listeners is bad enough,
-    // so we don't want to make it wrose.
-    // The number could be brought down by using an `IntersectionObserver` in the future.
-    // Also note that typically there will be an animation playing while this is happening,
-    // so the effects are not easily noticed.
-    //
-    // In any case, the `MutationObserver` and `Set` help us keep track of which links are children
-    // of this component, so that we can reliably add and remove the event listeners.
+We don't use `Observable.fromEvent` here to avoid creating too many observables.
+Registering an unknown number of event listeners is bad enough,
+so we don't want to make it wrose.
+The number could be brought down by using an `IntersectionObserver` in the future.
+Also note that typically there will be an animation playing while this is happening,
+so the effects are not easily noticed.
+
+In any case, the `MutationObserver` and `Set` help us keep track of which links are children
+of this component, so that we can reliably add and remove the event listeners.
+
+
+```js
     const addListeners = (addedNode) => {
       addedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
         if (!set.has(link)) {
@@ -511,10 +702,14 @@ function setupObservables() {
         }
       });
     };
+```
 
-    // Usually the elments will be removed from the document altogher
-    // when they are removed from this component,
-    // but since we can't be sure, we remove the event listners anyway.
+Usually the elments will be removed from the document altogher
+when they are removed from this component,
+but since we can't be sure, we remove the event listners anyway.
+
+
+```js
     const removeListeners = (removedNode) => {
       removedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
         set.delete(link);
@@ -524,12 +719,20 @@ function setupObservables() {
         link.removeEventListener('focus', hintNext, { passive: true });
       });
     };
+```
 
-    // The mutation observer simply puts all mutations on the `mutation$` observable.
+The mutation observer simply puts all mutations on the `mutation$` observable.
+
+
+```js
     const observer = new MutationObserver(mutations => mutations.forEach(::mutation$.next));
+```
 
-    // For every mutation, we remove the event listeners of elements that go out of the component
-    // (if any), and add event listeners for all elements that make it into the compnent (if any).
+For every mutation, we remove the event listeners of elements that go out of the component
+(if any), and add event listeners for all elements that make it into the compnent (if any).
+
+
+```js
     mutation$
       ::pauseWith(pauser$)
       ::effect(({ addedNodes, removedNodes }) => {
@@ -539,18 +742,30 @@ function setupObservables() {
       ::effect({ error: ::console.error })
       ::recover((e, c) => c)
       .subscribe();
+```
 
-    // We're interested in nodes entering and leaving the entire subtree of this component,
-    // but not attribute changes, etc...
+We're interested in nodes entering and leaving the entire subtree of this component,
+but not attribute changes, etc...
+
+
+```js
     observer.observe(this.el, { childList: true, subtree: true });
+```
 
-    // The mutation observer does not pick up the links that are already on the page,
-    // so we add them manually here, once.
+The mutation observer does not pick up the links that are already on the page,
+so we add them manually here, once.
+
+
+```js
     this::addListeners(this.el);
+```
 
-  // If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
-  // on the entire component, and check if a click occurred on one of our links.
-  // Note that we can't reliably generate hints this way, so we don't.
+If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
+on the entire component, and check if a click occurred on one of our links.
+Note that we can't reliably generate hints this way, so we don't.
+
+
+```js
   } else {
     this.el.addEventListener('click', (event) => {
       const anchor = event.target::matchesAncestors(this.linkSelector);
@@ -560,11 +775,20 @@ function setupObservables() {
       }
     });
   }
+```
 
-  // Finally, we fire our custom `load` event.
+Finally, we fire our custom `load` event.
+
+
+```js
   this::onLoad({});
 }
+```
 
+main export
+
+
+```js
 export function pushStateMixin(C) {
   return class extends componentMixin(C) {
     static get componentName() { return 'hy-push-state'; }
@@ -579,6 +803,7 @@ export function pushStateMixin(C) {
         blacklist: '.no-push-state',
         duration: 0,
         instantPop: true,
+        prefetch: true,
       };
     }
 
@@ -597,13 +822,20 @@ export function pushStateMixin(C) {
 
       return this;
     }
+```
 
-    _ready1() {
-      this.fready$.next(true);
-    }
+_ready1() {
+  this.fready$.next(true);
+}
 
-    _ready2() {
-      // this.fready$.next(false);
-    }
+_ready2() {
+  // this.fready$.next(false);
+}
+
+
+```js
   };
 }
+```
+
+

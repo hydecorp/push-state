@@ -36,19 +36,20 @@ import { ajax } from 'rxjs/observable/dom/ajax';
 
 import { _catch as recover } from 'rxjs/operator/catch';
 import { concatMap } from 'rxjs/operator/concatMap';
-import { debounceTime } from 'rxjs/operator/debounceTime';
+// import { debounceTime } from 'rxjs/operator/debounceTime';
 // import { delay } from 'rxjs/operator/delay';
 // import { delayWhen } from 'rxjs/operator/delayWhen';
-import { distinctUntilKeyChanged } from 'rxjs/operator/distinctUntilKeyChanged';
+import { distinctUntilChanged } from 'rxjs/operator/distinctUntilChanged';
 import { _do as effect } from 'rxjs/operator/do';
 import { filter } from 'rxjs/operator/filter';
 import { map } from 'rxjs/operator/map';
 import { mapTo } from 'rxjs/operator/mapTo';
-import { mergeMap } from 'rxjs/operator/mergeMap';
+// import { mergeMap } from 'rxjs/operator/mergeMap';
 // import { partition } from 'rxjs/operator/partition';
+// import { pairwise } from 'rxjs/operator/pairwise';
 import { share } from 'rxjs/operator/share';
 import { startWith } from 'rxjs/operator/startWith';
-import { _switch as switchAll } from 'rxjs/operator/switch';
+// import { _switch as switchAll } from 'rxjs/operator/switch';
 import { switchMap } from 'rxjs/operator/switchMap';
 import { take } from 'rxjs/operator/take';
 import { takeUntil } from 'rxjs/operator/takeUntil';
@@ -116,11 +117,21 @@ function setScrollPosition() {
   document.body.style.minHeight = '';
 }
 
-function resetScrollPostion(snowball) {
+function scrollHashIntoView(hash) {
+  const el = document.getElementById(hash.substr(1));
+  if (el) el.scrollIntoView();
+  else window.scroll(window.pageXOffset, 0);
+}
+
+function resetScrollPostion({ type, url: { hash } }) {
   if (this.scrollRestoration) {
-    if (snowball.type === POP) {
+    if (type === POP) {
       setScrollPosition();
     }
+  }
+
+  if (type === PUSH) {
+    scrollHashIntoView(hash);
   }
 }
 
@@ -186,7 +197,6 @@ function recoverIfResponse(snowball, error) {
   return Observable::of(assign(snowball, { error }));
 }
 
-
 function fetchPage(snowball) {
   return Observable::ajax(hrefToAjax(snowball))
     ::map(({ response }) => assign(snowball, { response }))
@@ -203,9 +213,9 @@ function getFetch({ url: { href } }, prefetch, prefetch$) {
 }
 
 function getAnimationDuration() {
-  return this.duration === 'manual' ?
-    this.ready$ :
-    Observable::timer(this.duration + DEJITTER);
+  return (/* this.duration === 'manual' ?
+    this.ready$ : */
+    Observable::timer(this.duration + DEJITTER));
 }
 
 function getResponse([snowball, prefetch], prefetch$) {
@@ -321,6 +331,7 @@ function updateDOM(snowball) {
     const { url, title, content } = snowball;
 
     if (snowball.type === PUSH) {
+      // console.log('replaceState', url);
       window.history.replaceState({ id: this.el.id }, title, url);
     }
 
@@ -335,6 +346,7 @@ function onStart(snowball) {
   const { url } = snowball;
 
   if (snowball.type === PUSH) {
+    // console.log('pushState', url);
     window.history.pushState({ id: this.el.id }, '', url);
   }
 
@@ -370,16 +382,16 @@ function onLoad(x) {
 // }
 
 function onDOMError(err) {
+  console.error(err);
   this[fire]('dom-error', err);
 }
 
 function onScriptError(err) {
+  console.error(err);
   this[fire]('script-error', err);
 }
 
 function setupObservables() {
-  this.fready$ = new Subject();
-  this.ready$ = this.fready$::share();
   const pushSubject = new Subject();
   const hintSubject = new Subject();
   // this.fready$ = new Subject();
@@ -411,6 +423,18 @@ function setupObservables() {
 
   // Definitive page change (i.e. either push or pop event)
   const page$ = Observable::merge(push$, pop$)
+    // ::startWith({ url: new URL(window.location) })
+    // ::pairwise()
+    // ::filter(([{ url: prevUrl }, { event, url }]) => {
+    //   event.preventDefault();
+    //   console.log(prevUrl.pathname, url.pathname);
+    //   const samePage = prevUrl.pathname === url.pathname;
+    //   // HACK: filter shouldn't have side effects, but this is convenient...
+    //   // if (samePage) scrollHashIntoView(url.hash);
+    //   // We have a pop event if it's not the same page and the history state was pushed by us.
+    //   return !samePage && history.state && history.state.id === this.el.id;
+    // })
+    // ::map(([, x]) => x)
     ::share();
 
   // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
@@ -564,6 +588,7 @@ function setupObservables() {
   this::onLoad({});
 }
 
+// main export
 export function pushStateMixin(C) {
   return class extends componentMixin(C) {
     static get componentName() { return 'hy-push-state'; }
@@ -578,6 +603,7 @@ export function pushStateMixin(C) {
         blacklist: '.no-push-state',
         duration: 0,
         instantPop: true,
+        prefetch: true,
       };
     }
 
@@ -596,12 +622,12 @@ export function pushStateMixin(C) {
       return this;
     }
 
-    _ready1() {
-      this.fready$.next(true);
-    }
-
-    _ready2() {
-      // this.fready$.next(false);
-    }
+    // _ready1() {
+    //   this.fready$.next(true);
+    // }
+    //
+    // _ready2() {
+    //   // this.fready$.next(false);
+    // }
   };
 }

@@ -440,7 +440,7 @@ function setupObservables() {
     ::distinctUntilChanged((p, q) => p.url.href === q.url.href)
     ::switchMap(this::fetchPage)
     // Start with some value so `withLatestFrom` below doesn't "block"
-    ::startWith({})
+    ::startWith({ url: {} })
     ::share();
 
   ref.response$ = page$

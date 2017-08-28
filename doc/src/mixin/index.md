@@ -1,4 +1,4 @@
-# mixin / index.js
+# src / mixin / index.js
 Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 
 This program is free software: you can redistribute it and/or modify
@@ -196,10 +196,6 @@ function setupScrollRestoration() {
   setScrollPosition();
   window.addEventListener('beforeunload', this::updateHistoryState);
 }
-
-function cacheTitleElement() {
-  this.titleElement = document.querySelector('title') || {};
-}
 ```
 
 URL will only be loaded if it's not an external link, hash, `_blank` target (or similar),
@@ -254,7 +250,6 @@ else
   return Observable::of(assign(snowball, { error }));
 }
 
-
 function fetchPage(snowball) {
   return Observable::ajax(hrefToAjax(snowball))
     ::map(({ response }) => assign(snowball, { response }))
@@ -281,8 +276,8 @@ function getAnimationDuration() {
     Observable::timer(this.duration + DEJITTER));
 }
 
-function getResponse([snowball, prefetch]) {
-  return getFetch(snowball, prefetch, this.prefetch$)
+function getResponse([snowball, prefetch], prefetch$) {
+  return getFetch(snowball, prefetch, prefetch$)
     ::map(fetch => assign(fetch, snowball))
     ::waitUntil(snowball.type === PUSH || !this.instantPop ?
       this::getAnimationDuration() :
@@ -365,7 +360,7 @@ function responseToContent(snowball) {
   const content = this::getContentFromFragment(fragment);
 
   if (content.some(x => x == null)) {
-    throw assign(snowball, { title, content });
+    throw assign(snowball, { title, content, someIdMissing: true });
   }
 
   const scripts = this::tempRemoveScriptTags(content);
@@ -407,7 +402,7 @@ console.log('replaceState', url);
       window.history.replaceState({ id: this.el.id }, title, url);
     }
 
-    this.titleElement.textContent = title;
+    document.title = title;
     this::replaceContent(content);
   } catch (error) {
     throw assign(snowball, { error });
@@ -455,20 +450,49 @@ function onLoad(x) {
 }
 ```
 
-function onFetchError(err) {
-  this[fire]('fetch-error', err);
-}
-
-function onContentError(err) {
-  this[fire]('content-error', err);
-}
+This function handles errors caused while trying to insert the new content into de document.
+If the retrieved documened doesn't contain the ids we are looking for
+we can't insert the content dynamically, so we tell the browser to open the link directly.
 
 
 ```js
-
 function onDOMError(err) {
-  console.error(err);
-  this[fire]('dom-error', err);
+  const { someIdMissing, url } = err;
+  if (someIdMissing) {
+```
+
+Ideally you should prevent this situation by adding the
+`no-push-state` CSS class (name can be changed with the `blacklist` option)
+on links to documents that don't match the expected document layout.
+This only serves as a fallback.
+
+
+```js
+    const ids = this.replaceIds.concat(this.el.id).map(x => `#${x}`).join(', ');
+    console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`);
+    console.warn(`NOTE: For a better user experience, make sure the link that caused this matches the blacklist: '${this.blacklist}'.`);
+    console.warn("NOTE: In markdown (kramdown), you can add CSS classes like this '[Link](/url){:.no-push-state.another-class'.");
+```
+
+To open the link directly, we first pop one entry off the browser history.
+We have to do this because browsers won't handle the back button otherwise.
+TODO: If we didn't call `pushState` optimistically we wouldn't have to do this.
+Then we wait for the animation to complete, and change the document's location.
+
+
+```js
+    history.back();
+    setTimeout(() => { document.location.href = url; }, this.duration);
+```
+
+If it's a different error, throw generic `dom-error` event.
+
+
+```js
+  } else {
+    console.error(err);
+    this[fire]('dom-error', err);
+  }
 }
 
 function onScriptError(err) {
@@ -486,6 +510,8 @@ this.ready$ = this.fready$::share();
 
 
 ```js
+
+  const ref = {};
 
   const push$ = pushSubject
     ::map(event => ({
@@ -550,11 +576,11 @@ Needs to be deferred b/c of "cyclical" dependency.
 ```
 
 A page change event means we want to pause prefetching, while
-a render event means we want to resume prefetching.
+a response event means we want to resume prefetching.
 
 
 ```js
-      Observable::merge(page$::mapTo(true), this.render$::mapTo(false)))
+      Observable::merge(page$::mapTo(true), ref.response$::mapTo(false)))
 ```
 
 Start with `false`, i.e. we want to prefetch
@@ -579,7 +605,7 @@ Includes definitive page change events do deal with unexpected page changes.
 
 
 ```js
-  this.prefetch$ = Observable::merge(hint$, page$)
+  const prefetch$ = Observable::merge(hint$, page$)
 ```
 
 Don't abort a request if the user "jiggles" over a link
@@ -594,46 +620,20 @@ Start with some value so `withLatestFrom` below doesn't "block"
 
 
 ```js
-    ::startWith({})
+    ::startWith({ url: {} })
     ::share();
 
-  this.render$ = page$
+  ref.response$ = page$
     ::effect(this::onStart)
-    ::withLatestFrom(this.prefetch$)
-    ::switchMap(this::getResponse)
-    ::map(this::responseToContent)
-    ::effect(this::onReady)
-    ::effect(this::updateDOM)
-    ::effect(this::resetScrollPostion)
+    ::withLatestFrom(prefetch$)
+    ::switchMap(x => this::getResponse(x, prefetch$))
 ```
 
-::delay(50)
-
-
-```js
-    ::effect(this::onAfter)
-    ::effect({ error: this::onDOMError })
-    ::recover((e, c) => c)
-```
-
-`share`ing the stream between the subscription below and `pauser$`.
+`share`ing the stream between the subscriptions below and `pauser$`.
 
 
 ```js
     ::share();
-```
-
-Add script tags one by one
-This simulates the behavior of a fresh page load
-
-
-```js
-  this.render$
-    ::switchMap(this::reinsertScriptTags)
-    ::effect({ error: this::onScriptError })
-    ::recover((e, c) => c)
-    ::effect(this::onLoad)
-    .subscribe();
 ```
 
 Fire `progress` event when fetching takes longer than expected.
@@ -641,8 +641,30 @@ Fire `progress` event when fetching takes longer than expected.
 
 ```js
   page$
-    ::switchMap(() => this::getAnimationDuration()::takeUntil(this.render$))
+    ::switchMap(() => this::getAnimationDuration()::takeUntil(ref.response$))
     ::effect(this::onProgress)
+    .subscribe();
+
+  ref.response$
+    ::map(this::responseToContent)
+    ::effect(this::onReady)
+    ::effect(this::updateDOM)
+    ::effect(this::resetScrollPostion)
+    /* ? ::delay(50) */
+    ::effect(this::onAfter)
+    ::effect({ error: this::onDOMError })
+    ::recover((e, c) => c)
+```
+
+Add script tags one by one
+This simulates the behavior of a fresh page load
+
+
+```js
+    ::switchMap(this::reinsertScriptTags)
+    ::effect({ error: this::onScriptError })
+    ::recover((e, c) => c)
+    ::effect(this::onLoad)
     .subscribe();
 ```
 
@@ -817,7 +839,6 @@ export function pushStateMixin(C) {
 
       this::checkPreCondition();
       this::setupScrollRestoration();
-      this::cacheTitleElement();
       this::setupObservables();
 
       return this;

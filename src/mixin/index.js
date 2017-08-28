@@ -1,4 +1,4 @@
-// # mixin / index.js
+// # src / mixin / index.js
 // Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
@@ -374,9 +374,9 @@ function onLoad(x) {
 }
 
 // This function handles errors caused while trying to insert the new content into de document.
+// If the retrieved documened doesn't contain the ids we are looking for
+// we can't insert the content dynamically, so we tell the browser to open the link directly.
 function onDOMError(err) {
-  // If the retrieved documened doesn't contain the ids we are looking for
-  // we can't insert the content dynamically, so we tell the browser to open the link directly.
   const { someIdMissing, url } = err;
   if (someIdMissing) {
     // Ideally you should prevent this situation by adding the
@@ -637,7 +637,6 @@ export function pushStateMixin(C) {
 
       return this;
     }
-
     // _ready1() {
     //   this.fready$.next(true);
     // }

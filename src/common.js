@@ -63,21 +63,23 @@ export function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);
 }
 
-// export function expInterval(init, exp) {
-//   return Observable.create((observer) => {
-//     let n = init;
-//     let id;
-//
-//     function next() {
-//       observer.next(n);
-//       n *= exp;
-//       id = setTimeout(next, n);
-//     }
-//
-//     id = setTimeout(next, n);
-//
-//     return () => {
-//       clearTimeout(id);
-//     };
-//   });
-// }
+/*
+export function expInterval(init, exp) {
+  return Observable.create((observer) => {
+    let n = init;
+    let id;
+
+    function next() {
+      observer.next(n);
+      n *= exp;
+      id = setTimeout(next, n);
+    }
+
+    id = setTimeout(next, n);
+
+    return () => {
+      clearTimeout(id);
+    };
+  });
+}
+*/

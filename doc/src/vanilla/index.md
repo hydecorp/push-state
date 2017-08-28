@@ -19,24 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { VanillaComponent, setupDOM } from 'hy-component/src/vanilla';
 import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
-```
-
-import '../style.css';
-
-
-```js
+/* import '../style.css'; */
 
 export const MODERNIZR_TESTS = [
   ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,
 ];
 
 export class PushState extends pushStateMixin(VanillaComponent) {
-```
-
-@override
-
-
-```js
+  /* @override */
   [setupDOM](el) {
     if (!el) throw Error('No element provided');
     return el;

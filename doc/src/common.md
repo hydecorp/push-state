@@ -42,8 +42,7 @@ If you consider a URL being external if either the protocol, hostname or port is
 
 ```js
 export function isExternal({ protocol, host }) {
-  return protocol !== window.location.protocol
-    && host !== window.location.host;
+  return protocol !== window.location.protocol || host !== window.location.host;
 }
 
 export function isHash({ hash, origin, pathname }) {
@@ -70,8 +69,8 @@ export function getScrollTop() {
 export function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);
 }
-```
 
+/*
 export function expInterval(init, exp) {
   return Observable.create((observer) => {
     let n = init;
@@ -90,5 +89,7 @@ export function expInterval(init, exp) {
     };
   });
 }
+*/
+```
 
 

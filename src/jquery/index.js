@@ -18,7 +18,7 @@ import { JQueryComponent, defineJQueryComponent, setupDOM }
 from 'hy-component/src/define-jquery-component';
 
 import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
-// import '../style.css';
+/* import '../style.css'; */
 
 export const MODERNIZR_TESTS = [
   ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,

@@ -36,12 +36,8 @@ export const MODERNIZR_TESTS = [
 
 export class DrawerHTMLElement extends customElementMixin(pushStateMixin(CustomElement)) {
   static get observedAttributes() { return this.getObservedAttributes(); }
-```
 
-@override
-
-
-```js
+  /* @override */
   [getTemplate]() { return fragmentFromString(templateString); }
 }
 ```

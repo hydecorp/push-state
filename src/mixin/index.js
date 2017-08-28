@@ -298,7 +298,7 @@ function responseToContent(snowball) {
   const content = this::getContentFromFragment(fragment);
 
   if (content.some(x => x == null)) {
-    throw assign(snowball, { title, content });
+    throw assign(snowball, { title, content, someIdMissing: true });
   }
 
   const scripts = this::tempRemoveScriptTags(content);
@@ -373,17 +373,33 @@ function onLoad(x) {
   this[fire]('load', x);
 }
 
-// function onFetchError(err) {
-//   this[fire]('fetch-error', err);
-// }
-//
-// function onContentError(err) {
-//   this[fire]('content-error', err);
-// }
-
+// This function handles errors caused while trying to insert the new content into de document.
 function onDOMError(err) {
-  console.error(err);
-  this[fire]('dom-error', err);
+  // If the retrieved documened doesn't contain the ids we are looking for
+  // we can't insert the content dynamically, so we tell the browser to open the link directly.
+  const { someIdMissing, url } = err;
+  if (someIdMissing) {
+    // Ideally you should prevent this situation by adding the
+    // `no-push-state` CSS class (name can be changed with the `blacklist` option)
+    // on links to documents that don't match the expected document layout.
+    // This only serves as a fallback.
+    const ids = this.replaceIds.concat(this.el.id).map(x => `#${x}`).join(', ');
+    console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`);
+    console.warn(`NOTE: For a better user experience, make sure the link that caused this matches the blacklist: '${this.blacklist}'.`);
+    console.warn("NOTE: In markdown (kramdown), you can add CSS classes like this '[Link](/url){:.no-push-state.another-class'.");
+
+    // To open the link directly, we first pop one entry off the browser history.
+    // We have to do this because browsers won't handle the back button otherwise.
+    // TODO: If we didn't call `pushState` optimistically we wouldn't have to do this.
+    // Then we wait for the animation to complete, and change the document's location.
+    history.back();
+    setTimeout(() => { document.location.href = url; }, this.duration);
+
+  // If it's a different error, throw generic `dom-error` event.
+  } else {
+    console.error(err);
+    this[fire]('dom-error', err);
+  }
 }
 
 function onScriptError(err) {

@@ -35,8 +35,7 @@ export function matchesAncestors(selector) {
 
 // If you consider a URL being external if either the protocol, hostname or port is different.
 export function isExternal({ protocol, host }) {
-  return protocol !== window.location.protocol
-    && host !== window.location.host;
+  return protocol !== window.location.protocol || host !== window.location.host;
 }
 
 export function isHash({ hash, origin, pathname }) {

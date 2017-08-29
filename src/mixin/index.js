@@ -574,15 +574,15 @@ function setupObservables() {
     };
 
     // The mutation observer simply puts all mutations on the `mutation$` observable.
-    const observer = new MutationObserver(mutations => mutations.forEach(::mutation$.next));
+    const observer = new MutationObserver(mutations => mutations::forEach(::mutation$.next));
 
     // For every mutation, we remove the event listeners of elements that go out of the component
     // (if any), and add event listeners for all elements that make it into the compnent (if any).
     mutation$
       ::pauseWith(pauser$)
       ::effect(({ addedNodes, removedNodes }) => {
-        removedNodes.forEach(this::removeListeners);
-        addedNodes.forEach(this::addListeners);
+        removedNodes::forEach(this::removeListeners);
+        addedNodes::forEach(this::addListeners);
       })
       ::effect({ error: ::console.error })
       ::recover((e, c) => c)

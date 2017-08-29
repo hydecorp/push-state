@@ -514,6 +514,7 @@ function setupObservables() {
     ::effect(this::onLoad)
     .subscribe();
 
+  // ### Keeping track of links
   // We use a `MutationObserver` to keep track of all the links inside the component,
   // but first we need to check if it is available.
   if ('MutationObserver' in window && 'Set' in window) {
@@ -540,28 +541,32 @@ function setupObservables() {
     // In any case, the `MutationObserver` and `Set` help us keep track of which links are children
     // of this component, so that we can reliably add and remove the event listeners.
     const addListeners = (addedNode) => {
-      addedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
-        if (!set.has(link)) {
-          set.add(link);
-          link.addEventListener('click', pushNext);
-          link.addEventListener('mouseenter', hintNext, { passive: true });
-          link.addEventListener('touchstart', hintNext, { passive: true });
-          link.addEventListener('focus', hintNext, { passive: true });
-        }
-      });
+      if (addedNode instanceof Element) {
+        addedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
+          if (!set.has(link)) {
+            set.add(link);
+            link.addEventListener('click', pushNext);
+            link.addEventListener('mouseenter', hintNext, { passive: true });
+            link.addEventListener('touchstart', hintNext, { passive: true });
+            link.addEventListener('focus', hintNext, { passive: true });
+          }
+        });
+      }
     };
 
     // Usually the elments will be removed from the document altogher
     // when they are removed from this component,
     // but since we can't be sure, we remove the event listners anyway.
     const removeListeners = (removedNode) => {
-      removedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
-        set.delete(link);
-        link.removeEventListener('click', pushNext);
-        link.removeEventListener('mouseenter', hintNext, { passive: true });
-        link.removeEventListener('touchstart', hintNext, { passive: true });
-        link.removeEventListener('focus', hintNext, { passive: true });
-      });
+      if (removedNode instanceof Element) {
+        removedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
+          set.delete(link);
+          link.removeEventListener('click', pushNext);
+          link.removeEventListener('mouseenter', hintNext, { passive: true });
+          link.removeEventListener('touchstart', hintNext, { passive: true });
+          link.removeEventListener('focus', hintNext, { passive: true });
+        });
+      }
     };
 
     // The mutation observer simply puts all mutations on the `mutation$` observable.

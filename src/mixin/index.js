@@ -309,8 +309,8 @@ function responseToContent(snowball) {
 function replaceContentByIds(elements) {
   this.replaceIds
     .map(id => document.getElementById(id))
-    .forEach((oldElement) => {
-      oldElement.parentNode.replaceChild(elements.shift(), oldElement);
+    .forEach((oldElement, i) => {
+      oldElement.parentNode.replaceChild(elements[i], oldElement);
     });
 }
 

@@ -315,6 +315,7 @@ function replaceContentByIds(elements) {
 }
 
 function replaceContentWholesale([content]) {
+  /* TODO: avoid innerHTML */
   this.el.innerHTML = content.innerHTML;
 }
 
@@ -407,6 +408,7 @@ function onScriptError(err) {
   this[fire]('script-error', err);
 }
 
+// ## Setting up the pipeline
 function setupObservables() {
   const pushSubject = new Subject();
   const hintSubject = new Subject();
@@ -490,18 +492,11 @@ function setupObservables() {
     // `share`ing the stream between the subscriptions below and `pauser$`.
     ::share();
 
-  // Fire `progress` event when fetching takes longer than expected.
-  page$
-    ::switchMap(() => this::getAnimationDuration()::takeUntil(ref.response$))
-    ::effect(this::onProgress)
-    .subscribe();
-
   ref.response$
     ::map(this::responseToContent)
     ::effect(this::onReady)
     ::effect(this::updateDOM)
     ::effect(this::resetScrollPostion)
-    /* ? ::delay(50) */
     ::effect(this::onAfter)
     ::effect({ error: this::onDOMError })
     ::recover((e, c) => c)
@@ -513,6 +508,15 @@ function setupObservables() {
     ::recover((e, c) => c)
     ::effect(this::onLoad)
     .subscribe();
+
+  // Fire `progress` event when fetching takes longer than expected.
+  page$
+    ::switchMap(() => this::getAnimationDuration()::takeUntil(ref.response$))
+    ::effect(this::onProgress)
+    .subscribe();
+  // NOTE: It is important that we subscribe to this last,
+  // otherwise `onProgress` will not be canceled by `response$` in time.
+  // (i.e. execution order of concurrent events is determined by subscription order)
 
   // ### Keeping track of links
   // We use a `MutationObserver` to keep track of all the links inside the component,
@@ -609,7 +613,7 @@ function setupObservables() {
   this::onLoad({});
 }
 
-// main export
+// ## Main export
 export function pushStateMixin(C) {
   return class extends componentMixin(C) {
     static get componentName() { return 'hy-push-state'; }

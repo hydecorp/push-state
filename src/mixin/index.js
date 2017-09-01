@@ -24,6 +24,9 @@ import { componentMixin, setup, fire,
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
+import { animationFrame } from 'rxjs/scheduler/animationFrame';
+// import { asap } from 'rxjs/scheduler/asap';
+
 import { defer } from 'rxjs/observable/defer';
 import { from } from 'rxjs/observable/from';
 import { fromEvent } from 'rxjs/observable/fromEvent';
@@ -45,6 +48,7 @@ import { filter } from 'rxjs/operator/filter';
 import { map } from 'rxjs/operator/map';
 import { mapTo } from 'rxjs/operator/mapTo';
 // import { mergeMap } from 'rxjs/operator/mergeMap';
+import { observeOn } from 'rxjs/operator/observeOn';
 // import { partition } from 'rxjs/operator/partition';
 // import { pairwise } from 'rxjs/operator/pairwise';
 import { share } from 'rxjs/operator/share';
@@ -53,7 +57,7 @@ import { startWith } from 'rxjs/operator/startWith';
 import { switchMap } from 'rxjs/operator/switchMap';
 import { take } from 'rxjs/operator/take';
 import { takeUntil } from 'rxjs/operator/takeUntil';
-// import { throttleTime } from 'rxjs/operator/throttleTime';
+import { throttleTime } from 'rxjs/operator/throttleTime';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zipWith } from 'rxjs/operator/zip';
 
@@ -87,7 +91,7 @@ const PUSH = 'push';
 const HINT = 'hint';
 const POP = 'pop';
 
-const DEJITTER = 100;
+const anim$ = Symbol('animObservable');
 
 const { forEach } = Array.prototype;
 const assign = ::Object.assign;
@@ -110,23 +114,27 @@ function checkPreCondition() {
   }
 }
 
-function setScrollPosition() {
+function resetScrollPostion() {
   const state = history.state || {};
-  document.body.style.minHeight = `${state.scrollHeight || 0}px`;
-  if (state.scrollTop != null) window.scroll(window.pageXOffset, state.scrollTop);
-  document.body.style.minHeight = '';
+  if (state.scrollTop != null) {
+    document.body.style.minHeight = state.scrollHeight;
+    window.scroll(window.pageXOffset, state.scrollTop);
+    document.body.style.minHeight = '';
+  }
 }
 
 function scrollHashIntoView(hash) {
-  const el = document.getElementById(hash.substr(1));
-  if (el) el.scrollIntoView();
-  else window.scroll(window.pageXOffset, 0);
+  if (hash) {
+    const el = document.getElementById(hash);
+    if (el) el.scrollIntoView();
+    else window.scroll(window.pageXOffset, 0);
+  } else window.scroll(window.pageXOffset, 0);
 }
 
-function resetScrollPostion({ type, url: { hash } }) {
+function manageScrollPostion({ type, url: { hash } }) {
   if (this.scrollRestoration) {
     if (type === POP) {
-      setScrollPosition();
+      resetScrollPostion();
     }
   }
 
@@ -144,16 +152,15 @@ function saveScrollPosition(state) {
 
 function updateHistoryState() {
   const state = this::saveScrollPosition(history.state || { id: this.el.id });
-  // console.log('replaceState', window.location.href);
   history.replaceState(state, document.title, window.location);
 }
 
 function setupScrollRestoration() {
   if ('scrollRestoration' in history) {
-    history.scrollRestoration = this.scrollRestoration ? 'manual' : 'auto';
+    history.scrollRestoration = this.scrollRestoration ? 'manual' : history.scrollRestoration;
   }
 
-  setScrollPosition();
+  resetScrollPostion();
   window.addEventListener('beforeunload', this::updateHistoryState);
 }
 
@@ -213,9 +220,7 @@ function getFetch({ url: { href } }, prefetch, prefetch$) {
 }
 
 function getAnimationDuration() {
-  return (/* this.duration === 'manual' ?
-    this.ready$ : */
-    Observable::timer(this.duration + DEJITTER));
+  return this[anim$] ? this[anim$] : Observable::timer(this.duration);
 }
 
 function getResponse([snowball, prefetch], prefetch$) {
@@ -329,14 +334,11 @@ function replaceContent(content) {
 
 function updateDOM(snowball) {
   try {
-    const { url, title, content } = snowball;
-
-    if (snowball.type === PUSH) {
-      // console.log('replaceState', url);
-      window.history.replaceState({ id: this.el.id }, title, url);
-    }
+    const { title, content } = snowball;
 
     document.title = title;
+    if (snowball.type === PUSH) history.replaceState(history.state, title, location);
+
     this::replaceContent(content);
   } catch (error) {
     throw assign(snowball, { error });
@@ -346,10 +348,7 @@ function updateDOM(snowball) {
 function onStart(snowball) {
   const { url } = snowball;
 
-  if (snowball.type === PUSH) {
-    // console.log('pushState', url);
-    window.history.pushState({ id: this.el.id }, '', url);
-  }
+  if (snowball.type === PUSH) history.pushState({ id: this.el.id }, '', url);
 
   this[fire]('start', snowball);
 }
@@ -412,9 +411,8 @@ function onScriptError(err) {
 function setupObservables() {
   const pushSubject = new Subject();
   const hintSubject = new Subject();
-  // this.fready$ = new Subject();
-  // this.ready$ = this.fready$::share();
 
+  // This is used to refernce deferred observaables.
   const ref = {};
 
   const push$ = pushSubject
@@ -428,15 +426,14 @@ function setupObservables() {
     ::effect(({ event }) => {
       event.preventDefault();
       this::updateHistoryState();
-    });
-    // ::throttleTime(this.duration + DEJITTER); // TODO: generalize
+    })
+    ::throttleTime(this.repeatDelay);
 
   const pop$ = Observable::fromEvent(window, 'popstate')
     ::filter(() => history.state && history.state.id === this.el.id)
-    ::map(event => ({
+    ::map(() => ({
       type: POP,
       url: new URL(window.location),
-      event,
     }));
 
   // Definitive page change (i.e. either push or pop event)
@@ -492,11 +489,17 @@ function setupObservables() {
     // `share`ing the stream between the subscriptions below and `pauser$`.
     ::share();
 
+  // Reset the scroll position when the animation is complete
+  page$
+    ::switchMap(x => this::getAnimationDuration()::mapTo(x))
+    ::effect(this::manageScrollPostion)
+    .subscribe();
+
   ref.response$
     ::map(this::responseToContent)
+    ::observeOn(animationFrame)
     ::effect(this::onReady)
     ::effect(this::updateDOM)
-    ::effect(this::resetScrollPostion)
     ::effect(this::onAfter)
     ::effect({ error: this::onDOMError })
     ::recover((e, c) => c)
@@ -629,6 +632,7 @@ export function pushStateMixin(C) {
         duration: 0,
         instantPop: true,
         prefetch: true,
+        repeatDelay: 500,
       };
     }
 
@@ -646,12 +650,8 @@ export function pushStateMixin(C) {
 
       return this;
     }
-    // _ready1() {
-    //   this.fready$.next(true);
-    // }
-    //
-    // _ready2() {
-    //   // this.fready$.next(false);
-    // }
+
+    /* HACK */
+    setAnim$(x) { this[anim$] = x; }
   };
 }

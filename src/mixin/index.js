@@ -49,8 +49,8 @@ import { map } from 'rxjs/operator/map';
 import { mapTo } from 'rxjs/operator/mapTo';
 // import { mergeMap } from 'rxjs/operator/mergeMap';
 import { observeOn } from 'rxjs/operator/observeOn';
-// import { partition } from 'rxjs/operator/partition';
-// import { pairwise } from 'rxjs/operator/pairwise';
+import { partition } from 'rxjs/operator/partition';
+import { pairwise } from 'rxjs/operator/pairwise';
 import { share } from 'rxjs/operator/share';
 import { startWith } from 'rxjs/operator/startWith';
 // import { _switch as switchAll } from 'rxjs/operator/switch';
@@ -125,10 +125,10 @@ function resetScrollPostion() {
 
 function scrollHashIntoView(hash) {
   if (hash) {
-    const el = document.getElementById(hash);
+    const el = document.getElementById(hash.substr(1));
     if (el) el.scrollIntoView();
     else window.scroll(window.pageXOffset, 0);
-  } else window.scroll(window.pageXOffset, 0);
+  }
 }
 
 function manageScrollPostion({ type, url: { hash } }) {
@@ -139,7 +139,7 @@ function manageScrollPostion({ type, url: { hash } }) {
   }
 
   if (type === PUSH) {
-    scrollHashIntoView(hash);
+    requestAnimationFrame(() => scrollHashIntoView(hash));
   }
 }
 
@@ -151,7 +151,7 @@ function saveScrollPosition(state) {
 }
 
 function updateHistoryState() {
-  const state = this::saveScrollPosition(history.state || { id: this.el.id });
+  const state = this::saveScrollPosition(history.state || { [this.el.id]: true });
   history.replaceState(state, document.title, window.location);
 }
 
@@ -164,23 +164,23 @@ function setupScrollRestoration() {
   window.addEventListener('beforeunload', this::updateHistoryState);
 }
 
-// URL will only be loaded if it's not an external link, hash, `_blank` target (or similar),
-// or blacklisted.
-function shouldLoadAnchor(anchor, url, blacklist, hrefRegex) {
-  const { target } = anchor;
-  return !isExternal(url) && !isHash(url)
-    && target === ''
+function shouldLoadAnchor(anchor, blacklist, hrefRegex) {
+  return anchor && anchor.target === ''
     && !anchor::matches(blacklist)
-    && (!hrefRegex || url.href.search(hrefRegex) !== -1);
+    && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
 }
 
-function isPageChangeAnchor({ url, anchor }) {
-  return anchor && anchor.href && shouldLoadAnchor(anchor, url, this.blacklist, this.hrefRegex);
+function isPrefetchEvent({ url, anchor }) {
+  return shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
+    && !isExternal(url)
+    && !isHash(url);
 }
 
 function isPageChangeEvent(snowball) {
-  const { event: { metaKey, ctrlKey } } = snowball;
-  return !metaKey && !ctrlKey && this::isPageChangeAnchor(snowball);
+  const { event: { metaKey, ctrlKey }, url, anchor } = snowball;
+  return !metaKey && !ctrlKey
+    && shouldLoadAnchor(anchor, this.blacklist, this.hrefRegex)
+    && !isExternal(url);
 }
 
 function hrefToAjax({ url }) {
@@ -346,9 +346,11 @@ function updateDOM(snowball) {
 }
 
 function onStart(snowball) {
-  const { url } = snowball;
+  const { type, url: { href } } = snowball;
 
-  if (snowball.type === PUSH) history.pushState({ id: this.el.id }, '', url);
+  if (type === PUSH) {
+    history.pushState({ [this.el.id]: true }, '', href);
+  }
 
   this[fire]('start', snowball);
 }
@@ -415,6 +417,7 @@ function setupObservables() {
   // This is used to refernce deferred observaables.
   const ref = {};
 
+  // const [push$, hash$] = pushSubject
   const push$ = pushSubject
     ::map(event => ({
       type: PUSH,
@@ -430,27 +433,20 @@ function setupObservables() {
     ::throttleTime(this.repeatDelay);
 
   const pop$ = Observable::fromEvent(window, 'popstate')
-    ::filter(() => history.state && history.state.id === this.el.id)
+    ::filter(() => history.state && history.state[this.el.id])
     ::map(() => ({
       type: POP,
       url: new URL(window.location),
     }));
 
-  // Definitive page change (i.e. either push or pop event)
-  const page$ = Observable::merge(push$, pop$)
-    // ::startWith({ url: new URL(window.location) })
-    // ::pairwise()
-    // ::filter(([{ url: prevUrl }, { event, url }]) => {
-    //   event.preventDefault();
-    //   console.log(prevUrl.pathname, url.pathname);
-    //   const samePage = prevUrl.pathname === url.pathname;
-    //   // HACK: filter shouldn't have side effects, but this is convenient...
-    //   // if (samePage) scrollHashIntoView(url.hash);
-    //   // We have a pop event if it's not the same page and the history state was pushed by us.
-    //   return !samePage && history.state && history.state.id === this.el.id;
-    // })
-    // ::map(([, x]) => x)
-    ::share();
+  const [page$, hash$] = Observable::merge(push$, pop$)
+    ::startWith({ url: new URL(location) })
+    ::pairwise()
+    ::map(([{ url: prevUrl }, snowball]) => assign(snowball, {
+      pageChange: prevUrl.pathname !== snowball.url.pathname,
+    }))
+    ::share()
+    ::partition(({ pageChange }) => pageChange);
 
   // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
   // while a _definitive_ page load is going on => `pauser$` stream.
@@ -470,7 +466,7 @@ function setupObservables() {
       url: new URL(event.currentTarget.href),
       event,
     }))
-    ::filter(this::isPageChangeAnchor);
+    ::filter(this::isPrefetchEvent);
 
   // The stream of (pre-)fetch events.
   // Includes definitive page change events do deal with unexpected page changes.
@@ -492,7 +488,7 @@ function setupObservables() {
   // Reset the scroll position when the animation is complete
   page$
     ::switchMap(x => this::getAnimationDuration()::mapTo(x))
-    ::effect(this::manageScrollPostion)
+    ::effect(() => window.scroll(window.pageXOffset, 0))
     .subscribe();
 
   ref.response$
@@ -501,6 +497,7 @@ function setupObservables() {
     ::effect(this::onReady)
     ::effect(this::updateDOM)
     ::effect(this::onAfter)
+    ::effect(this::manageScrollPostion)
     ::effect({ error: this::onDOMError })
     ::recover((e, c) => c)
 
@@ -511,6 +508,15 @@ function setupObservables() {
     ::recover((e, c) => c)
     ::effect(this::onLoad)
     .subscribe();
+
+  hash$
+    .subscribe(({ type, url }) => {
+      const { hash, href } = url;
+      if (type === PUSH) {
+        history.pushState({ [this.el.id]: true }, document.title, href);
+      }
+      scrollHashIntoView(hash);
+    });
 
   // Fire `progress` event when fetching takes longer than expected.
   page$

@@ -15,11 +15,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { VanillaComponent, setupDOM } from 'hy-component/src/vanilla';
-import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
+import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 /* import '../style.css'; */
 
-export const MODERNIZR_TESTS = [
-  ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,
+export const VANILLA_FEATURE_TESTS = [
+  ...MIXIN_FEATURE_TESTS,
 ];
 
 export class PushState extends pushStateMixin(VanillaComponent) {

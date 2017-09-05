@@ -18,8 +18,7 @@ import 'core-js/fn/array/for-each';
 import 'core-js/fn/function/bind';
 import 'core-js/fn/object/assign';
 
-import { componentMixin, setup, fire,
-  MODERNIZR_TESTS as COMPONENT_MODERNIZER_TESTS } from 'hy-component/src/component';
+import { componentMixin, setup, fire, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -74,8 +73,8 @@ import {
 } from '../common';
 
 // TODO: explain `MODERNIZR_TESTS`
-export const MODERNIZR_TESTS = [
-  ...COMPONENT_MODERNIZER_TESTS,
+export const MIXIN_FEATURE_TESTS = [
+  ...COMPONENT_FEATURE_TESTS,
   'documentfragment',
   'eventlistener',
   'history',

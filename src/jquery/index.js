@@ -17,11 +17,11 @@
 import { JQueryComponent, defineJQueryComponent, setupDOM }
 from 'hy-component/src/define-jquery-component';
 
-import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
+import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 /* import '../style.css'; */
 
-export const MODERNIZR_TESTS = [
-  ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,
+export const JQUERY_FEATURE_TESTS = [
+  ...MIXIN_FEATURE_TESTS,
 ];
 
 // TODO: rename? check how jQuery UI does it

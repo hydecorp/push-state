@@ -17,16 +17,9 @@
 import {
   customElementMixin,
   CustomElement,
-  MODERNIZR_TESTS as CUSTOM_ELEMENT_MODERNIZER_TESTS,
 } from 'hy-component/src/custom-element';
 
-import { pushStateMixin, MODERNIZR_TESTS as DRAWER_MIXIN_MODERNIZR_TESTS } from '../mixin';
-
-export const MODERNIZR_TESTS = [
-  ...CUSTOM_ELEMENT_MODERNIZER_TESTS,
-  ...DRAWER_MIXIN_MODERNIZR_TESTS,
-  'htmlimports',
-];
+import { pushStateMixin } from '../mixin';
 
 if ('customElements' in window) {
   customElements.define('hy-push-state', class extends customElementMixin(pushStateMixin(CustomElement)) {

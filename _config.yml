@@ -36,8 +36,8 @@ exclude:
   - webpack.config.js
   - src
   - scripts
-
-strip_title: true
+include:
+  - LICENSE.md
 
 defaults:
   - scope:
@@ -45,6 +45,19 @@ defaults:
     values:
       menu: true
       order: 1
+
+titles_from_headings:
+  strip_title: true
+  collections: true
+
+relative_links:
+  collections: true
+
+optional_front_matter:
+  remove_originals: true
+
+readme_index:
+  remove_originals: true
 
 data_social:
   github:

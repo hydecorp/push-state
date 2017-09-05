@@ -257,14 +257,26 @@ function tempRemoveScriptTags(content) {
 }
 
 function insertScript([script, ref]) {
+  const write = document.write;
+
+  // Temporarliy overwrite `document.wirte` to simulate its behavior during the initial load.
+  // This works because one `insertScript` is called one-at-a-time (see `concatMap`).
+  document.write = (...args) => {
+    const temp = document.createElement('span');
+    temp.innerHTML = args.join();
+    temp.childNodes::forEach((node) => { ref.parentNode.insertBefore(node, ref); });
+  };
+
   return script.src !== '' ?
     Observable.create((observer) => {
       script.addEventListener('load', (x) => {
+        document.write = write;
         observer.next(x);
         observer.complete();
       });
 
       script.addEventListener('error', (x) => {
+        document.write = write;
         observer.error(x);
       });
 
@@ -273,6 +285,7 @@ function insertScript([script, ref]) {
     Observable::of({})
       ::effect(() => {
         ref.parentNode.insertBefore(script, ref.nextElementSibling);
+        document.write = write;
       });
 }
 
@@ -284,15 +297,6 @@ function reinsertScriptTags(snowball) {
   return Observable::from(scripts)
     ::concatMap(insertScript)
     ::recover((error) => { throw assign(snowball, { error }); });
-
-  // TODO: the code below does not guarantee that a script tag has loaded before a `async` one
-  // const [script$, asyncScript$] = Observable.from(scripts)
-  //   .partition(([script]) => script.async !== '');
-  //
-  // return Observable.merge(
-  //     script$.concatMap(this.insertScript),
-  //     asyncScript$.mergeMap(this.insertScript),
-  //   );
 }
 
 function responseToContent(snowball) {
@@ -491,7 +495,7 @@ function setupObservables() {
     ::effect(() => window.scroll(window.pageXOffset, 0))
     .subscribe();
 
-  ref.response$
+  let main$ = ref.response$
     ::map(this::responseToContent)
     ::observeOn(animationFrame)
     ::effect(this::onReady)
@@ -499,13 +503,18 @@ function setupObservables() {
     ::effect(this::onAfter)
     ::effect(this::manageScrollPostion)
     ::effect({ error: this::onDOMError })
-    ::recover((e, c) => c)
+    ::recover((e, c) => c);
 
-    // Add script tags one by one
-    // This simulates the behavior of a fresh page load
-    ::switchMap(this::reinsertScriptTags)
-    ::effect({ error: this::onScriptError })
-    ::recover((e, c) => c)
+  if (this.scriptHack) {
+    main$ = main$
+      // Add script tags one by one
+      // This simulates the behavior of a fresh page load
+      ::switchMap(this::reinsertScriptTags)
+      ::effect({ error: this::onScriptError })
+      ::recover((e, c) => c);
+  }
+
+  main$
     ::effect(this::onLoad)
     .subscribe();
 
@@ -639,6 +648,7 @@ export function pushStateMixin(C) {
         instantPop: true,
         prefetch: true,
         repeatDelay: 500,
+        scriptHack: false,
       };
     }
 

@@ -207,11 +207,13 @@ function fetchPage(snowball) {
   return Observable::ajax(hrefToAjax(snowball))
     ::map(({ response }) => assign(snowball, { response }))
     ::recover(error => this::recoverIfResponse(snowball, error));
+    /*
     // TODO: make this available via option?
-    // .retryWhen(() => Observable.merge(
-    //     Observable.fromEvent(window, 'online'),
-    //     expInterval(1000, 2))
-    //   .do(this.onRetry.bind(this, snowball)));
+    .retryWhen(() => Observable.merge(
+        Observable.fromEvent(window, 'online'),
+        expInterval(1000, 2))
+      .do(this.onRetry.bind(this, snowball)));
+    */
 }
 
 function getFetch({ url: { href } }, prefetch, prefetch$) {
@@ -389,9 +391,11 @@ function onDOMError(err) {
     // on links to documents that don't match the expected document layout.
     // This only serves as a fallback.
     const ids = this.replaceIds.concat(this.el.id).map(x => `#${x}`).join(', ');
-    console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`);
-    console.warn(`NOTE: For a better user experience, make sure the link that caused this matches the blacklist: '${this.blacklist}'.`);
-    console.warn("NOTE: In markdown (kramdown), you can add CSS classes like this '[Link](/url){:.no-push-state.another-class'.");
+    if (process.env.DEBUG) {
+      console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`);
+      console.warn(`NOTE: For a better user experience, make sure the link that caused this matches the blacklist: '${this.blacklist}'.`);
+      console.warn("NOTE: In markdown (kramdown), you can add CSS classes like this '[Link](/url){:.no-push-state.another-class'.");
+    }
 
     // To open the link directly, we first pop one entry off the browser history.
     // We have to do this because browsers won't handle the back button otherwise.
@@ -402,14 +406,19 @@ function onDOMError(err) {
 
   // If it's a different error, throw generic `dom-error` event.
   } else {
-    console.error(err);
+    if (process.env.DEBUG) console.error(err);
     this[fire]('dom-error', err);
   }
 }
 
-function onScriptError(err) {
-  console.error(err);
-  this[fire]('script-error', err);
+function onScriptError(snowball) {
+  if (process.env.DEBUG) console.error(snowball);
+  this[fire]('script-error', snowball);
+}
+
+function onFetchError(snowball) {
+  if (process.env.DEBUG) console.error(snowball);
+  this[fire]('fetch-error', snowball);
 }
 
 // ## Setting up the pipeline
@@ -442,14 +451,14 @@ function setupObservables() {
       url: new URL(window.location),
     }));
 
-  const [page$, hash$] = Observable::merge(push$, pop$)
+  const [hash$, page$] = Observable::merge(push$, pop$)
     ::startWith({ url: new URL(location) })
     ::pairwise()
-    ::map(([{ url: prevUrl }, snowball]) => assign(snowball, {
-      pageChange: prevUrl.pathname !== snowball.url.pathname,
+    ::map(([{ url: { pathname, hash } }, snowball]) => assign(snowball, {
+      hashChange: hash !== snowball.url.hash && pathname === snowball.url.pathname,
     }))
     ::share()
-    ::partition(({ pageChange }) => pageChange);
+    ::partition(({ hashChange }) => hashChange);
 
   // We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
   // while a _definitive_ page load is going on => `pauser$` stream.
@@ -459,7 +468,8 @@ function setupObservables() {
       // a response event means we want to resume prefetching.
       Observable::merge(page$::mapTo(true), ref.response$::mapTo(false)))
     // Start with `false`, i.e. we want to prefetch
-    ::startWith(false);
+    ::startWith(false)
+    ::share();
 
   const hint$ = hintSubject
     ::pauseWith(pauser$)
@@ -488,13 +498,15 @@ function setupObservables() {
     // `share`ing the stream between the subscriptions below and `pauser$`.
     ::share();
 
+  const [responseOk$, fetchError$] = ref.response$::partition(({ error }) => !error);
+
   // Reset the scroll position when the animation is complete
   page$
     ::switchMap(x => this::getAnimationDuration()::mapTo(x))
     ::effect(() => window.scroll(window.pageXOffset, 0))
     .subscribe();
 
-  let main$ = ref.response$
+  let main$ = responseOk$
     ::map(this::responseToContent)
     ::observeOn(animationFrame)
     ::effect(this::onReady)
@@ -526,9 +538,14 @@ function setupObservables() {
       scrollHashIntoView(hash);
     });
 
+  fetchError$
+    .subscribe((snowball) => {
+      this::onFetchError(snowball);
+    });
+
   // Fire `progress` event when fetching takes longer than expected.
   page$
-    ::switchMap(() => this::getAnimationDuration()::takeUntil(ref.response$))
+    ::switchMap(snowball => this::getAnimationDuration()::takeUntil(ref.response$)::mapTo(snowball))
     ::effect(this::onProgress)
     .subscribe();
   // NOTE: It is important that we subscribe to this last,
@@ -601,7 +618,7 @@ function setupObservables() {
         removedNodes::forEach(this::removeListeners);
         addedNodes::forEach(this::addListeners);
       })
-      ::effect({ error: ::console.error })
+      ::effect({ error: (err) => { if (process.env.DEBUG) console.error(err); } })
       ::recover((e, c) => c)
       .subscribe();
 
@@ -666,7 +683,8 @@ export function pushStateMixin(C) {
       return this;
     }
 
-    /* HACK */
-    setAnim$(x) { this[anim$] = x; }
+    set _animation$(x) {
+      this[anim$] = x;
+    }
   };
 }

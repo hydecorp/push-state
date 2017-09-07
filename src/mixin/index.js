@@ -86,9 +86,9 @@ export const MIXIN_FEATURE_TESTS = [
 export { setup };
 
 // TODO
-const PUSH = 'push';
-const HINT = 'hint';
-const POP = 'pop';
+export const PUSH = 'push';
+export const HINT = 'hint';
+export const POP = 'pop';
 
 const anim$ = Symbol('animObservable');
 
@@ -217,7 +217,9 @@ function fetchPage(snowball) {
 }
 
 function getFetch({ url: { href } }, prefetch, prefetch$) {
-  return href === prefetch.url.href ? Observable::of(prefetch) : prefetch$::take(1);
+  return href === prefetch.url.href && !prefetch.error ?
+    Observable::of(prefetch) :
+    prefetch$::take(1);
 }
 
 function getAnimationDuration() {
@@ -324,9 +326,10 @@ function replaceContentByIds(elements) {
     });
 }
 
+// TODO: avoid innerHTML
 function replaceContentWholesale([content]) {
-  /* TODO: avoid innerHTML */
-  this.el.innerHTML = content.innerHTML;
+  while (this.el.firstChild) this.el.removeChild(this.el.firstChild);
+  content.childNodes::forEach(node => this.el.appendChild(node));
 }
 
 function replaceContent(content) {
@@ -351,12 +354,6 @@ function updateDOM(snowball) {
 }
 
 function onStart(snowball) {
-  const { type, url: { href } } = snowball;
-
-  if (type === PUSH) {
-    history.pushState({ [this.el.id]: true }, '', href);
-  }
-
   this[fire]('start', snowball);
 }
 
@@ -372,12 +369,8 @@ function onProgress(snowball) {
   this[fire]('progress', snowball);
 }
 
-// function onRetry(snowball) {
-//   this[fire]('retry', snowball);
-// }
-
-function onLoad(x) {
-  this[fire]('load', x);
+function onLoad(e) {
+  this[fire]('load', e);
 }
 
 // This function handles errors caused while trying to insert the new content into de document.
@@ -426,6 +419,8 @@ function setupObservables() {
   const pushSubject = new Subject();
   const hintSubject = new Subject();
 
+  // this.retry$ = new Subject();
+
   // This is used to refernce deferred observaables.
   const ref = {};
 
@@ -466,7 +461,7 @@ function setupObservables() {
   const pauser$ = Observable::defer(() =>
       // A page change event means we want to pause prefetching, while
       // a response event means we want to resume prefetching.
-      Observable::merge(page$::mapTo(true), ref.response$::mapTo(false)))
+      Observable::merge(page$::mapTo(true), ref.fetch$::mapTo(false)))
     // Start with `false`, i.e. we want to prefetch
     ::startWith(false)
     ::share();
@@ -485,28 +480,32 @@ function setupObservables() {
   // Includes definitive page change events do deal with unexpected page changes.
   const prefetch$ = Observable::merge(hint$, page$)
     // Don't abort a request if the user "jiggles" over a link
-    ::distinctUntilChanged((p, q) => p.url.href === q.url.href)
+    ::distinctUntilChanged((p, q) => p.url.href === q.url.href && p.error === q.error)
     ::switchMap(this::fetchPage)
     // Start with some value so `withLatestFrom` below doesn't "block"
     ::startWith({ url: {} })
     ::share();
 
-  ref.response$ = page$
+  ref.fetch$ = page$
+    ::effect(({ type, url: { href } }) => {
+      if (type === PUSH) history.pushState({ [this.el.id]: true }, '', href);
+    })
     ::effect(this::onStart)
     ::withLatestFrom(prefetch$)
     ::switchMap(x => this::getResponse(x, prefetch$))
     // `share`ing the stream between the subscriptions below and `pauser$`.
     ::share();
 
-  const [responseOk$, fetchError$] = ref.response$::partition(({ error }) => !error);
+  const [fetchOk$, fetchError$] = ref.fetch$::partition(({ error }) => !error);
 
   // Reset the scroll position when the animation is complete
+  // TODO: should this be part of this component?
   page$
     ::switchMap(x => this::getAnimationDuration()::mapTo(x))
     ::effect(() => window.scroll(window.pageXOffset, 0))
     .subscribe();
 
-  let main$ = responseOk$
+  let main$ = fetchOk$
     ::map(this::responseToContent)
     ::observeOn(animationFrame)
     ::effect(this::onReady)
@@ -545,11 +544,11 @@ function setupObservables() {
 
   // Fire `progress` event when fetching takes longer than expected.
   page$
-    ::switchMap(snowball => this::getAnimationDuration()::takeUntil(ref.response$)::mapTo(snowball))
+    ::switchMap(snowball => this::getAnimationDuration()::takeUntil(ref.fetch$)::mapTo(snowball))
     ::effect(this::onProgress)
     .subscribe();
   // NOTE: It is important that we subscribe to this last,
-  // otherwise `onProgress` will not be canceled by `response$` in time.
+  // otherwise `onProgress` will not be canceled by `fetch$` in time.
   // (i.e. execution order of concurrent events is determined by subscription order)
 
   // ### Keeping track of links

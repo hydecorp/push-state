@@ -42,7 +42,7 @@ import 'core-js/fn/object/assign';
 // Importing the hy-compontent base libary,
 // which helps with making multiple versions of the component (Vanilla JS, WebComponent, etc...).
 import { componentMixin, sFire, sSetup, sSetupDOM, COMPONENT_FEATURE_TESTS }
-from 'hy-component/src/component';
+  from 'hy-component/src/component';
 
 // Importing the subset of RxJS functions that we are going to use.
 // Note that some of these have been renamed to avoid conflicts with keywords,
@@ -176,7 +176,6 @@ function histId() {
 
 // Given a hash, find the element of the same id on the page, and scroll it into view.
 // If no hash is provided, scroll to the top instead.
-// FIXME: MSIE
 function scrollHashIntoView(hash) {
   if (hash) {
     const el = document.getElementById(hash.substr(1));
@@ -224,7 +223,7 @@ function updateHistoryState({ type, replace, url: { href, hash } }) {
   if (type === PUSH || type === INIT) {
     const id = this::histId();
     const method = replace ? 'replaceState' : 'pushState';
-    history[method]({ [id]: { hash: !!hash } }, '', href);
+    window.history[method]({ [id]: { hash: !!hash } }, '', href);
   }
 }
 
@@ -248,12 +247,12 @@ function updateHistoryStateHash({ type, url }) {
 
 function saveScrollHistoryState() {
   const state = this::saveScrollPosition(window.history.state || {});
-  history.replaceState(state, document.title, window.location);
+  window.history.replaceState(state, document.title, window.location);
 }
 
 function setupScrollRestoration() {
-  if ('scrollRestoration' in history && this.scrollRestoration) {
-    history.scrollRestoration = 'manual';
+  if ('scrollRestoration' in window.history && this.scrollRestoration) {
+    window.history.scrollRestoration = 'manual';
   }
 
   this::restoreScrollPostion();
@@ -397,11 +396,10 @@ function insertScript([script, ref]) {
     }) :
 
     // Otherwise we insert it into the DOM and reset the `document.write` function.
-    Observable::of({})
-      ::effect(() => {
-        ref.parentNode.insertBefore(script, ref.nextElementSibling);
-        document.write = originalWrite;
-      });
+    Observable::of({})::effect(() => {
+      ref.parentNode.insertBefore(script, ref.nextElementSibling);
+      document.write = originalWrite;
+    });
 }
 
 
@@ -586,8 +584,10 @@ function compareContext(p, q) {
 // Determines if a pair of context's constitutes a hash change (vs. a page chagne)
 // We take as a hash change when the pathname of the URLs is the same,
 // and the `hash` isn't empty.
-function isHashChange([{ url: { pathname: prevPathname } },
-                       { url: { pathname, hash }, type }]) {
+function isHashChange([
+  { url: { pathname: prevPathname } },
+  { url: { pathname, hash }, type },
+]) {
   return pathname === prevPathname
     && (type === POP || (type === PUSH && hash !== ''));
 }

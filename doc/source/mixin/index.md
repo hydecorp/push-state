@@ -49,7 +49,7 @@ which helps with making multiple versions of the component (Vanilla JS, WebCompo
 
 ```js
 import { componentMixin, sFire, sSetup, sSetupDOM, COMPONENT_FEATURE_TESTS }
-from 'hy-component/src/component';
+  from 'hy-component/src/component';
 ```
 
 Importing the subset of RxJS functions that we are going to use.
@@ -236,7 +236,6 @@ function histId() {
 
 Given a hash, find the element of the same id on the page, and scroll it into view.
 If no hash is provided, scroll to the top instead.
-FIXME: MSIE
 
 
 ```js
@@ -295,7 +294,7 @@ function updateHistoryState({ type, replace, url: { href, hash } }) {
   if (type === PUSH || type === INIT) {
     const id = this::histId();
     const method = replace ? 'replaceState' : 'pushState';
-    history[method]({ [id]: { hash: !!hash } }, '', href);
+    window.history[method]({ [id]: { hash: !!hash } }, '', href);
   }
 }
 
@@ -319,12 +318,12 @@ function updateHistoryStateHash({ type, url }) {
 
 function saveScrollHistoryState() {
   const state = this::saveScrollPosition(window.history.state || {});
-  history.replaceState(state, document.title, window.location);
+  window.history.replaceState(state, document.title, window.location);
 }
 
 function setupScrollRestoration() {
-  if ('scrollRestoration' in history && this.scrollRestoration) {
-    history.scrollRestoration = 'manual';
+  if ('scrollRestoration' in window.history && this.scrollRestoration) {
+    window.history.scrollRestoration = 'manual';
   }
 
   this::restoreScrollPostion();
@@ -516,11 +515,10 @@ Otherwise we insert it into the DOM and reset the `document.write` function.
 
 
 ```js
-    Observable::of({})
-      ::effect(() => {
-        ref.parentNode.insertBefore(script, ref.nextElementSibling);
-        document.write = originalWrite;
-      });
+    Observable::of({})::effect(() => {
+      ref.parentNode.insertBefore(script, ref.nextElementSibling);
+      document.write = originalWrite;
+    });
 }
 ```
 
@@ -761,8 +759,10 @@ and the `hash` isn't empty.
 
 
 ```js
-function isHashChange([{ url: { pathname: prevPathname } },
-                       { url: { pathname, hash }, type }]) {
+function isHashChange([
+  { url: { pathname: prevPathname } },
+  { url: { pathname, hash }, type },
+]) {
   return pathname === prevPathname
     && (type === POP || (type === PUSH && hash !== ''));
 }

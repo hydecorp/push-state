@@ -17,10 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import $ from 'jquery';
-
 import { JQueryComponent, defineJQueryComponent, sSetupDOM }
-from 'hy-component/src/define-jquery-component';
+  from 'hy-component/src/define-jquery-component';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 /* import '../style.css'; */
@@ -29,11 +27,10 @@ export const JQUERY_FEATURE_TESTS = [
   ...MIXIN_FEATURE_TESTS,
 ];
 
-export const pushStateJQueryPlugin = defineJQueryComponent('hy.pushState',
+export const pushStateJQueryPlugin = defineJQueryComponent(
+  'hy.pushstate',
   class extends pushStateMixin(JQueryComponent) {
-    [sSetupDOM](el) {
-      return el;
-    }
+    [sSetupDOM]($el) { return $el; }
   },
 );
 ```

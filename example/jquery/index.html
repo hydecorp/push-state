@@ -16,7 +16,7 @@
       <p>Current implementation: <span>jQuery</span></p>
     </aside>
     <div class="wrapper">
-      <div id="pushStateEl">
+      <div id="pushStateEl" data-link-selector="a[href^='..']">
         <main>
           <h1>jQuery Example</h1>
           <ul>
@@ -45,9 +45,7 @@
     </div>
 
     <script>
-      $('#pushStateEl').pushState({
-        linkSelector: 'a[href^=".."]'
-      });
+      $('#pushStateEl').pushstate({ /* options */ });
     </script>
   </body>
 </html>

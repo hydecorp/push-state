@@ -14,21 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import {
-  customElementMixin,
-  CustomElement,
-  sGetTemplate,
-} from 'hy-component/src/custom-element';
+import { customElementMixin, CustomElement, sGetTemplate }
+  from 'hy-component/src/custom-element';
 
 import { pushStateMixin } from '../mixin';
 
 if ('customElements' in window) {
-  customElements.define('hy-push-state',
+  customElements.define(
+    'hy-push-state',
     class extends customElementMixin(pushStateMixin(CustomElement)) {
       static get observedAttributes() { return this.getObservedAttributes(); }
 
       [sGetTemplate]() { return null; }
-    });
+    },
+  );
 } else if (process.env.DEBUG) {
   console.warn('Couldn\'t register hy-drawer component. Did you forget to include the custom elements polyfill?');
 }

@@ -14,18 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { VanillaComponent, setupDOM } from 'hy-component/src/vanilla';
+import { VanillaComponent } from 'hy-component/src/vanilla';
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
-/* import '../style.css'; */
 
 export const VANILLA_FEATURE_TESTS = [
   ...MIXIN_FEATURE_TESTS,
 ];
 
-export class PushState extends pushStateMixin(VanillaComponent) {
-  /* @override */
-  [setupDOM](el) {
-    if (!el) throw Error('No element provided');
-    return el;
-  }
-}
+export class PushState extends pushStateMixin(VanillaComponent) {}

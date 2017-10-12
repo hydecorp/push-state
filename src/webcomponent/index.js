@@ -17,23 +17,19 @@
 import {
   customElementMixin,
   CustomElement,
-  getTemplate,
-  fragmentFromString,
+  sGetTemplate,
   CUSTOM_ELEMENT_FEATURE_TESTS,
 } from 'hy-component/src/custom-element';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
-
-import templateString from './template.ejs';
 
 export const WEBCOMPONENT_FEATURE_TESTS = [
   ...CUSTOM_ELEMENT_FEATURE_TESTS,
   ...MIXIN_FEATURE_TESTS,
 ];
 
-export class DrawerHTMLElement extends customElementMixin(pushStateMixin(CustomElement)) {
+export class HTMLPushStateElement extends customElementMixin(pushStateMixin(CustomElement)) {
   static get observedAttributes() { return this.getObservedAttributes(); }
 
-  /* @override */
-  [getTemplate]() { return fragmentFromString(templateString); }
+  [sGetTemplate]() { return null; }
 }

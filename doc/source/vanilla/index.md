@@ -1,4 +1,4 @@
-# src / jquery / index.js
+# src / vanilla / index.js
 Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 
 This program is free software: you can redistribute it and/or modify
@@ -17,37 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { JQueryComponent, defineJQueryComponent, setupDOM }
-from 'hy-component/src/define-jquery-component';
+import { VanillaComponent } from 'hy-component/src/vanilla';
+import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
-import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
-/* import '../style.css'; */
-
-export const MODERNIZR_TESTS = [
-  ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,
+export const VANILLA_FEATURE_TESTS = [
+  ...MIXIN_FEATURE_TESTS,
 ];
-```
 
-TODO: rename? check how jQuery UI does it
-
-
-```js
-export const pushStateJQueryPlugin = defineJQueryComponent('pushState',
-  class extends pushStateMixin(JQueryComponent) {
-    /* @override */
-    [setupDOM](el) {
-      /* const $el = $(el); */
-```
-
-TODO: ....
-
-
-```js
-
-      return el;
-    }
-  },
-);
+export class PushState extends pushStateMixin(VanillaComponent) {}
 ```
 
 

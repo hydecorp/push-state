@@ -34,8 +34,13 @@ node_modules
 _site
 .sass-cache
 
-react
+# Bundler
+vendor
+.bundle
 
-# exclude dist from git, not npm
+# hy-component
 dist
 lib
+
+# Temp
+react

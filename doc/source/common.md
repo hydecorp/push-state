@@ -14,8 +14,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from 'rxjs/Observable';
-
 
 ```js
 
@@ -26,7 +24,12 @@ export const matches =
   Element.prototype.mozMatchesSelector ||
   Element.prototype.webkitMatchesSelector ||
   Element.prototype.oMatchesSelector;
+```
 
+Checks if this element or any of its parents matches a given `selector`.
+
+
+```js
 export function matchesAncestors(selector) {
   let curr = this;
   while (curr !== document && curr !== document.documentElement) {
@@ -37,7 +40,7 @@ export function matchesAncestors(selector) {
 }
 ```
 
-If you consider a URL being external if either the protocol, hostname or port is different.
+Consider a URL external if either the protocol, hostname or port is different.
 
 
 ```js
@@ -69,27 +72,6 @@ export function getScrollTop() {
 export function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);
 }
-
-/*
-export function expInterval(init, exp) {
-  return Observable.create((observer) => {
-    let n = init;
-    let id;
-
-    function next() {
-      observer.next(n);
-      n *= exp;
-      id = setTimeout(next, n);
-    }
-
-    id = setTimeout(next, n);
-
-    return () => {
-      clearTimeout(id);
-    };
-  });
-}
-*/
 ```
 
 

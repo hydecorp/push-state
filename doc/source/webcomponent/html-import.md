@@ -1,4 +1,4 @@
-# src / webcomponent / index.js
+# src / webcomponent / html-import.js
 Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 
 This program is free software: you can redistribute it and/or modify
@@ -20,25 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import {
   customElementMixin,
   CustomElement,
-  getTemplate,
-  fragmentFromString,
-  MODERNIZR_TESTS as CUSTOM_ELEMENT_MODERNIZER_TESTS,
+  sGetTemplate,
 } from 'hy-component/src/custom-element';
 
-import { pushStateMixin, MODERNIZR_TESTS as DRAWER_MIXIN_MODERNIZR_TESTS } from '../mixin';
+import { pushStateMixin } from '../mixin';
 
-import templateString from './template.ejs';
+if ('customElements' in window) {
+  customElements.define('hy-push-state',
+    class extends customElementMixin(pushStateMixin(CustomElement)) {
+      static get observedAttributes() { return this.getObservedAttributes(); }
 
-export const MODERNIZR_TESTS = [
-  ...CUSTOM_ELEMENT_MODERNIZER_TESTS,
-  ...DRAWER_MIXIN_MODERNIZR_TESTS,
-];
-
-export class DrawerHTMLElement extends customElementMixin(pushStateMixin(CustomElement)) {
-  static get observedAttributes() { return this.getObservedAttributes(); }
-
-  /* @override */
-  [getTemplate]() { return fragmentFromString(templateString); }
+      [sGetTemplate]() { return null; }
+    });
+} else if (process.env.DEBUG) {
+  console.warn('Couldn\'t register hy-drawer component. Did you forget to include the custom elements polyfill?');
 }
 ```
 

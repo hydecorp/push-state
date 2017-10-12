@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { JQueryComponent, defineJQueryComponent, setupDOM }
+import $ from 'jquery';
+
+import { JQueryComponent, defineJQueryComponent, sSetupDOM }
 from 'hy-component/src/define-jquery-component';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
@@ -24,15 +26,9 @@ export const JQUERY_FEATURE_TESTS = [
   ...MIXIN_FEATURE_TESTS,
 ];
 
-// TODO: rename? check how jQuery UI does it
-export const pushStateJQueryPlugin = defineJQueryComponent('pushState',
+export const pushStateJQueryPlugin = defineJQueryComponent('hy.pushState',
   class extends pushStateMixin(JQueryComponent) {
-    /* @override */
-    [setupDOM](el) {
-      /* const $el = $(el); */
-
-      // TODO: ....
-
+    [sSetupDOM](el) {
       return el;
     }
   },

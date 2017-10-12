@@ -6,13 +6,16 @@
     <title>Mixin Example | hy-push-state</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:700|Noto+Sans:400,400i,700,700i" rel="stylesheet">
     <link href="../style.css" rel="stylesheet">
+    <style>aside.wrapper { color: #fff; background: #4fb1ba; }</style>
 
     <script src="../../dist/mixin/hy-push-state.js"></script>
   </head>
 
   <body>
+    <aside class="wrapper">
+      <p>Current implementation: <span>Mixin</span></p>
+    </aside>
     <div class="wrapper">
-      <p>Current implementation: Mixin</p>
       <div id="pushStateEl">
         <main>
           <h1>Mixin Example</h1>
@@ -43,13 +46,13 @@
 
     <script>
       var pushStateMixin = hyPushState.pushStateMixin;
-      var setup = hyPushState.setup;
+      var sSetup = hyPushState.sSetup;
 
       function MyComponent() {}
       var PushState = pushStateMixin(MyComponent);
-      var pushState = new PushState();
+      window.pushState = new PushState();
 
-      pushState[setup](pushStateEl, {
+      pushState[sSetup](window.pushStateEl, {
         linkSelector: 'a[href^=".."]'
       });
     </script>

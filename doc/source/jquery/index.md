@@ -1,4 +1,4 @@
-# src / vanilla / index.js
+# src / jquery / index.js
 Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 
 This program is free software: you can redistribute it and/or modify
@@ -17,21 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { VanillaComponent, setupDOM } from 'hy-component/src/vanilla';
-import { pushStateMixin, MODERNIZR_TESTS as PUSH_STATE_MIXIN_MODERNIZER_TESTS } from '../mixin';
+import $ from 'jquery';
+
+import { JQueryComponent, defineJQueryComponent, sSetupDOM }
+from 'hy-component/src/define-jquery-component';
+
+import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 /* import '../style.css'; */
 
-export const MODERNIZR_TESTS = [
-  ...PUSH_STATE_MIXIN_MODERNIZER_TESTS,
+export const JQUERY_FEATURE_TESTS = [
+  ...MIXIN_FEATURE_TESTS,
 ];
 
-export class PushState extends pushStateMixin(VanillaComponent) {
-  /* @override */
-  [setupDOM](el) {
-    if (!el) throw Error('No element provided');
-    return el;
-  }
-}
+export const pushStateJQueryPlugin = defineJQueryComponent('hy.pushState',
+  class extends pushStateMixin(JQueryComponent) {
+    [sSetupDOM](el) {
+      return el;
+    }
+  },
+);
 ```
 
 

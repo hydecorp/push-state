@@ -71,12 +71,12 @@ jQuery event name
 This event is fired when fetching the new page takes longer than expected.
 You can use this to show a loading spinner.
 
-jQuery event name
-: `progress.hy.pushstate`
-
 Specifically, if `waitUntil` has been called during `hy-push-state-start`,
 the event will fire when the provided promise resolves, but no response from the server is available yet.
 If `waitUntil` hasn't been called, the event will fire after [`duration`](options.md#duration) ms.
+
+jQuery event name
+: `progress.hy.pushstate`
 
 ## `hy-push-state-networkerror`
 This event is fired when a network error occurs while fetching a new page form the server.

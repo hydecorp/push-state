@@ -33,9 +33,8 @@
 // ## Imports
 // Including the patches for ES6+ functions, but
 // there is a -lite version of the component that comes without these.
-// Note that we don't patch large misses like ES6 Promises,
-// instead they are included in the pre-requisites.
 import 'core-js/fn/array/for-each';
+import 'core-js/fn/array/from';
 import 'core-js/fn/function/bind';
 import 'core-js/fn/object/assign';
 
@@ -62,6 +61,7 @@ import { fromEvent } from 'rxjs/observable/fromEvent';
 import { merge } from 'rxjs/observable/merge';
 import { never } from 'rxjs/observable/never';
 import { of } from 'rxjs/observable/of';
+import { timer } from 'rxjs/observable/timer';
 
 import { ajax } from 'rxjs/observable/dom/ajax';
 
@@ -95,13 +95,14 @@ import {
   isExternal,
   isHash,
   matchesAncestors,
+  Set,
 } from '../common';
 
 // ## Constants
-// A list of [Modernizr] tests that are required to run this component.
+// A set of [Modernizr] tests that are required to run this component.
 // These are the bare-minimum requirements, more ad-hoc features tests for optional behavior
 // is part of the code below.
-export const MIXIN_FEATURE_TESTS = [
+export const MIXIN_FEATURE_TESTS = new Set([
   ...COMPONENT_FEATURE_TESTS,
   'documentfragment',
   'eventlistener',
@@ -109,7 +110,7 @@ export const MIXIN_FEATURE_TESTS = [
   'promises',
   'queryselector',
   'requestanimationframe',
-];
+]);
 
 // We export the setup symbols,
 // so that mixin users don't have to import them from hy-compnent separately.
@@ -129,7 +130,6 @@ const Symbol = global.Symbol || (x => `_${x}`);
 // We use `Symbol`s for all internal variables, to avoid naming conflicts when using the mixin.
 const sAnimPromise = Symbol('animPromise');
 const sReload$ = Symbol('reloadObservable');
-const sTimeoutId = Symbol('timeoutId');
 
 // For convenience....
 const { forEach, indexOf } = Array.prototype;
@@ -473,21 +473,15 @@ function onStart(context) {
   // By default, hy-push-state will wait at least `duration` ms before replacing the content,
   // so that animations have enough time to finish.
   // The behavior is encoded with a promise that resolves after `duration` ms.
-  clearTimeout(this[sTimeoutId]);
-
-  this[sAnimPromise] = new Promise((res) => {
-    this[sTimeoutId] = setTimeout(res, this.duration);
-  });
+  this[sAnimPromise] = Observable::timer(this.duration);
 
   // The `waitUntil` function lets users of this component override the animation promise.
   // This allows for event-based code execution, rather than timing-based, which prevents hiccups
   // and glitches when, for example, painting takes longer than expected.
   const waitUntil = (promise) => {
     if (process.env.DEBUG && !(promise instanceof Promise || promise instanceof Observable)) {
-      console.warn('waitUntil expects a Promise as first argument!');
+      console.warn('waitUntil expects a Promise as first argument.');
     }
-
-    clearTimeout(this[sTimeoutId]);
     this[sAnimPromise] = promise;
   };
 

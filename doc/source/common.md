@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
+import { Set } from 'hy-component/src/common';
+
+export { Set };
+
 export const matches =
   Element.prototype.matches ||
   Element.prototype.matchesSelector ||

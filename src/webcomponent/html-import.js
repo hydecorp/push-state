@@ -29,5 +29,5 @@ if ('customElements' in window) {
     },
   );
 } else if (process.env.DEBUG) {
-  console.warn('Couldn\'t register hy-drawer component. Did you forget to include the custom elements polyfill?');
+  console.warn('Couldn\'t register hy-drawer component. Did you forget to include a WebComponents polyfill?');
 }

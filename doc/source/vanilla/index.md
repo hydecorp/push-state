@@ -17,12 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
+import 'core-js/fn/array/from';
+
 import { VanillaComponent } from 'hy-component/src/vanilla';
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
-export const VANILLA_FEATURE_TESTS = [
-  ...MIXIN_FEATURE_TESTS,
-];
+export const VANILLA_FEATURE_TESTS = MIXIN_FEATURE_TESTS;
 
 export class PushState extends pushStateMixin(VanillaComponent) {}
 ```

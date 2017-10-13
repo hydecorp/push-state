@@ -17,16 +17,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
+import 'core-js/fn/array/from';
+
 import { customElementMixin, CustomElement, CUSTOM_ELEMENT_FEATURE_TESTS }
   from 'hy-component/src/custom-element';
 import { sGetTemplate } from 'hy-component/src/symbols';
 
+import { Set } from '../common';
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
-export const WEBCOMPONENT_FEATURE_TESTS = [
+export const WEBCOMPONENT_FEATURE_TESTS = new Set([
   ...CUSTOM_ELEMENT_FEATURE_TESTS,
   ...MIXIN_FEATURE_TESTS,
-];
+]);
 
 export class HTMLPushStateElement extends customElementMixin(pushStateMixin(CustomElement)) {
   static get observedAttributes() { return this.getObservedAttributes(); }

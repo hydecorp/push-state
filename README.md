@@ -12,7 +12,7 @@ Also, it's harder to trash its internal state when quickly jumping through the b
 **hy-push-state** can be used in a variety of ways:
 * As **Vanilla** JavaScript class
 * As **jQuery** plugin
-* As **WebComponent**, either standalone or via HTML Import
+* As **WebComponent**, both as *ES6 Module* and *HTML Import*
 * Possibly as part of your own component hierarchy via [ES6 Mixin][esmixins].
 
 The component was initially developed --- and can be encountered in the wild ---

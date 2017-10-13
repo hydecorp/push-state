@@ -41,8 +41,9 @@ import 'core-js/fn/object/assign';
 
 // Importing the hy-compontent base libary,
 // which helps with making multiple versions of the component (Vanilla JS, WebComponent, etc...).
-import { componentMixin, sFire, sSetup, sSetupDOM, COMPONENT_FEATURE_TESTS }
-  from 'hy-component/src/component';
+import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
+import { sSetup, sSetupDOM, sFire } from 'hy-component/src/symbols';
+import { array, boolean, number, regex, string } from 'hy-component/src/types';
 
 // Importing the subset of RxJS functions that we are going to use.
 // Note that some of these have been renamed to avoid conflicts with keywords,
@@ -166,8 +167,25 @@ function subscribe(ne, er, co) {
     .subscribe(ne, er, co);
 }
 
-// ### Helper functions
-// #### Managing scroll positions
+// ### Event filters
+function shouldLoadAnchor(anchor, hrefRegex) {
+  return anchor && anchor.target === ''
+    && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
+}
+
+function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
+  return !metaKey && !ctrlKey
+    && shouldLoadAnchor(currentTarget, this._hrefRegex)
+    && !isExternal(currentTarget);
+}
+
+function isHintEvent({ currentTarget }) {
+  return shouldLoadAnchor(currentTarget, this._hrefRegex)
+    && !isExternal(currentTarget)
+    && !isHash(currentTarget);
+}
+
+// ### Managing scroll positions
 // The following functions deal with managing the scroll position of the site.
 
 function histId() {
@@ -198,7 +216,7 @@ function restoreScrollPostion() {
   }
 }
 
-// TODO: more explaining. actually, need to understand what I did there first...
+// TODO
 function manageScrollPostion({ type, url: { hash } }) {
   if (type === PUSH) {
     scrollHashIntoView(hash);
@@ -260,24 +278,7 @@ function setupScrollRestoration() {
   window.addEventListener('beforeunload', this::saveScrollHistoryState);
 }
 
-// ####  should load waaaat?
-function shouldLoadAnchor(anchor, hrefRegex) {
-  return anchor && anchor.target === ''
-    && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
-}
-
-function isHintEvent({ currentTarget }) {
-  return shouldLoadAnchor(currentTarget, this.hrefRegex)
-    && !isExternal(currentTarget)
-    && !isHash(currentTarget);
-}
-
-function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
-  return !metaKey && !ctrlKey
-    && shouldLoadAnchor(currentTarget, this.hrefRegex)
-    && !isExternal(currentTarget);
-}
-
+// ### Fetching
 function hrefToAjax({ url }) {
   return {
     method: 'GET',
@@ -286,7 +287,6 @@ function hrefToAjax({ url }) {
   };
 }
 
-// #### Recover if response
 // The `ajax` method will throw when it encoutners an a 400+ status code,
 // however these are still valid responses from the server, that can be shown using this component.
 // This assumes error pages have the same HTML strcuture as the other pages though.
@@ -303,7 +303,6 @@ function recoverIfResponse(context, error) {
 }
 
 
-// #### Fetch page
 // TODO
 function fetchPage(context) {
   return Observable::ajax(hrefToAjax(context))
@@ -311,7 +310,6 @@ function fetchPage(context) {
     ::recover(error => this::recoverIfResponse(context, error));
 }
 
-// #### Get request
 // This function returns the request that matches a given URL.
 // The way the pipeline is set up, it is either the current `prefetch` value,
 // or the next value on the prefetch observable.
@@ -329,26 +327,7 @@ function getResponse(prefetch$, [context, latestPrefetch]) {
     ::zipWith(this[sAnimPromise], x => x);
 }
 
-function getTitle(fragment) {
-  return (fragment.querySelector('title') || {}).textContent;
-}
-
-function getReplaceElements(fragment) {
-  if (this.replaceIds.length > 0) {
-    return this.replaceIds.map(id => fragment.getElementById(id));
-  } else {
-    let replaceEl;
-    if (this.el.id) {
-      replaceEl = fragment.getElementById(this.el.id);
-    } else {
-      const index = document.getElementsByTagName(this.el.tagName)::indexOf(this.el);
-      replaceEl = fragment.querySelectorAll(this.el.tagName)[index];
-    }
-    return [replaceEl];
-  }
-}
-
-// #### Experimental script feature
+// ### Experimental script feature
 // TODO
 
 // This function removes all script tags (as query'ed by `_scriptSelector`) from the response.
@@ -412,7 +391,27 @@ function reinsertScriptTags(context) {
     ::recover((error) => { throw assign(context, { error }); });
 }
 
-// #### Content replacement
+// ### Content replacement
+// TODO
+function getTitle(fragment) {
+  return (fragment.querySelector('title') || {}).textContent;
+}
+
+function getReplaceElements(fragment) {
+  if (this.replaceIds.length > 0) {
+    return this.replaceIds.map(id => fragment.getElementById(id));
+  } else {
+    let replaceEl;
+    if (this.el.id) {
+      replaceEl = fragment.getElementById(this.el.id);
+    } else {
+      const index = document.getElementsByTagName(this.el.tagName)::indexOf(this.el);
+      replaceEl = fragment.querySelectorAll(this.el.tagName)[index];
+    }
+    return [replaceEl];
+  }
+}
+
 function responseToContent(context) {
   const { response } = context;
 
@@ -848,15 +847,12 @@ export function pushStateMixin(C) {
     [sSetup](el, props) {
       super[sSetup](el, props);
 
-      // if (process.env.DEBUG && !this.el.id)
-
       this::setupScrollRestoration();
       this::setupObservables();
 
       return this;
     }
 
-    /* @override */
     [sSetupDOM](el) { return el; }
 
     // ### Options
@@ -867,15 +863,27 @@ export function pushStateMixin(C) {
         replaceIds: [],
         linkSelector: 'a[href]:not(.no-push-state)',
         scrollRestoration: false,
-        hrefRegex: null,
         duration: 0,
-        _scriptSelector: '',
+        _hrefRegex: null,
+        _scriptSelector: null,
         /* prefetch: true, */
         /* repeatDelay: 500, */
       };
     }
 
-    // ### Side effects
+    static get types() {
+      return {
+        replaceIds: array,
+        linkSelector: string,
+        scrollRestoration: boolean,
+        duration: number,
+        _hrefRegex: regex,
+        _scriptSelector: string,
+        /* prefetch: boolean, */
+        /* repeatDelay: number, */
+      };
+    }
+
     // Modifying options of this component doesn't have side effects (so far).
     static get sideEffects() {
       return {};
@@ -912,9 +920,11 @@ export function pushStateMixin(C) {
 
 // This concludes the implementation of push-state mixin.
 // You can now check out
-// [vanilla / index.js](../vanilla/index.md),
-// [jquery / index.js](../jquery/index.md), or
-// [webcomponent / index.js](../webcomponent/index.md)
+//
+// * [vanilla / index.js](../vanilla/index.md)
+// * [jquery / index.js](../jquery/index.md)
+// * [webcomponent / index.js](../webcomponent/index.md)
+//
 // to see how it is used.
 
 // [rxjs]: https://github.com/ReactiveX/rxjs

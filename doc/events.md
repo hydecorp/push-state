@@ -35,12 +35,12 @@ hyPushStateEl.addEventListener('hy-push-state-start', ({ detail }) => {
 });
 ```
 
-jQuery event name
-: `start.hy.pushstate`
-
 PRO Tip: `waitUntil` will also accept an [`Observable`](http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html),
 delaying replacing the content until the observable completes.
 {:.message}
+
+jQuery event name
+: `start.hy.pushstate`
 
 ## `hy-push-state-ready`
 This event is fired when hy-push-state is ready to replace the current content with the new content, i.e.

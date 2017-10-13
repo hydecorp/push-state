@@ -22,8 +22,11 @@ Type
 Default
 : `[]`
 
-HTML Attribute
-: `replace-ids` (values look like `some-id,another-id`)
+jQuery attribute
+: `data-replace-ids` (e.g.: `data-replace-ids="some-id,another-id"`)
+
+HTML attribute
+: `replace-ids` (e.g.: `replace-ids="some-id,another-id"`)
 
 ### Example
 Here we have another web component `very-special` that may has some state of its own,
@@ -68,7 +71,10 @@ Type
 Default
 : `'a[href]:not(.no-push-state)'`
 
-HTML Attribute
+jQuery attribute
+: `data-link-selector`
+
+HTML attribute
 : `link-selector`
 
 ## `scrollRestoration`
@@ -79,19 +85,11 @@ Type
 Default
 : `false`
 
-HTML Attribute
+jQuery attribute
+: `data-scroll-restoration`
+
+HTML attribute
 : `scroll-restoration`
-
-## `hrefRegex`
-
-Type
-: `String` (Regular Expression)
-
-Default
-: `null`
-
-HTML Attribute
-: `hrefRegex`
 
 ## `duration`
 The duration of a page transition. Use this to ensure that animations have sufficient time to finish
@@ -106,5 +104,8 @@ Type
 Default
 : `0`
 
-HTML Attribute
+jQuery attribute
+: `data-duration`
+
+HTML attribute
 : `duration`

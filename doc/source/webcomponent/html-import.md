@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { customElementMixin, CustomElement, sGetTemplate }
-  from 'hy-component/src/custom-element';
+import { customElementMixin, CustomElement } from 'hy-component/src/custom-element';
+import { sGetTemplate } from 'hy-component/src/symbols';
 
 import { pushStateMixin } from '../mixin';
 

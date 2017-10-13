@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { customElementMixin, CustomElement, sGetTemplate, CUSTOM_ELEMENT_FEATURE_TESTS }
+import { customElementMixin, CustomElement, CUSTOM_ELEMENT_FEATURE_TESTS }
   from 'hy-component/src/custom-element';
+import { sGetTemplate } from 'hy-component/src/symbols';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 

@@ -48,8 +48,9 @@ which helps with making multiple versions of the component (Vanilla JS, WebCompo
 
 
 ```js
-import { componentMixin, sFire, sSetup, sSetupDOM, COMPONENT_FEATURE_TESTS }
-  from 'hy-component/src/component';
+import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
+import { sSetup, sSetupDOM, sFire } from 'hy-component/src/symbols';
+import { array, boolean, number, regex, string } from 'hy-component/src/types';
 ```
 
 Importing the subset of RxJS functions that we are going to use.
@@ -222,8 +223,29 @@ function subscribe(ne, er, co) {
 }
 ```
 
-### Helper functions
-#### Managing scroll positions
+### Event filters
+
+
+```js
+function shouldLoadAnchor(anchor, hrefRegex) {
+  return anchor && anchor.target === ''
+    && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
+}
+
+function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
+  return !metaKey && !ctrlKey
+    && shouldLoadAnchor(currentTarget, this._hrefRegex)
+    && !isExternal(currentTarget);
+}
+
+function isHintEvent({ currentTarget }) {
+  return shouldLoadAnchor(currentTarget, this._hrefRegex)
+    && !isExternal(currentTarget)
+    && !isHash(currentTarget);
+}
+```
+
+### Managing scroll positions
 The following functions deal with managing the scroll position of the site.
 
 
@@ -266,7 +288,7 @@ function restoreScrollPostion() {
 }
 ```
 
-TODO: more explaining. actually, need to understand what I did there first...
+TODO
 
 
 ```js
@@ -332,27 +354,10 @@ function setupScrollRestoration() {
 }
 ```
 
-####  should load waaaat?
+### Fetching
 
 
 ```js
-function shouldLoadAnchor(anchor, hrefRegex) {
-  return anchor && anchor.target === ''
-    && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
-}
-
-function isHintEvent({ currentTarget }) {
-  return shouldLoadAnchor(currentTarget, this.hrefRegex)
-    && !isExternal(currentTarget)
-    && !isHash(currentTarget);
-}
-
-function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
-  return !metaKey && !ctrlKey
-    && shouldLoadAnchor(currentTarget, this.hrefRegex)
-    && !isExternal(currentTarget);
-}
-
 function hrefToAjax({ url }) {
   return {
     method: 'GET',
@@ -362,7 +367,6 @@ function hrefToAjax({ url }) {
 }
 ```
 
-#### Recover if response
 The `ajax` method will throw when it encoutners an a 400+ status code,
 however these are still valid responses from the server, that can be shown using this component.
 This assumes error pages have the same HTML strcuture as the other pages though.
@@ -390,7 +394,6 @@ If we don't have a response, this is an acutal error that should be dealt with.
 }
 ```
 
-#### Fetch page
 TODO
 
 
@@ -402,7 +405,6 @@ function fetchPage(context) {
 }
 ```
 
-#### Get request
 This function returns the request that matches a given URL.
 The way the pipeline is set up, it is either the current `prefetch` value,
 or the next value on the prefetch observable.
@@ -426,28 +428,9 @@ function getResponse(prefetch$, [context, latestPrefetch]) {
     ::map(fetch => assign(fetch, context))
     ::zipWith(this[sAnimPromise], x => x);
 }
-
-function getTitle(fragment) {
-  return (fragment.querySelector('title') || {}).textContent;
-}
-
-function getReplaceElements(fragment) {
-  if (this.replaceIds.length > 0) {
-    return this.replaceIds.map(id => fragment.getElementById(id));
-  } else {
-    let replaceEl;
-    if (this.el.id) {
-      replaceEl = fragment.getElementById(this.el.id);
-    } else {
-      const index = document.getElementsByTagName(this.el.tagName)::indexOf(this.el);
-      replaceEl = fragment.querySelectorAll(this.el.tagName)[index];
-    }
-    return [replaceEl];
-  }
-}
 ```
 
-#### Experimental script feature
+### Experimental script feature
 TODO
 
 This function removes all script tags (as query'ed by `_scriptSelector`) from the response.
@@ -535,10 +518,30 @@ function reinsertScriptTags(context) {
 }
 ```
 
-#### Content replacement
+### Content replacement
+TODO
 
 
 ```js
+function getTitle(fragment) {
+  return (fragment.querySelector('title') || {}).textContent;
+}
+
+function getReplaceElements(fragment) {
+  if (this.replaceIds.length > 0) {
+    return this.replaceIds.map(id => fragment.getElementById(id));
+  } else {
+    let replaceEl;
+    if (this.el.id) {
+      replaceEl = fragment.getElementById(this.el.id);
+    } else {
+      const index = document.getElementsByTagName(this.el.tagName)::indexOf(this.el);
+      replaceEl = fragment.querySelectorAll(this.el.tagName)[index];
+    }
+    return [replaceEl];
+  }
+}
+
 function responseToContent(context) {
   const { response } = context;
 
@@ -1185,12 +1188,6 @@ Overriding the setup function.
 ```js
     [sSetup](el, props) {
       super[sSetup](el, props);
-```
-
-if (process.env.DEBUG && !this.el.id)
-
-
-```js
 
       this::setupScrollRestoration();
       this::setupObservables();
@@ -1198,7 +1195,6 @@ if (process.env.DEBUG && !this.el.id)
       return this;
     }
 
-    /* @override */
     [sSetupDOM](el) { return el; }
 ```
 
@@ -1213,16 +1209,28 @@ See [Options](../../options.md) for usage information.
         replaceIds: [],
         linkSelector: 'a[href]:not(.no-push-state)',
         scrollRestoration: false,
-        hrefRegex: null,
         duration: 0,
-        _scriptSelector: '',
+        _hrefRegex: null,
+        _scriptSelector: null,
         /* prefetch: true, */
         /* repeatDelay: 500, */
       };
     }
+
+    static get types() {
+      return {
+        replaceIds: array,
+        linkSelector: string,
+        scrollRestoration: boolean,
+        duration: number,
+        _hrefRegex: regex,
+        _scriptSelector: string,
+        /* prefetch: boolean, */
+        /* repeatDelay: number, */
+      };
+    }
 ```
 
-### Side effects
 Modifying options of this component doesn't have side effects (so far).
 
 
@@ -1267,9 +1275,11 @@ Public methods of this component. See [Methods](../../methods.md) for more.
 
 This concludes the implementation of push-state mixin.
 You can now check out
-[vanilla / index.js](../vanilla/index.md),
-[jquery / index.js](../jquery/index.md), or
-[webcomponent / index.js](../webcomponent/index.md)
+
+* [vanilla / index.js](../vanilla/index.md)
+* [jquery / index.js](../jquery/index.md)
+* [webcomponent / index.js](../webcomponent/index.md)
+
 to see how it is used.
 
 [rxjs]: https://github.com/ReactiveX/rxjs

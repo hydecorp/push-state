@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { JQueryComponent, defineJQueryComponent, sSetupDOM }
-  from 'hy-component/src/define-jquery-component';
+import { JQueryComponent, defineJQueryComponent } from 'hy-component/src/define-jquery-component';
+import { sSetupDOM } from 'hy-component/src/symbols';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
-/* import '../style.css'; */
 
 export const JQUERY_FEATURE_TESTS = [
   ...MIXIN_FEATURE_TESTS,

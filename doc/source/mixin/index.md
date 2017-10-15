@@ -689,7 +689,7 @@ If it's a different error, throw the generic `error` event.
 ```js
   } else {
     if (process.env.DEBUG) console.error(context);
-    this[sFire]('error', context);
+    this[sFire]('error', { detail: context });
   }
 }
 ```
@@ -698,9 +698,9 @@ If there is a network error during (pre-) fetching, fire `networkerror` event.
 
 
 ```js
-function onFetchError(context) {
+function onNetworkError(context) {
   if (process.env.DEBUG) console.error(context);
-  this[sFire]('networkerror', context);
+  this[sFire]('networkerror', { detail: context });
 }
 ```
 
@@ -709,9 +709,9 @@ fire `scripterror` event if something goes wrong during script insertion.
 
 
 ```js
-function onScriptError(context) {
+function onError(context) {
   if (process.env.DEBUG) console.error(context);
-  this[sFire]('error', context);
+  this[sFire]('error', { detail: context });
 }
 ```
 
@@ -954,7 +954,7 @@ and this is where we insert them again.
   if (this._scriptSelector) {
     main$ = main$
       ::switchMap(this::reinsertScriptTags)
-      ::effect({ error: this::onScriptError })
+      ::effect({ error: this::onError })
       ::recover((e, c) => c);
   }
 ```
@@ -972,7 +972,7 @@ Subscribe to the fetch error branch.
 
 
 ```js
-  fetchError$::subscribe(this::onFetchError);
+  fetchError$::subscribe(this::onNetworkError);
 ```
 
 Fire `progress` event when fetching takes longer than expected.

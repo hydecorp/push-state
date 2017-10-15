@@ -530,21 +530,21 @@ function onDOMError(context) {
   // If it's a different error, throw the generic `error` event.
   } else {
     if (process.env.DEBUG) console.error(context);
-    this[sFire]('error', context);
+    this[sFire]('error', { detail: context });
   }
 }
 
 // If there is a network error during (pre-) fetching, fire `networkerror` event.
-function onFetchError(context) {
+function onNetworkError(context) {
   if (process.env.DEBUG) console.error(context);
-  this[sFire]('networkerror', context);
+  this[sFire]('networkerror', { detail: context });
 }
 
 // When using the experimental script feature,
 // fire `scripterror` event if something goes wrong during script insertion.
-function onScriptError(context) {
+function onError(context) {
   if (process.env.DEBUG) console.error(context);
-  this[sFire]('error', context);
+  this[sFire]('error', { detail: context });
 }
 
 // #### Others
@@ -699,7 +699,7 @@ function setupObservables() {
   if (this._scriptSelector) {
     main$ = main$
       ::switchMap(this::reinsertScriptTags)
-      ::effect({ error: this::onScriptError })
+      ::effect({ error: this::onError })
       ::recover((e, c) => c);
   }
 
@@ -709,7 +709,7 @@ function setupObservables() {
   hash$::subscribe(this::updateHistoryStateHash);
 
   // Subscribe to the fetch error branch.
-  fetchError$::subscribe(this::onFetchError);
+  fetchError$::subscribe(this::onNetworkError);
 
   // Fire `progress` event when fetching takes longer than expected.
   page$::switchMap(context =>

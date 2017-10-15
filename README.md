@@ -1,14 +1,14 @@
 # hy-push-state
 
 **hy-push-state** is a web component that lets you turn web pages into web apps.
-The component dynamically loads content (formerly known as "ajax") and inserts it into the current page,
+The component dynamically loads new content (formerly known as "ajax") and inserts it into the current page,
 without causing Flash of White, Flash of Unstyled Content, etc.
 
 > Turn web pages into web apps.
 {:.lead}
 
-**hy-push-state** is similar to [pjax] and [smoothState], but offers a more advanced pre-fetching logic,
-as well as more fine-grained control to allow advanced page transition animations.
+**hy-push-state** is similar to [pjax] and [smoothState], but offers a more advanced pre-fetching logic and
+gives more control over timings to enable custom page transition animations.
 
 **hy-push-state** can be used in a variety of ways:
 * As **Vanilla** JavaScript class

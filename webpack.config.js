@@ -50,7 +50,7 @@ function envConfig() {
     // same as prod, but does not bundle core-js polyfills
     case 'lite':
       return {
-        externals: [/^core-js/, /\/url.js$/],
+        externals: [/^core-js/],
         plugins: [
           new BannerPlugin({ banner }),
           new EnvironmentPlugin({ DEBUG: false }),
@@ -80,11 +80,6 @@ const baseConfig = merge({
       {
         test: /(\.jsx|\.js)$/,
         loader: 'babel-loader',
-        // NOTE: exclude defined in .babelrc
-        // exclude: {
-        //   test: /node_modules/,
-        //   exclude: /(y-component|camelcase)/,
-        // },
       },
       {
         test: /\.html$/,

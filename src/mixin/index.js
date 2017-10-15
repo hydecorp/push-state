@@ -80,6 +80,7 @@ import { startWith } from 'rxjs/operator/startWith';
 import { switchMap } from 'rxjs/operator/switchMap';
 import { take } from 'rxjs/operator/take';
 import { takeUntil } from 'rxjs/operator/takeUntil';
+import { toPromise } from 'rxjs/operator/toPromise';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zipWith } from 'rxjs/operator/zip';
 
@@ -362,8 +363,7 @@ function insertScript([script, ref]) {
     Observable.create((observer) => {
       script.addEventListener('load', (x) => {
         document.write = originalWrite;
-        observer.next(x);
-        observer.complete();
+        observer.complete(x);
       });
 
       script.addEventListener('error', (x) => {
@@ -388,7 +388,9 @@ function reinsertScriptTags(context) {
 
   return Observable::from(scripts)
     ::concatMap(insertScript)
-    ::recover((error) => { throw assign(context, { error }); });
+    ::recover((error) => { throw assign(context, { error }); })
+    ::toPromise()
+    .then(() => context);
 }
 
 // ### Content replacement

@@ -42,7 +42,7 @@ import 'core-js/fn/object/assign';
 // which helps with making multiple versions of the component (Vanilla JS, WebComponent, etc...).
 import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
 import { sSetup, sSetupDOM, sFire } from 'hy-component/src/symbols';
-import { array, boolean, number, regex, string } from 'hy-component/src/types';
+import { array, bool, number, regex, string } from 'hy-component/src/types';
 
 // Importing the subset of RxJS functions that we are going to use.
 // Note that some of these have been renamed to avoid conflicts with keywords,
@@ -871,11 +871,11 @@ export function pushStateMixin(C) {
       return {
         replaceIds: array,
         linkSelector: string,
-        scrollRestoration: boolean,
+        scrollRestoration: bool,
         duration: number,
         _hrefRegex: regex,
         _scriptSelector: string,
-        /* prefetch: boolean, */
+        /* prefetch: bool, */
         /* repeatDelay: number, */
       };
     }

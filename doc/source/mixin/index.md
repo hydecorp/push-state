@@ -343,16 +343,6 @@ function saveScrollHistoryState() {
   const state = this::saveScrollPosition(window.history.state || {});
   window.history.replaceState(state, document.title, window.location);
 }
-
-function setupScrollRestoration() {
-  if ('scrollRestoration' in window.history && this.scrollRestoration) {
-    window.history.scrollRestoration = 'manual';
-  }
-
-  this::restoreScrollPostion();
-
-  window.addEventListener('beforeunload', this::saveScrollHistoryState);
-}
 ```
 
 ### Fetching
@@ -1121,38 +1111,6 @@ Note that we can't reliably generate hints this way, so we don't.
       }
     });
   }
-```
-
-TODO
-
-
-```js
-  const url = new URL(window.location);
-  this::updateHistoryState({ type: INIT, replace: true, url });
-```
-
-#### Fire init events
-After all this is set up, we can fire the one-time `init` event...
-
-
-```js
-  this[sFire]('init');
-```
-
-...but we also fire our custom `load` event, which gets fired on every page change.
-We provide similar data as subsequent `load` events,
-however we can't provide an `anchor` or `event`,
-since this `load` event wasn't caused by a user interaction.
-
-
-```js
-  this::onLoad({
-    type: INIT,
-    title: this::getTitle(document),
-    replaceEls: this::getReplaceElements(document),
-    url,
-    cacheNr,
-  });
 }
 ```
 
@@ -1184,10 +1142,73 @@ Overriding the setup function.
 ```js
     [sSetup](el, props) {
       super[sSetup](el, props);
+```
 
-      this::setupScrollRestoration();
+Setting up scroll restoration
+
+
+```js
+      if ('scrollRestoration' in window.history && this.scrollRestoration) {
+        window.history.scrollRestoration = 'manual';
+      }
+```
+
+If restore the last scroll position, if any.
+
+
+```js
+      this::restoreScrollPostion();
+```
+
+Remember the current scroll position (for F5/reloads).
+
+
+```js
+      window.addEventListener('beforeunload', this::saveScrollHistoryState);
+```
+
+Finally, calling the [setup observables function](#setup-observables) function.
+
+
+```js
       this::setupObservables();
+```
 
+Setting the initial `history.state`.
+
+
+```js
+      const url = new URL(window.location);
+      this::updateHistoryState({ type: INIT, replace: true, url });
+```
+
+After all this is done, we can fire the one-time `init` event...
+
+
+```js
+      this[sFire]('init');
+```
+
+...and our custom `load` event, which gets fired on every page change.
+We provide similar data as subsequent `load` events,
+however we can't provide an `anchor` or `event`,
+since this `load` event wasn't caused by a user interaction.
+
+
+```js
+      this::onLoad({
+        type: INIT,
+        title: this::getTitle(document),
+        replaceEls: this::getReplaceElements(document),
+        url,
+        cacheNr,
+      });
+```
+
+Allow function chaining.
+
+
+```js
       return this;
     }
 

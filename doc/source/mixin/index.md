@@ -55,9 +55,9 @@ import { array, bool, number, regex, string } from 'hy-component/src/types';
 Importing the subset of RxJS functions that we are going to use.
 Note that some of these have been renamed to avoid conflicts with keywords,
 to avoid implementation specific names and conflicts within the library itself.
-* `do` → `effect`
-* `catch` → `recover`
-* `zipProto` → `zipWith`
+* `do` → `tap`
+* `catch` → `catchError`
+* `zipProto` → `zip`
 
 
 ```js
@@ -76,10 +76,10 @@ import { timer } from 'rxjs/observable/timer';
 
 import { ajax } from 'rxjs/observable/dom/ajax';
 
-import { _catch as recover } from 'rxjs/operator/catch';
+import { _catch as catchError } from 'rxjs/operator/catch';
 import { concatMap } from 'rxjs/operator/concatMap';
 import { distinctUntilChanged } from 'rxjs/operator/distinctUntilChanged';
-import { _do as effect } from 'rxjs/operator/do';
+import { _do as tap } from 'rxjs/operator/do';
 import { filter } from 'rxjs/operator/filter';
 import { map } from 'rxjs/operator/map';
 import { mapTo } from 'rxjs/operator/mapTo';
@@ -93,7 +93,7 @@ import { take } from 'rxjs/operator/take';
 import { takeUntil } from 'rxjs/operator/takeUntil';
 import { toPromise } from 'rxjs/operator/toPromise';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
-import { zipProto as zipWith } from 'rxjs/operator/zip';
+import { zipProto as zip } from 'rxjs/operator/zip';
 ```
 
 Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
@@ -217,9 +217,9 @@ TODO: maybe just let it crash s.t. the page reloads on the next click on a link!
 ```js
 function subscribe(ne, er, co) {
   let res = this;
-  if (process.env.DEBUG) res = this::effect({ error: ::console.error });
+  if (process.env.DEBUG) res = this::tap({ error: ::console.error });
   return res
-    ::recover((e, c) => c)
+    ::catchError((e, c) => c)
     .subscribe(ne, er, co);
 }
 ```
@@ -392,7 +392,7 @@ TODO
 function fetchPage(context) {
   return Observable::ajax(hrefToAjax(context))
     ::map(({ response }) => assign(context, { response }))
-    ::recover(error => this::recoverIfResponse(context, error));
+    ::catchError(error => this::recoverIfResponse(context, error));
 }
 ```
 
@@ -417,7 +417,7 @@ TODO: rename
 function getResponse(prefetch$, [context, latestPrefetch]) {
   return getFetch$(context, latestPrefetch, prefetch$)
     ::map(fetch => assign(fetch, context))
-    ::zipWith(this[sAnimPromise], x => x);
+    ::zip(this[sAnimPromise], x => x);
 }
 ```
 
@@ -488,7 +488,7 @@ Otherwise we insert it into the DOM and reset the `document.write` function.
 
 
 ```js
-    Observable::of({})::effect(() => {
+    Observable::of({})::tap(() => {
       ref.parentNode.insertBefore(script, ref.nextElementSibling);
       document.write = originalWrite;
     });
@@ -504,7 +504,7 @@ function reinsertScriptTags(context) {
 
   return Observable::from(scripts)
     ::concatMap(insertScript)
-    ::recover((error) => { throw assign(context, { error }); })
+    ::catchError((error) => { throw assign(context, { error }); })
     ::toPromise()
     .then(() => context);
 }
@@ -802,7 +802,7 @@ TODO
       event,
       cacheNr,
     }))
-    ::effect(({ event }) => {
+    ::tap(({ event }) => {
       event.preventDefault();
       this::saveScrollHistoryState();
     });
@@ -906,8 +906,8 @@ TODO
 
 ```js
   ref.fetch$ = page$
-    ::effect(this::updateHistoryState)
-    ::effect(this::onStart)
+    ::tap(this::updateHistoryState)
+    ::tap(this::onStart)
     ::withLatestFrom(prefetch$)
     ::switchMap(getResponse.bind(this, prefetch$))
     ::share();
@@ -927,12 +927,12 @@ TODO
   let main$ = fetchOk$
     ::map(this::responseToContent)
     ::observeOn(animationFrame)
-    ::effect(this::onReady)
-    ::effect(this::updateDOM)
-    ::effect(this::onAfter)
-    ::effect(this::manageScrollPostion)
-    ::effect({ error: this::onDOMError })
-    ::recover((e, c) => c);
+    ::tap(this::onReady)
+    ::tap(this::updateDOM)
+    ::tap(this::onAfter)
+    ::tap(this::manageScrollPostion)
+    ::tap({ error: this::onDOMError })
+    ::catchError((e, c) => c);
 ```
 
 If the experimental script feature is enabled,
@@ -944,8 +944,8 @@ and this is where we insert them again.
   if (this._scriptSelector) {
     main$ = main$
       ::switchMap(this::reinsertScriptTags)
-      ::effect({ error: this::onError })
-      ::recover((e, c) => c);
+      ::tap({ error: this::onError })
+      ::catchError((e, c) => c);
   }
 ```
 

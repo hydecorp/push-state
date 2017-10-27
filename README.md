@@ -48,6 +48,9 @@ The most straight-forward way to use **hy-push-state** is by using the vanilla J
 </script>
 ~~~
 
+This assumes all pages have an element with `id="pushStateEl"`, which will be used for replacement.
+You can get more fine-grained control over which elements get replaced with the [`replaceIds` option](doc/options.md#replaceids).
+
 ## Documentation
 
 * [Options](doc/options.md)

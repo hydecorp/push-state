@@ -1,6 +1,6 @@
 {
   "name": "hy-push-state",
-  "version": "1.0.0-hydejack.6",
+  "version": "1.0.0-hydejack.7",
   "description": "Turn web sites into web apps",
   "main": "./lib/vanilla/index.js",
   "browser": "./dist/vanilla/hy-push-state.min.js",

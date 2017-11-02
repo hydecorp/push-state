@@ -901,6 +901,7 @@ export function pushStateMixin(C) {
         type: PUSH,
         url: new URL(window.location.href),
         cacheNr: ++cacheNr, // eslint-disable-line no-plusplus
+        replace: true,
       });
     }
 

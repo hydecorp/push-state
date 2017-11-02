@@ -1275,6 +1275,7 @@ Public methods of this component. See [Methods](../../methods.md) for more.
         type: PUSH,
         url: new URL(window.location.href),
         cacheNr: ++cacheNr, // eslint-disable-line no-plusplus
+        replace: true,
       });
     }
 

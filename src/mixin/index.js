@@ -66,9 +66,9 @@ import { timer } from 'rxjs/observable/timer';
 import { ajax } from 'rxjs/observable/dom/ajax';
 
 import { _catch as catchError } from 'rxjs/operator/catch';
+import { _do as tap } from 'rxjs/operator/do';
 import { concatMap } from 'rxjs/operator/concatMap';
 import { distinctUntilChanged } from 'rxjs/operator/distinctUntilChanged';
-import { _do as tap } from 'rxjs/operator/do';
 import { filter } from 'rxjs/operator/filter';
 import { map } from 'rxjs/operator/map';
 import { mapTo } from 'rxjs/operator/mapTo';
@@ -189,6 +189,7 @@ function isHintEvent({ currentTarget }) {
 // ### Managing scroll positions
 // The following functions deal with managing the scroll position of the site.
 
+// Returns an identifier to mark frames on the history stack.
 function histId() {
   return this.el.id || this.constructor.componentName;
 }
@@ -241,7 +242,7 @@ function saveScrollPosition(state) {
 function updateHistoryState({ type, replace, url: { href, hash } }) {
   if (type === PUSH || type === INIT) {
     const id = this::histId();
-    const method = replace ? 'replaceState' : 'pushState';
+    const method = replace || href === window.location.href ? 'replaceState' : 'pushState';
     window.history[method]({ [id]: { hash: !!hash } }, '', href);
   }
 }

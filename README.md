@@ -1,5 +1,7 @@
 # hy-push-state
 
+[![npm version](https://badge.fury.io/js/hy-push-state.svg)](https://badge.fury.io/js/hy-push-state)
+
 **hy-push-state** is a web component that lets you turn web pages into web apps.
 The component dynamically loads new content (formerly known as "ajax") and inserts it into the current page,
 without causing Flash of White, Flash of Unstyled Content, etc.

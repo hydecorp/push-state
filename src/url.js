@@ -12,12 +12,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-(function() {
 
-  if (window.URL && window.URL.prototype && ('href' in window.URL.prototype))
-    return;
+export let URL = window.URL;
 
-  function URL(url, base) {
+if (!URL || !URL.prototype || !('href' in URL.prototype)) {
+  URL = function (url, base) {
     if (!url)
       throw new TypeError('Invalid argument');
 
@@ -129,6 +128,4 @@
   };
 
   Object.defineProperty(URL.prototype, 'toString', {enumerable: false});
-
-  window.URL = URL;
-})();
+}

@@ -101,7 +101,7 @@ but sufficient for this compoennt.
 
 
 ```js
-import '../url';
+import { URL } from '../url';
 ```
 
 Some of our own helper functions from [src / common.js](../common.md).

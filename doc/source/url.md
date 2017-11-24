@@ -15,12 +15,11 @@ limitations under the License.
 
 
 ```js
-(function() {
 
-  if (window.URL && window.URL.prototype && ('href' in window.URL.prototype))
-    return;
+export let URL = window.URL;
 
-  function URL(url, base) {
+if (!URL || !URL.prototype || !('href' in URL.prototype)) {
+  URL = function (url, base) {
     if (!url)
       throw new TypeError('Invalid argument');
 
@@ -132,9 +131,7 @@ limitations under the License.
   };
 
   Object.defineProperty(URL.prototype, 'toString', {enumerable: false});
-
-  window.URL = URL;
-})();
+}
 ```
 
 

@@ -86,7 +86,7 @@ import { zipProto as zip } from 'rxjs/operator/zip';
 
 // Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
 // but sufficient for this compoennt.
-import '../url';
+import { URL } from '../url';
 
 // Some of our own helper functions from [src / common.js](../common.md).
 import {

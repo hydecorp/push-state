@@ -19,8 +19,8 @@ import 'core-js/fn/array/from';
 import { customElementMixin, CustomElement, CUSTOM_ELEMENT_FEATURE_TESTS }
   from 'hy-component/src/custom-element';
 import { sGetTemplate } from 'hy-component/src/symbols';
+import { Set } from 'qd-set';
 
-import { Set } from '../common';
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
 export const WEBCOMPONENT_FEATURE_TESTS = new Set([

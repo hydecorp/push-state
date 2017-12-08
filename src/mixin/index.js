@@ -42,7 +42,6 @@ import 'core-js/fn/object/assign';
 // which helps with making multiple versions of the component (Vanilla JS, WebComponent, etc...).
 import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
 import { sSetup, sSetupDOM, sFire } from 'hy-component/src/symbols';
-import { array, bool, number, regex, string } from 'hy-component/src/types';
 
 // Importing the subset of RxJS functions that we are going to use.
 // Note that some of these have been renamed to avoid conflicts with keywords,
@@ -84,6 +83,7 @@ import { toPromise } from 'rxjs/operator/toPromise';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zip } from 'rxjs/operator/zip';
 
+import { array, bool, number, regex, string } from 'attr-types';
 import { Set } from 'qd-set';
 
 // Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,

@@ -49,7 +49,6 @@ which helps with making multiple versions of the component (Vanilla JS, WebCompo
 ```js
 import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
 import { sSetup, sSetupDOM, sFire } from 'hy-component/src/symbols';
-import { array, bool, number, regex, string } from 'hy-component/src/types';
 ```
 
 Importing the subset of RxJS functions that we are going to use.
@@ -95,6 +94,7 @@ import { toPromise } from 'rxjs/operator/toPromise';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zip } from 'rxjs/operator/zip';
 
+import { array, bool, number, regex, string } from 'attr-types';
 import { Set } from 'qd-set';
 ```
 

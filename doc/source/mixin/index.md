@@ -94,6 +94,8 @@ import { takeUntil } from 'rxjs/operator/takeUntil';
 import { toPromise } from 'rxjs/operator/toPromise';
 import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
 import { zipProto as zip } from 'rxjs/operator/zip';
+
+import { Set } from 'qd-set';
 ```
 
 Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
@@ -115,7 +117,6 @@ import {
   isExternal,
   isHash,
   matchesAncestors,
-  Set,
 } from '../common';
 ```
 

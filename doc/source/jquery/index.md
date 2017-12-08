@@ -21,8 +21,8 @@ import 'core-js/fn/array/from';
 
 import { JQueryComponent, defineJQueryComponent } from 'hy-component/src/define-jquery-component';
 import { sSetupDOM } from 'hy-component/src/symbols';
+import { Set } from 'qd-set';
 
-import { Set } from '../common';
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
 export const JQUERY_FEATURE_TESTS = new Set([...MIXIN_FEATURE_TESTS]);

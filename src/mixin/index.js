@@ -329,7 +329,7 @@ function tempRemoveScriptTags(replaceEls) {
 
   replaceEls.forEach(docfrag =>
     docfrag.querySelectorAll(this._scriptSelector)::forEach((script) => {
-      const pair = [script, script.previousElementSibling];
+      const pair = [script, script.previousSibling];
       script.parentNode.removeChild(script);
       scripts.push(pair);
     }));
@@ -344,9 +344,11 @@ function insertScript([script, ref]) {
   const originalWrite = document.write;
 
   document.write = (...args) => {
-    const temp = document.createElement('noscript');
+    const temp = document.createElement('div');
     temp.innerHTML = args.join();
-    temp.childNodes::forEach((node) => { ref.parentNode.insertBefore(node, ref); });
+    temp.childNodes::forEach((node) => {
+      ref.parentNode.insertBefore(node, ref.nextSibling);
+    });
   };
 
   // If the script tag needs to fetch its source code, we insert it into the DOM,
@@ -363,12 +365,12 @@ function insertScript([script, ref]) {
         observer.error(x);
       });
 
-      ref.parentNode.insertBefore(script, ref.nextElementSibling);
+      ref.parentNode.insertBefore(script, ref.nextSibling);
     }) :
 
     // Otherwise we insert it into the DOM and reset the `document.write` function.
     Observable::of({})::tap(() => {
-      ref.parentNode.insertBefore(script, ref.nextElementSibling);
+      ref.parentNode.insertBefore(script, ref.nextSibling);
       document.write = originalWrite;
     });
 }

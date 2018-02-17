@@ -396,7 +396,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var isFunction_1 = __webpack_require__(40);
-var Subscription_1 = __webpack_require__(9);
+var Subscription_1 = __webpack_require__(10);
 var Observer_1 = __webpack_require__(56);
 var rxSubscriber_1 = __webpack_require__(41);
 /**
@@ -892,6 +892,21 @@ if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(global) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var Set = exports.Set = global.Set && new global.Set([1]).size === 1 ? global.Set : __webpack_require__(103);
+
+exports.default = Set;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17)))
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 
 var isArray_1 = __webpack_require__(24);
 var isObject_1 = __webpack_require__(55);
@@ -1087,7 +1102,7 @@ function flattenUnsubscriptionErrors(errors) {
 //# sourceMappingURL=Subscription.js.map
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var anObject = __webpack_require__(23);
@@ -1095,7 +1110,7 @@ var IE8_DOM_DEFINE = __webpack_require__(76);
 var toPrimitive = __webpack_require__(77);
 var dP = Object.defineProperty;
 
-exports.f = __webpack_require__(12) ? Object.defineProperty : function defineProperty(O, P, Attributes) {
+exports.f = __webpack_require__(13) ? Object.defineProperty : function defineProperty(O, P, Attributes) {
   anObject(O);
   P = toPrimitive(P, true);
   anObject(Attributes);
@@ -1109,7 +1124,7 @@ exports.f = __webpack_require__(12) ? Object.defineProperty : function definePro
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = function (it) {
@@ -1118,17 +1133,17 @@ module.exports = function (it) {
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Thank's IE8 for his funny defineProperty
-module.exports = !__webpack_require__(13)(function () {
+module.exports = !__webpack_require__(14)(function () {
   return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
 });
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = function (exec) {
@@ -1141,7 +1156,7 @@ module.exports = function (exec) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 var hasOwnProperty = {}.hasOwnProperty;
@@ -1151,7 +1166,7 @@ module.exports = function (it, key) {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.1.13 ToObject(argument)
@@ -1160,21 +1175,6 @@ module.exports = function (it) {
   return Object(defined(it));
 };
 
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var Set = exports.Set = global.Set && new global.Set([1]).size === 1 ? global.Set : __webpack_require__(103);
-
-exports.default = Set;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(17)))
 
 /***/ }),
 /* 17 */
@@ -1384,9 +1384,9 @@ exports.isScheduler = isScheduler;
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var dP = __webpack_require__(10);
+var dP = __webpack_require__(11);
 var createDesc = __webpack_require__(30);
-module.exports = __webpack_require__(12) ? function (object, key, value) {
+module.exports = __webpack_require__(13) ? function (object, key, value) {
   return dP.f(object, key, createDesc(1, value));
 } : function (object, key, value) {
   object[key] = value;
@@ -1398,7 +1398,7 @@ module.exports = __webpack_require__(12) ? function (object, key, value) {
 /* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(11);
+var isObject = __webpack_require__(12);
 module.exports = function (it) {
   if (!isObject(it)) throw TypeError(it + ' is not an object!');
   return it;
@@ -1791,7 +1791,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var Observable_1 = __webpack_require__(0);
 var Subscriber_1 = __webpack_require__(1);
-var Subscription_1 = __webpack_require__(9);
+var Subscription_1 = __webpack_require__(10);
 var ObjectUnsubscribedError_1 = __webpack_require__(121);
 var SubjectSubscription_1 = __webpack_require__(122);
 var rxSubscriber_1 = __webpack_require__(41);
@@ -2029,7 +2029,7 @@ module.exports = __webpack_require__(2).Array.from;
 /* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(11);
+var isObject = __webpack_require__(12);
 var document = __webpack_require__(8).document;
 // typeof document.createElement is 'object' in old IE
 var is = isObject(document) && isObject(document.createElement);
@@ -2044,7 +2044,7 @@ module.exports = function (it) {
 
 var global = __webpack_require__(8);
 var hide = __webpack_require__(22);
-var has = __webpack_require__(14);
+var has = __webpack_require__(15);
 var SRC = __webpack_require__(31)('src');
 var TO_STRING = 'toString';
 var $toString = Function[TO_STRING];
@@ -2123,8 +2123,8 @@ module.exports = (
 /* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var def = __webpack_require__(10).f;
-var has = __webpack_require__(14);
+var def = __webpack_require__(11).f;
+var has = __webpack_require__(15);
 var TAG = __webpack_require__(4)('toStringTag');
 
 module.exports = function (it, tag, stat) {
@@ -3122,7 +3122,7 @@ var _defineJqueryComponent = __webpack_require__(93);
 
 var _symbols = __webpack_require__(18);
 
-var _qdSet = __webpack_require__(16);
+var _qdSet = __webpack_require__(9);
 
 var _mixin = __webpack_require__(106);
 
@@ -3227,7 +3227,7 @@ var LIBRARY = __webpack_require__(75);
 var $export = __webpack_require__(5);
 var redefine = __webpack_require__(47);
 var hide = __webpack_require__(22);
-var has = __webpack_require__(14);
+var has = __webpack_require__(15);
 var Iterators = __webpack_require__(33);
 var $iterCreate = __webpack_require__(78);
 var setToStringTag = __webpack_require__(52);
@@ -3305,7 +3305,7 @@ module.exports = false;
 /* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = !__webpack_require__(12) && !__webpack_require__(13)(function () {
+module.exports = !__webpack_require__(13) && !__webpack_require__(14)(function () {
   return Object.defineProperty(__webpack_require__(46)('div'), 'a', { get: function () { return 7; } }).a != 7;
 });
 
@@ -3315,7 +3315,7 @@ module.exports = !__webpack_require__(12) && !__webpack_require__(13)(function (
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.1.1 ToPrimitive(input [, PreferredType])
-var isObject = __webpack_require__(11);
+var isObject = __webpack_require__(12);
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
 // and the second argument - flag - preferred type is a string
 module.exports = function (it, S) {
@@ -3399,11 +3399,11 @@ module.exports = Object.create || function create(O, Properties) {
 /* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var dP = __webpack_require__(10);
+var dP = __webpack_require__(11);
 var anObject = __webpack_require__(23);
 var getKeys = __webpack_require__(34);
 
-module.exports = __webpack_require__(12) ? Object.defineProperties : function defineProperties(O, Properties) {
+module.exports = __webpack_require__(13) ? Object.defineProperties : function defineProperties(O, Properties) {
   anObject(O);
   var keys = getKeys(Properties);
   var length = keys.length;
@@ -3418,7 +3418,7 @@ module.exports = __webpack_require__(12) ? Object.defineProperties : function de
 /* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var has = __webpack_require__(14);
+var has = __webpack_require__(15);
 var toIObject = __webpack_require__(49);
 var arrayIndexOf = __webpack_require__(82)(false);
 var IE_PROTO = __webpack_require__(38)('IE_PROTO');
@@ -3492,8 +3492,8 @@ module.exports = document && document.documentElement;
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
-var has = __webpack_require__(14);
-var toObject = __webpack_require__(15);
+var has = __webpack_require__(15);
+var toObject = __webpack_require__(16);
 var IE_PROTO = __webpack_require__(38)('IE_PROTO');
 var ObjectProto = Object.prototype;
 
@@ -3514,7 +3514,7 @@ module.exports = Object.getPrototypeOf || function (O) {
 
 var ctx = __webpack_require__(32);
 var $export = __webpack_require__(5);
-var toObject = __webpack_require__(15);
+var toObject = __webpack_require__(16);
 var call = __webpack_require__(87);
 var isArrayIter = __webpack_require__(88);
 var toLength = __webpack_require__(37);
@@ -3588,7 +3588,7 @@ module.exports = function (it) {
 
 "use strict";
 
-var $defineProperty = __webpack_require__(10);
+var $defineProperty = __webpack_require__(11);
 var createDesc = __webpack_require__(30);
 
 module.exports = function (object, index, value) {
@@ -3696,7 +3696,7 @@ var _jquery = __webpack_require__(102);
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _qdSet = __webpack_require__(16);
+var _qdSet = __webpack_require__(9);
 
 var _common = __webpack_require__(104);
 
@@ -3834,7 +3834,7 @@ $export($export.P + $export.F * !STRICT, 'Array', {
 // 6 -> Array#findIndex
 var ctx = __webpack_require__(32);
 var IObject = __webpack_require__(35);
-var toObject = __webpack_require__(15);
+var toObject = __webpack_require__(16);
 var toLength = __webpack_require__(37);
 var asc = __webpack_require__(96);
 module.exports = function (TYPE, $create) {
@@ -3887,7 +3887,7 @@ module.exports = function (original, length) {
 /* 97 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(11);
+var isObject = __webpack_require__(12);
 var isArray = __webpack_require__(98);
 var SPECIES = __webpack_require__(4)('species');
 
@@ -3922,7 +3922,7 @@ module.exports = Array.isArray || function isArray(arg) {
 
 "use strict";
 
-var fails = __webpack_require__(13);
+var fails = __webpack_require__(14);
 
 module.exports = function (method, arg) {
   return !!method && fails(function () {
@@ -3937,7 +3937,7 @@ module.exports = function (method, arg) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.14 Object.keys(O)
-var toObject = __webpack_require__(15);
+var toObject = __webpack_require__(16);
 var $keys = __webpack_require__(34);
 
 __webpack_require__(101)('keys', function () {
@@ -3954,7 +3954,7 @@ __webpack_require__(101)('keys', function () {
 // most Object methods by ES6 should accept primitives
 var $export = __webpack_require__(5);
 var core = __webpack_require__(2);
-var fails = __webpack_require__(13);
+var fails = __webpack_require__(14);
 module.exports = function (KEY, exec) {
   var fn = (core.Object || {})[KEY] || Object[KEY];
   var exp = {};
@@ -4040,7 +4040,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.sSetupDOM = exports.sSetup = exports.VanillaComponent = exports.Set = undefined;
 
-var _qdSet = __webpack_require__(16);
+var _qdSet = __webpack_require__(9);
 
 var _symbols = __webpack_require__(18);
 
@@ -4151,7 +4151,7 @@ var _zip = __webpack_require__(186);
 
 var _attrTypes = __webpack_require__(188);
 
-var _qdSet = __webpack_require__(16);
+var _qdSet = __webpack_require__(9);
 
 var _url = __webpack_require__(195);
 
@@ -4484,7 +4484,7 @@ function tempRemoveScriptTags(replaceEls) {
     var _context4;
 
     return (_context4 = docfrag.querySelectorAll(_this3._scriptSelector), forEach).call(_context4, function (script) {
-      var pair = [script, script.previousElementSibling];
+      var pair = [script, script.previousSibling];
       script.parentNode.removeChild(script);
       scripts.push(pair);
     });
@@ -4512,10 +4512,10 @@ function insertScript(_ref11) {
       args[_key] = arguments[_key];
     }
 
-    var temp = document.createElement('noscript');
+    var temp = document.createElement('div');
     temp.innerHTML = args.join();
     (_context5 = temp.childNodes, forEach).call(_context5, function (node) {
-      ref.parentNode.insertBefore(node, ref);
+      ref.parentNode.insertBefore(node, ref.nextSibling);
     });
   };
 
@@ -4532,12 +4532,12 @@ function insertScript(_ref11) {
       observer.error(x);
     });
 
-    ref.parentNode.insertBefore(script, ref.nextElementSibling);
+    ref.parentNode.insertBefore(script, ref.nextSibling);
   }) :
 
   // Otherwise we insert it into the DOM and reset the `document.write` function.
   (_context6 = _of.of.call(_Observable.Observable, {}), _do._do).call(_context6, function () {
-    ref.parentNode.insertBefore(script, ref.nextElementSibling);
+    ref.parentNode.insertBefore(script, ref.nextSibling);
     document.write = originalWrite;
   });
 }
@@ -5213,7 +5213,7 @@ $export($export.P, 'Function', { bind: __webpack_require__(109) });
 "use strict";
 
 var aFunction = __webpack_require__(48);
-var isObject = __webpack_require__(11);
+var isObject = __webpack_require__(12);
 var invoke = __webpack_require__(110);
 var arraySlice = [].slice;
 var factories = {};
@@ -5280,12 +5280,12 @@ $export($export.S + $export.F, 'Object', { assign: __webpack_require__(112) });
 var getKeys = __webpack_require__(34);
 var gOPS = __webpack_require__(113);
 var pIE = __webpack_require__(114);
-var toObject = __webpack_require__(15);
+var toObject = __webpack_require__(16);
 var IObject = __webpack_require__(35);
 var $assign = Object.assign;
 
 // should work with symbols and should have deterministic property order (V8 bug)
-module.exports = !$assign || __webpack_require__(13)(function () {
+module.exports = !$assign || __webpack_require__(14)(function () {
   var A = {};
   var B = {};
   // eslint-disable-next-line no-undef
@@ -5349,7 +5349,7 @@ __webpack_require__(116);
 
 __webpack_require__(53);
 
-var _qdSet = __webpack_require__(16);
+var _qdSet = __webpack_require__(9);
 
 var _symbols = __webpack_require__(18);
 
@@ -5498,7 +5498,7 @@ module.exports = function defineProperty(it, key, desc) {
 
 var $export = __webpack_require__(5);
 // 19.1.2.4 / 15.2.3.6 Object.defineProperty(O, P, Attributes)
-$export($export.S + $export.F * !__webpack_require__(12), 'Object', { defineProperty: __webpack_require__(10).f });
+$export($export.S + $export.F * !__webpack_require__(13), 'Object', { defineProperty: __webpack_require__(11).f });
 
 
 /***/ }),
@@ -5633,7 +5633,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var Subscription_1 = __webpack_require__(9);
+var Subscription_1 = __webpack_require__(10);
 /**
  * We need this JSDoc comment for affecting ESDoc.
  * @ignore
@@ -5781,7 +5781,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var Subscription_1 = __webpack_require__(9);
+var Subscription_1 = __webpack_require__(10);
 /**
  * A unit of work to be executed in a {@link Scheduler}. An action is typically
  * created from within a Scheduler and an RxJS user does not need to concern
@@ -6773,7 +6773,7 @@ var Observable_1 = __webpack_require__(0);
 var tryCatch_1 = __webpack_require__(25);
 var isFunction_1 = __webpack_require__(40);
 var errorObject_1 = __webpack_require__(19);
-var Subscription_1 = __webpack_require__(9);
+var Subscription_1 = __webpack_require__(10);
 var toString = Object.prototype.toString;
 function isNodeStyleEventEmitter(sourceObj) {
     return !!sourceObj && typeof sourceObj.addListener === 'function' && typeof sourceObj.removeListener === 'function';
@@ -9157,7 +9157,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var Subject_1 = __webpack_require__(43);
 var Observable_1 = __webpack_require__(0);
 var Subscriber_1 = __webpack_require__(1);
-var Subscription_1 = __webpack_require__(9);
+var Subscription_1 = __webpack_require__(10);
 var refCount_1 = __webpack_require__(69);
 /**
  * @class ConnectableObservable<T>
@@ -10957,6 +10957,7 @@ if (!URL || !URL.prototype || !('href' in URL.prototype)) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.matches = exports.Set = undefined;
 exports.matchesAncestors = matchesAncestors;
 exports.isExternal = isExternal;
 exports.isHash = isHash;
@@ -10964,7 +10965,10 @@ exports.getScrollHeight = getScrollHeight;
 exports.getScrollLeft = getScrollLeft;
 exports.getScrollTop = getScrollTop;
 exports.fragmentFromString = fragmentFromString;
-// # src / common.js
+
+var _qdSet = __webpack_require__(9);
+
+exports.Set = _qdSet.Set; // # src / common.js
 // Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify

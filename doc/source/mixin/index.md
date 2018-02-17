@@ -435,7 +435,7 @@ function tempRemoveScriptTags(replaceEls) {
 
   replaceEls.forEach(docfrag =>
     docfrag.querySelectorAll(this._scriptSelector)::forEach((script) => {
-      const pair = [script, script.previousElementSibling];
+      const pair = [script, script.previousSibling];
       script.parentNode.removeChild(script);
       scripts.push(pair);
     }));
@@ -459,9 +459,11 @@ This only works because scripts are inserted one-at-a-time (via `concatMap`).
   const originalWrite = document.write;
 
   document.write = (...args) => {
-    const temp = document.createElement('noscript');
+    const temp = document.createElement('div');
     temp.innerHTML = args.join();
-    temp.childNodes::forEach((node) => { ref.parentNode.insertBefore(node, ref); });
+    temp.childNodes::forEach((node) => {
+      ref.parentNode.insertBefore(node, ref.nextSibling);
+    });
   };
 ```
 
@@ -482,7 +484,7 @@ but we return an observable that only completes once the script has fired its `l
         observer.error(x);
       });
 
-      ref.parentNode.insertBefore(script, ref.nextElementSibling);
+      ref.parentNode.insertBefore(script, ref.nextSibling);
     }) :
 ```
 
@@ -491,7 +493,7 @@ Otherwise we insert it into the DOM and reset the `document.write` function.
 
 ```js
     Observable::of({})::tap(() => {
-      ref.parentNode.insertBefore(script, ref.nextElementSibling);
+      ref.parentNode.insertBefore(script, ref.nextSibling);
       document.write = originalWrite;
     });
 }

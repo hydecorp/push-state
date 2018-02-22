@@ -30,7 +30,7 @@ export const matches =
 export function matchesAncestors(selector) {
   let curr = this;
   while (curr !== document && curr !== document.documentElement) {
-    if (curr::matches(selector)) return curr;
+    if (matches.call(curr, selector)) return curr;
     curr = curr.parentNode;
   }
   return null;

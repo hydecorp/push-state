@@ -49,22 +49,14 @@ which helps with making multiple versions of the component (Vanilla JS, WebCompo
 ```js
 import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
 import { sSetup, sSetupDOM, sFire } from 'hy-component/src/symbols';
+
+import { Observable, Subject } from 'rxjs';
 ```
 
 Importing the subset of RxJS functions that we are going to use.
-Note that some of these have been renamed to avoid conflicts with keywords,
-to avoid implementation specific names and conflicts within the library itself.
-* `do` → `tap`
-* `catch` → `catchError`
-* `zipProto` → `zip`
 
 
 ```js
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-
-import { animationFrame } from 'rxjs/scheduler/animationFrame';
-
 import { defer } from 'rxjs/observable/defer';
 import { from } from 'rxjs/observable/from';
 import { fromEvent } from 'rxjs/observable/fromEvent';
@@ -75,24 +67,36 @@ import { timer } from 'rxjs/observable/timer';
 
 import { ajax } from 'rxjs/observable/dom/ajax';
 
-import { _catch as catchError } from 'rxjs/operator/catch';
-import { _do as tap } from 'rxjs/operator/do';
-import { concatMap } from 'rxjs/operator/concatMap';
-import { distinctUntilChanged } from 'rxjs/operator/distinctUntilChanged';
-import { filter } from 'rxjs/operator/filter';
-import { map } from 'rxjs/operator/map';
-import { mapTo } from 'rxjs/operator/mapTo';
-import { observeOn } from 'rxjs/operator/observeOn';
-import { partition } from 'rxjs/operator/partition';
-import { pairwise } from 'rxjs/operator/pairwise';
-import { share } from 'rxjs/operator/share';
-import { startWith } from 'rxjs/operator/startWith';
-import { switchMap } from 'rxjs/operator/switchMap';
-import { take } from 'rxjs/operator/take';
-import { takeUntil } from 'rxjs/operator/takeUntil';
-import { toPromise } from 'rxjs/operator/toPromise';
-import { withLatestFrom } from 'rxjs/operator/withLatestFrom';
-import { zipProto as zip } from 'rxjs/operator/zip';
+import {
+  catchError,
+  tap,
+  concatMap,
+  distinctUntilChanged,
+  filter,
+  map,
+  mapTo,
+```
+
+observeOn,
+
+
+```js
+  partition,
+  pairwise,
+  share,
+  startWith,
+  switchMap,
+  take,
+  takeUntil,
+  withLatestFrom,
+  zip,
+} from 'rxjs/operators';
+```
+
+import { animationFrame } from 'rxjs/scheduler/animationFrame';
+
+
+```js
 
 import { array, bool, number, regex, string } from 'attr-types';
 import { Set } from 'qd-set';
@@ -177,8 +181,7 @@ For convenience....
 
 
 ```js
-const { forEach, indexOf } = Array.prototype;
-const assign = ::Object.assign;
+const assign = Object.assign.bind(Object);
 ```
 
 Patching the document fragment's `getElementById` function, which is
@@ -203,27 +206,23 @@ and re-subscribes when it emits a falsy value.
 
 
 ```js
-function unsubscribeWhen(pauser$) {
+const unsubscribeWhen = pauser$ => (source) => {
   if (process.env.DEBUG && !pauser$) throw Error();
-  return pauser$::switchMap(paused => (paused ? Observable::never() : this));
-}
+  return pauser$.pipe(switchMap(paused => (paused ? never() : source)));
+};
 ```
 
 #### Custom subscribe
 A custom subscribe function that will `recover` from an error and log it to the console.
 This is a line of last defense to make sure the entire pipeline/page doesn't crash.
 TODO: maybe just let it crash s.t. the page reloads on the next click on a link!?
-
-
-```js
 function subscribe(ne, er, co) {
   let res = this;
-  if (process.env.DEBUG) res = this::tap({ error: ::console.error });
+  if (process.env.DEBUG) res = this.pipe(tap({ error: e => console.error(e) }));
   return res
-    ::catchError((e, c) => c)
+    .pipe(catchError((e, c) => c))
     .subscribe(ne, er, co);
 }
-```
 
 ### Event filters
 
@@ -278,7 +277,7 @@ Takes the current history state, and restores the scroll position.
 
 ```js
 function restoreScrollPostion() {
-  const id = this::histId();
+  const id = histId.call(this); // TODO
   const state = (window.history.state && window.history.state[id]) || {};
 
   if (state.scrollTop != null) {
@@ -301,12 +300,12 @@ function manageScrollPostion({ type, url: { hash } }) {
   }
 
   if (type === POP && this.scrollRestoration) {
-    this::restoreScrollPostion();
+    restoreScrollPostion.call(this);
   }
 }
 
 function saveScrollPosition(state) {
-  const id = this::histId();
+  const id = histId.call(this);
   return assign(state, {
     [id]: assign(state[id] || {}, {
       scrollTop: getScrollTop(),
@@ -317,7 +316,7 @@ function saveScrollPosition(state) {
 
 function updateHistoryState({ type, replace, url: { href, hash } }) {
   if (type === PUSH || type === INIT) {
-    const id = this::histId();
+    const id = histId.call(this);
     const method = replace || href === window.location.href ? 'replaceState' : 'pushState';
     window.history[method]({ [id]: { hash: !!hash } }, '', href);
   }
@@ -327,7 +326,7 @@ function updateHistoryStateHash({ type, url }) {
   const { hash, href } = url;
 
   if (type === PUSH) {
-    const id = this::histId();
+    const id = histId.call(this);
     const currState = assign(window.history.state, {
       [id]: assign(window.history.state[id], { hash: true }),
     });
@@ -342,7 +341,7 @@ function updateHistoryStateHash({ type, url }) {
 }
 
 function saveScrollHistoryState() {
-  const state = this::saveScrollPosition(window.history.state || {});
+  const state = saveScrollPosition.call(this, window.history.state || {});
   window.history.replaceState(state, document.title, window.location);
 }
 ```
@@ -375,7 +374,7 @@ If we have a response, recover with it and continue with the pipeline.
 
 ```js
   if (xhr && xhr.response && status > 400) {
-    return Observable::of(assign(context, { response: xhr.response }));
+    return of(assign(context, { response: xhr.response }));
   }
 ```
 
@@ -383,18 +382,7 @@ If we don't have a response, this is an acutal error that should be dealt with.
 
 
 ```js
-  return Observable::of(assign(context, { error }));
-}
-```
-
-TODO
-
-
-```js
-function fetchPage(context) {
-  return Observable::ajax(hrefToAjax(context))
-    ::map(({ response }) => assign(context, { response }))
-    ::catchError(error => this::recoverIfResponse(context, error));
+  return of(assign(context, { error }));
 }
 ```
 
@@ -407,8 +395,8 @@ TODO: rename
 ```js
 function getFetch$({ url: { href } }, latestPrefetch, prefetch$) {
   return href === latestPrefetch.url.href && latestPrefetch.error == null ?
-    Observable::of(latestPrefetch) :
-    prefetch$::take(1);
+    of(latestPrefetch) :
+    prefetch$.pipe(take(1));
 }
 ```
 
@@ -417,9 +405,10 @@ TODO: rename
 
 ```js
 function getResponse(prefetch$, [context, latestPrefetch]) {
-  return getFetch$(context, latestPrefetch, prefetch$)
-    ::map(fetch => assign(fetch, context))
-    ::zip(this[sAnimPromise], x => x);
+  return getFetch$(context, latestPrefetch, prefetch$).pipe(
+    map(fetch => assign(fetch, context)),
+    zip(this[sAnimPromise], x => x),
+  );
 }
 ```
 
@@ -434,7 +423,7 @@ function tempRemoveScriptTags(replaceEls) {
   const scripts = [];
 
   replaceEls.forEach(docfrag =>
-    docfrag.querySelectorAll(this._scriptSelector)::forEach((script) => {
+    Array.from(docfrag.querySelectorAll(this._scriptSelector)).forEach((script) => {
       const pair = [script, script.previousSibling];
       script.parentNode.removeChild(script);
       scripts.push(pair);
@@ -461,7 +450,7 @@ This only works because scripts are inserted one-at-a-time (via `concatMap`).
   document.write = (...args) => {
     const temp = document.createElement('div');
     temp.innerHTML = args.join();
-    temp.childNodes::forEach((node) => {
+    Array.from(temp.childNodes).forEach((node) => {
       ref.parentNode.insertBefore(node, ref.nextSibling);
     });
   };
@@ -492,10 +481,10 @@ Otherwise we insert it into the DOM and reset the `document.write` function.
 
 
 ```js
-    Observable::of({})::tap(() => {
+    of({}).pipe(tap(() => {
       ref.parentNode.insertBefore(script, ref.nextSibling);
       document.write = originalWrite;
-    });
+    }));
 }
 ```
 
@@ -506,10 +495,11 @@ Takes a list of `script`--`ref` pairs, and inserts them into the DOM one-by-one.
 function reinsertScriptTags(context) {
   const { scripts } = context;
 
-  return Observable::from(scripts)
-    ::concatMap(insertScript)
-    ::catchError((error) => { throw assign(context, { error }); })
-    ::toPromise()
+  return from(scripts).pipe(
+    concatMap(insertScript),
+    catchError((error) => { throw assign(context, { error }); }),
+  )
+    .toPromise()
     .then(() => context);
 }
 ```
@@ -531,7 +521,7 @@ function getReplaceElements(fragment) {
     if (this.el.id) {
       replaceEl = fragment.getElementById(this.el.id);
     } else {
-      const index = document.getElementsByTagName(this.el.tagName)::indexOf(this.el);
+      const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
       replaceEl = fragment.querySelectorAll(this.el.tagName)[index];
     }
     return [replaceEl];
@@ -542,14 +532,14 @@ function responseToContent(context) {
   const { response } = context;
 
   const fragment = fragmentFromString(response);
-  const title = this::getTitle(fragment);
-  const replaceEls = this::getReplaceElements(fragment);
+  const title = getTitle.call(this, fragment);
+  const replaceEls = getReplaceElements.call(this, fragment);
 
   if (replaceEls.some(x => x == null)) {
     throw assign(context, { relaceElMissing: true });
   }
 
-  const scripts = this._scriptSelector ? this::tempRemoveScriptTags(replaceEls) : [];
+  const scripts = this._scriptSelector ? tempRemoveScriptTags.call(this, replaceEls) : [];
 
   return assign(context, { title, replaceEls, scripts });
 }
@@ -568,9 +558,9 @@ function replaceContentWholesale([el]) {
 
 function replaceContent(replaceEls) {
   if (this.replaceIds.length > 0) {
-    this::replaceContentByIds(replaceEls);
+    replaceContentByIds.call(this, replaceEls);
   } else {
-    this::replaceContentWholesale(replaceEls);
+    replaceContentWholesale.call(this, replaceEls);
   }
 }
 
@@ -584,7 +574,7 @@ function updateDOM(context) {
       window.history.replaceState(window.history.state, title, window.location);
     }
 
-    this::replaceContent(replaceEls);
+    replaceContent.call(this, replaceEls);
   } catch (error) {
     throw assign(context, { error });
   }
@@ -608,7 +598,7 @@ The behavior is encoded with a promise that resolves after `duration` ms.
 
 
 ```js
-  this[sAnimPromise] = Observable::timer(this.duration);
+  this[sAnimPromise] = timer(this.duration);
 ```
 
 The `waitUntil` function lets users of this component override the animation promise.
@@ -797,20 +787,20 @@ TODO
 
 
 ```js
-  const push$ = pushSubject
-    ::filter(this::isPushEvent)
-    ::map(event => ({
+  const push$ = pushSubject.pipe(
+    filter(isPushEvent.bind(this)),
+    map(event => ({
       type: PUSH,
       url: new URL(event.currentTarget.href),
       anchor: event.currentTarget,
       event,
       cacheNr,
-    }))
-    ::tap(({ event }) => {
+    })),
+    tap(({ event }) => {
       event.preventDefault();
-      this::saveScrollHistoryState();
-    });
-    /* *::throttleTime(this.repeatDelay); */
+      saveScrollHistoryState.call(this);
+    }),
+  );
 ```
 
 In additon to `HINT` and `PUSH` events, there's also `POP` events, which are caused by
@@ -818,26 +808,28 @@ modifying the browser history, e.g. clicking the back button, etc.
 
 
 ```js
-  const pop$ = Observable::fromEvent(window, 'popstate')
-    ::filter(() => window.history.state && window.history.state[this::histId()])
-    ::map(event => ({
+  const pop$ = fromEvent(window, 'popstate').pipe(
+    filter(() => window.history.state && window.history.state[histId.call(this)]),
+    map(event => ({
       type: POP,
       url: new URL(window.location),
       event,
       cacheNr,
-    }));
+    })),
+  );
 ```
 
 TODO
 
 
 ```js
-  const [hash$, page$] = Observable::merge(push$, pop$, this[sReload$])
-    ::startWith({ url: new URL(window.location) })
-    ::pairwise()
-    ::share()
-    ::partition(isHashChange)
-    .map($ => $::map(([, x]) => x)::share());
+  const [hash$, page$] = merge(push$, pop$, this[sReload$]).pipe(
+    startWith({ url: new URL(window.location) }),
+    pairwise(),
+    share(),
+    partition(isHashChange),
+  )
+    .map(obs$ => obs$.pipe(map(([, x]) => x), share()));
 ```
 
 We don't want to prefetch (i.e. use bandwidth) for a _probabilistic_ page load,
@@ -846,7 +838,7 @@ Needs to be deferred b/c of "cyclical" dependency.
 
 
 ```js
-  const pauser$ = Observable::defer(() =>
+  const pauser$ = defer(() =>
 ```
 
 A page change event means we want to pause prefetching, while
@@ -854,31 +846,33 @@ a response event means we want to resume prefetching.
 
 
 ```js
-      Observable::merge(page$::mapTo(true), ref.fetch$::mapTo(false)))
+    merge(page$.pipe(mapTo(true)), ref.fetch$.pipe(mapTo(false)))).pipe(
 ```
 
 Start with `false`, i.e. we want to prefetch
 
 
 ```js
-    ::startWith(false)
-    ::share();
+    startWith(false),
+    share(),
+  );
 ```
 
 TODO
 
 
 ```js
-  const hint$ = hintSubject
-    ::unsubscribeWhen(pauser$)
-    ::filter(this::isHintEvent)
-    ::map(event => ({
+  const hint$ = hintSubject.pipe(
+    unsubscribeWhen(pauser$),
+    filter(isHintEvent.bind(this)),
+    map(event => ({
       type: HINT,
       url: new URL(event.currentTarget.href),
       anchor: event.currentTarget,
       event,
       cacheNr,
-    }));
+    })),
+  );
 ```
 
 The stream of (pre-)fetch events.
@@ -886,57 +880,69 @@ Includes definitive page change events do deal with unexpected page changes.
 
 
 ```js
-  const prefetch$ = Observable::merge(hint$, page$)
+  const prefetch$ = merge(hint$, page$).pipe(
 ```
 
 Don't abort a request if the user "jiggles" over a link
 
 
 ```js
-    ::distinctUntilChanged(compareContext)
-    ::switchMap(this::fetchPage)
+    distinctUntilChanged(compareContext),
+    switchMap(context =>
+      ajax(hrefToAjax(context)).pipe(
+        map(({ response }) => assign(context, { response })),
+        catchError(error => recoverIfResponse.call(this, context, error)),
+      )),
 ```
 
 Start with some value so `withLatestFrom` below doesn't "block"
 
 
 ```js
-    ::startWith({ url: {} })
-    ::share();
+    startWith({ url: {} }),
+    share(),
+  );
 ```
 
 TODO
 
 
 ```js
-  ref.fetch$ = page$
-    ::tap(this::updateHistoryState)
-    ::tap(this::onStart)
-    ::withLatestFrom(prefetch$)
-    ::switchMap(getResponse.bind(this, prefetch$))
-    ::share();
+  ref.fetch$ = page$.pipe(
+    tap(updateHistoryState.bind(this)),
+    tap(onStart.bind(this)),
+    withLatestFrom(prefetch$),
+    switchMap(getResponse.bind(this, prefetch$)),
+    share(),
+  );
 ```
 
 TODO
 
 
 ```js
-  const [fetchOk$, fetchError$] = ref.fetch$::partition(({ error }) => !error);
+  const [fetchOk$, fetchError$] = ref.fetch$.pipe(partition(({ error }) => !error));
 ```
 
 TODO
 
 
 ```js
-  let main$ = fetchOk$
-    ::map(this::responseToContent)
-    ::observeOn(animationFrame)
-    ::tap(this::onReady)
-    ::tap(this::updateDOM)
-    ::tap(this::onAfter)
-    ::tap(this::manageScrollPostion)
-    ::tap({ error: this::onDOMError })
-    ::catchError((e, c) => c);
+  let main$ = fetchOk$.pipe(
+    map(responseToContent.bind(this)),
+```
+
+observeOn(animationFrame),
+
+
+```js
+    tap(onReady.bind(this)),
+    tap(updateDOM.bind(this)),
+    tap(onAfter.bind(this)),
+    tap(manageScrollPostion.bind(this)),
+    tap({ error: e => onDOMError.call(this, e) }),
+    catchError((e, c) => c),
+  );
 ```
 
 If the experimental script feature is enabled,
@@ -946,10 +952,11 @@ and this is where we insert them again.
 
 ```js
   if (this._scriptSelector) {
-    main$ = main$
-      ::switchMap(this::reinsertScriptTags)
-      ::tap({ error: this::onError })
-      ::catchError((e, c) => c);
+    main$ = main$.pipe(
+      switchMap(reinsertScriptTags.bind(this)),
+      tap({ error: e => onError.call(this, e) }),
+      catchError((e, c) => c),
+    );
   }
 ```
 
@@ -958,26 +965,27 @@ Subscribe to main and hash observables.
 
 
 ```js
-  main$::subscribe(this::onLoad);
-  hash$::subscribe(this::updateHistoryStateHash);
+  main$.subscribe(onLoad.bind(this));
+  hash$.subscribe(updateHistoryStateHash.bind(this));
 ```
 
 Subscribe to the fetch error branch.
 
 
 ```js
-  fetchError$::subscribe(this::onNetworkError);
+  fetchError$.subscribe(onNetworkError.bind(this));
 ```
 
 Fire `progress` event when fetching takes longer than expected.
 
 
 ```js
-  page$::switchMap(context =>
-      Observable::defer(() => this[sAnimPromise])
-        ::takeUntil(ref.fetch$)
-        ::mapTo(context))
-    ::subscribe(this::onProgress);
+  page$.pipe(switchMap(context =>
+    defer(() => this[sAnimPromise]).pipe(
+      takeUntil(ref.fetch$),
+      mapTo(context),
+    )))
+    .subscribe(onProgress.bind(this));
 ```
 
 #### Keeping track of links
@@ -1011,9 +1019,9 @@ so that we can pass them as callbacks directly. This is just for convenience.
 
 
 ```js
-    const mutationNext = ::mutation$.next;
-    const pushNext = ::pushSubject.next;
-    const hintNext = ::hintSubject.next;
+    const mutationNext = mutation$.next.bind(mutation$);
+    const pushNext = pushSubject.next.bind(pushSubject);
+    const hintNext = hintSubject.next.bind(hintSubject);
 ```
 
 We don't use `Observable.fromEvent` here to avoid creating too many observables.
@@ -1031,7 +1039,7 @@ The function to be called for every added node:
 ```js
     const addListeners = (addedNode) => {
       if (addedNode instanceof Element) {
-        addedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
+        Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach((link) => {
           if (!links.has(link)) {
             links.add(link);
             link.addEventListener('click', pushNext);
@@ -1053,7 +1061,7 @@ but since we can't be sure, we remove the event listeners anyway.
 ```js
     const removeListeners = (removedNode) => {
       if (removedNode instanceof Element) {
-        removedNode.querySelectorAll(this.linkSelector)::forEach((link) => {
+        Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach((link) => {
           links.delete(link);
           link.removeEventListener('click', pushNext);
           link.removeEventListener('mouseenter', hintNext, { passive: true });
@@ -1068,7 +1076,7 @@ The mutation observer callback simply puts all mutations on the `mutation$` obse
 
 
 ```js
-    const observer = new MutationObserver(mutations => mutations::forEach(mutationNext));
+    const observer = new MutationObserver(mutations => Array.from(mutations).forEach(mutationNext));
 ```
 
 For every mutation, we remove the event listeners of elements that go out of the component
@@ -1076,11 +1084,10 @@ For every mutation, we remove the event listeners of elements that go out of the
 
 
 ```js
-    mutation$
-      ::unsubscribeWhen(pauser$)
-      ::subscribe(({ addedNodes, removedNodes }) => {
-        removedNodes::forEach(this::removeListeners);
-        addedNodes::forEach(this::addListeners);
+    mutation$.pipe(unsubscribeWhen(pauser$))
+      .subscribe(({ addedNodes, removedNodes }) => {
+        Array.from(removedNodes).forEach(removeListeners.bind(this));
+        Array.from(addedNodes).forEach(addListeners.bind(this));
       });
 ```
 
@@ -1097,7 +1104,7 @@ so we add them manually here, once.
 
 
 ```js
-    this::addListeners(this.el);
+    addListeners.call(this, this.el);
 ```
 
 If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
@@ -1108,7 +1115,7 @@ Note that we can't reliably generate hints this way, so we don't.
 ```js
   } else {
     this.el.addEventListener('click', (event) => {
-      const anchor = event.target::matchesAncestors(this.linkSelector);
+      const anchor = matchesAncestors.call(event.target, this.linkSelector);
       if (anchor && anchor.href) {
         event.currentTarget = anchor; // eslint-disable-line no-param-reassign
         pushSubject.next(event);
@@ -1161,21 +1168,21 @@ If restore the last scroll position, if any.
 
 
 ```js
-      this::restoreScrollPostion();
+      restoreScrollPostion.call(this);
 ```
 
 Remember the current scroll position (for F5/reloads).
 
 
 ```js
-      window.addEventListener('beforeunload', this::saveScrollHistoryState);
+      window.addEventListener('beforeunload', saveScrollHistoryState.bind(this));
 ```
 
 Finally, calling the [setup observables function](#setup-observables) function.
 
 
 ```js
-      this::setupObservables();
+      setupObservables.call(this);
 ```
 
 Setting the initial `history.state`.
@@ -1183,7 +1190,7 @@ Setting the initial `history.state`.
 
 ```js
       const url = new URL(window.location);
-      this::updateHistoryState({ type: INIT, replace: true, url });
+      updateHistoryState.call(this, { type: INIT, replace: true, url });
 ```
 
 After all this is done, we can fire the one-time `init` event...
@@ -1200,10 +1207,10 @@ since this `load` event wasn't caused by a user interaction.
 
 
 ```js
-      this::onLoad({
+      onLoad.call(this, {
         type: INIT,
-        title: this::getTitle(document),
-        replaceEls: this::getReplaceElements(document),
+        title: getTitle.call(this, document),
+        replaceEls: getReplaceElements.call(this, document),
         url,
         cacheNr,
       });

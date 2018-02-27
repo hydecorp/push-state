@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+- node
+deploy:
+  provider: npm
+  email: mail@qwtel.com
+  api_key:
+    secure: IBuvNytKhg1DFtZ5PMXujqEElDUAhzYWXBP+oSPpDGJn6NK5rpw9hd9iC+Pivzbtah08NRdHfg7Yp7oO2To8u1xbOR1mZJ05i4qU8KWXJFrS3WKrQH/KXA5yx6jRb/htHJOQeHSTMeFuEcbNhXYiCZ9MxfVHf7BNR4j7+5hRK5BOPWtyX2aCVsVb8iAFq/sWebfSm26AJ41Liy22eTx0BUOigj15gwXIE0z2+ORC/5QIK0D7pdmx07fJmnbvtxoH2b467AOyO2/7jjyDszIG6/70GRsrHTnspnRM23B74QrZ0Bf4+tt6ZbTeq6KQY0HJYcyYJyO4hVzR7RjGyvlCzcop7OPN/lHhPB3Y0kDMunJUzKsEsFgNRaY0jonNv+YkcjmbN3DwXoOpAxZ6orHbGBfMY2rjBLvLr/0nUQv89naZVcD6oQAWNZ1jcvwW8cQjUHMqzPrAarGEzeeqzyphPlJYkiUDEtL/V6n1d7C6acZQNn9k/rPTrV2Nl5FBnKilHckgwaqEdEMt3PCiSYFc1apG+JLpZATG2jLoGPsT4sN/kJaTgmBrOMt9Vvzbp4D+KZMy2tyfoUcsrd23SsPOvUEsYXT/u2IjZDI89jT9YheH6OyCWZc00R1jKO6GcjGv79qy/dOu93h4+L7wMSHUhUVcK2W7nOf6QEy81pdix9Y=
+  on:
+    tags: true
+    repo: qwtel/hy-push-state
+  skip_cleanup: true

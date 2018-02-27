@@ -16,14 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Overview
 This component is written in [RxJS] and reading its code requires some basic understanding
-of how RxJS works. It may also serve as an example of how to use RxJS (or how not to use it...).
+of how RxJS works. It may also serve as an example of how to use RxJS.
 
-Other than RxJS, you should be familiar with the (non-standard) function-bind syntax `::`,
-which is extremely helpful with using RxJS operators *as if* they were class methods,
-as well as writing private functions for our mixin.
-
-Finally, the export is a [ES6 Mixin][esmixins],
+Other than RxJS, you should be familiar with [ES6 Mixin][esmixins],
 which is a clever way of using the ES6 class syntax to achieve inheritance-based mixins.
+The mixin in the main export of this file.
 
 ## Table of Contents
 {:.no_toc}
@@ -75,12 +72,7 @@ import {
   filter,
   map,
   mapTo,
-```
-
-observeOn,
-
-
-```js
+  observeOn,
   partition,
   pairwise,
   share,
@@ -91,12 +83,8 @@ observeOn,
   withLatestFrom,
   zip,
 } from 'rxjs/operators';
-```
 
 import { animationFrame } from 'rxjs/scheduler/animationFrame';
-
-
-```js
 
 import { array, bool, number, regex, string } from 'attr-types';
 import { Set } from 'qd-set';
@@ -216,6 +204,10 @@ const unsubscribeWhen = pauser$ => (source) => {
 A custom subscribe function that will `recover` from an error and log it to the console.
 This is a line of last defense to make sure the entire pipeline/page doesn't crash.
 TODO: maybe just let it crash s.t. the page reloads on the next click on a link!?
+
+
+```js
+/*
 function subscribe(ne, er, co) {
   let res = this;
   if (process.env.DEBUG) res = this.pipe(tap({ error: e => console.error(e) }));
@@ -223,6 +215,8 @@ function subscribe(ne, er, co) {
     .pipe(catchError((e, c) => c))
     .subscribe(ne, er, co);
 }
+*/
+```
 
 ### Event filters
 
@@ -930,12 +924,7 @@ TODO
 ```js
   let main$ = fetchOk$.pipe(
     map(responseToContent.bind(this)),
-```
-
-observeOn(animationFrame),
-
-
-```js
+    observeOn(animationFrame),
     tap(onReady.bind(this)),
     tap(updateDOM.bind(this)),
     tap(onAfter.bind(this)),

@@ -46,7 +46,6 @@ import {
   HINT,
   PUSH,
   POP,
-  sReload$,
 } from './constants';
 
 import {
@@ -176,7 +175,7 @@ export function pushStateMixin(C) {
     // ### Methods
     // Public methods of this component. See [Methods](../../methods.md) for more.
     assign(url) {
-      this[sReload$].next({
+      this.reload$.next({
         type: PUSH,
         url: new URL(url, window.location),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
@@ -184,7 +183,7 @@ export function pushStateMixin(C) {
     }
 
     reload() {
-      this[sReload$].next({
+      this.reload$.next({
         type: PUSH,
         url: new URL(window.location.href),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
@@ -193,7 +192,7 @@ export function pushStateMixin(C) {
     }
 
     replace(url) {
-      this[sReload$].next({
+      this.reload$.next({
         type: PUSH,
         url: new URL(url, window.location),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus

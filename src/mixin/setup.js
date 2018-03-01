@@ -57,7 +57,6 @@ import {
   PUSH,
   POP,
   sAnimPromise,
-  sReload$,
 } from './constants';
 
 // [Source](./methods.md)
@@ -129,7 +128,7 @@ export function setupObservables() {
   const hintSubject = new Subject();
 
   // Emits a value each time the `reload` method is called on this component.
-  this[sReload$] = new Subject();
+  this.reload$ = new Subject();
 
   // This is used to reference deferred observaables.
   const ref = {};
@@ -163,7 +162,7 @@ export function setupObservables() {
   );
 
   // TODO
-  const [hash$, page$] = merge(push$, pop$, this[sReload$]).pipe(
+  const [hash$, page$] = merge(push$, pop$, this.reload$).pipe(
     startWith({ url: new URL(window.location) }),
     pairwise(),
     share(),

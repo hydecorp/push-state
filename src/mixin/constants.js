@@ -20,11 +20,3 @@ export const INIT = 'init';
 export const HINT = 'hint';
 export const PUSH = 'push';
 export const POP = 'pop';
-
-// If Symbol isn't supported, just use underscore naming convention for private properties.
-// We don't need advanced features of Symbol.
-const Symbol = global.Symbol || (x => `_${x}`);
-
-// We use `Symbol`s for all internal variables, to avoid naming conflicts when using the mixin.
-export const sAnimPromise = Symbol('animPromise');
-export const sReload$ = Symbol('reloadObservable');

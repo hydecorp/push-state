@@ -17,7 +17,6 @@
 import { fragmentFromString } from '../common';
 
 import { PUSH } from './constants';
-
 import { tempRemoveScriptTags } from './script-hack';
 
 // For convenience....

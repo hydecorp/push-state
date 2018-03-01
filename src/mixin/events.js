@@ -17,8 +17,6 @@
 import { Observable } from 'rxjs';
 import { timer } from 'rxjs/observable/timer';
 
-import { sAnimPromise } from './constants';
-
 // For convenience....
 const assign = Object.assign.bind(Object);
 
@@ -31,7 +29,7 @@ export function onStart(context) {
   // By default, hy-push-state will wait at least `duration` ms before replacing the content,
   // so that animations have enough time to finish.
   // The behavior is encoded with a promise that resolves after `duration` ms.
-  this[sAnimPromise] = timer(this.duration);
+  this.animPromise = timer(this.duration);
 
   // The `waitUntil` function lets users of this component override the animation promise.
   // This allows for event-based code execution, rather than timing-based, which prevents hiccups
@@ -40,7 +38,7 @@ export function onStart(context) {
     if (process.env.DEBUG && !(promise instanceof Promise || promise instanceof Observable)) {
       console.warn('waitUntil expects a Promise as first argument.');
     }
-    this[sAnimPromise] = promise;
+    this.animPromise = promise;
   };
 
   this.fireEvent('start', { detail: assign(context, { waitUntil }) });

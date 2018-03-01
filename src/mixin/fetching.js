@@ -21,8 +21,6 @@
 import { of } from 'rxjs/observable/of';
 import { map, take, zip } from 'rxjs/operators';
 
-import { sAnimPromise } from './constants';
-
 // For convenience....
 const assign = Object.assign.bind(Object);
 
@@ -65,6 +63,6 @@ function getFetch$({ url: { href } }, latestPrefetch, prefetch$) {
 export function getResponse(prefetch$, [context, latestPrefetch]) {
   return getFetch$(context, latestPrefetch, prefetch$).pipe(
     map(fetch => assign(fetch, context)),
-    zip(this[sAnimPromise], x => x),
+    zip(this.animPromise, x => x),
   );
 }

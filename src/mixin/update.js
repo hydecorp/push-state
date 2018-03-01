@@ -24,12 +24,12 @@ import { tempRemoveScriptTags } from './script-hack';
 const assign = Object.assign.bind(Object);
 
 // Extracts the title of the page
-function getTitle(fragment) {
+export function getTitle(fragment) {
   return (fragment.querySelector('title') || {}).textContent;
 }
 
 // Extracts the elements to be replaced
-function getReplaceElements(fragment) {
+export function getReplaceElements(fragment) {
   if (this.replaceIds.length > 0) {
     return this.replaceIds.map(id => fragment.getElementById(id));
   } else {

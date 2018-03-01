@@ -50,12 +50,16 @@ import {
 } from './constants';
 
 import {
-  restoreScrollPostion,
-  updateHistoryState,
-  saveScrollHistoryState,
   getTitle,
   getReplaceElements,
-} from './methods';
+} from './update';
+
+import {
+  updateHistoryState,
+  saveScrollHistoryState,
+} from './history';
+
+import { restoreScrollPostion } from './scrolling';
 
 import { onLoad } from './events';
 

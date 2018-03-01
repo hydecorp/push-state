@@ -69,12 +69,13 @@ import {
 } from './methods';
 
 // [Source](./scrolling.md)
+import { manageScrollPostion } from './scrolling';
+
 import {
-  manageScrollPostion,
   updateHistoryState,
   updateHistoryStateHash,
   saveScrollHistoryState,
-} from './scrolling';
+} from './history';
 
 // [Source](./fetching.md)
 import {

@@ -21,7 +21,7 @@ import 'core-js/fn/array/from';
 
 import { customElementMixin, CustomElement, CUSTOM_ELEMENT_FEATURE_TESTS }
   from 'hy-component/src/custom-element';
-import { sGetTemplate } from 'hy-component/src/symbols';
+
 import { Set } from 'qd-set';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
@@ -33,8 +33,7 @@ export const WEBCOMPONENT_FEATURE_TESTS = new Set([
 
 export class HTMLPushStateElement extends customElementMixin(pushStateMixin(CustomElement)) {
   static get observedAttributes() { return this.getObservedAttributes(); }
-
-  [sGetTemplate]() { return null; }
+  getTemplate() { return null; }
 }
 ```
 

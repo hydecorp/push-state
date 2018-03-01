@@ -1,5 +1,5 @@
-# src / vanilla / index.js
-Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
+# src / webcomponent / module.js
+Copyright (c) 2018 Florian Klampfer <https://qwtel.com/>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,18 +14,30 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+## Overview
+TODO
+
 
 ```js
 
-import 'core-js/fn/array/from';
+import { HTMLPushStateElement } from './index';
 
-import { VanillaComponent } from 'hy-component/src/vanilla';
+const define = () => {
+  window.customElements.define('hy-push-state', HTMLPushStateElement);
+};
+```
 
-import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
+Make sure the polyfills are ready (if they are being used).
 
-export const VANILLA_FEATURE_TESTS = MIXIN_FEATURE_TESTS;
 
-export class PushState extends pushStateMixin(VanillaComponent) {}
+```js
+if ('customElements' in window || window.WebComponents.ready) {
+  define();
+} else if (window.WebComponents) {
+  window.addEventListener('WebComponentsReady', define);
+} else if (process.env.DEBUG) {
+  console.warn('Couldn\'t register component. Did you forget to include a WebComponents polyfill?');
+}
 ```
 
 

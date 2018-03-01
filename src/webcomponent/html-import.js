@@ -15,7 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { customElementMixin, CustomElement } from 'hy-component/src/custom-element';
-import { sGetTemplate } from 'hy-component/src/symbols';
 
 import { pushStateMixin } from '../mixin';
 
@@ -25,7 +24,7 @@ if ('customElements' in window) {
     class extends customElementMixin(pushStateMixin(CustomElement)) {
       static get observedAttributes() { return this.getObservedAttributes(); }
 
-      [sGetTemplate]() { return null; }
+      getTemplate() { return null; }
     },
   );
 } else if (process.env.DEBUG) {

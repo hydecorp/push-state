@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { sFire } from 'hy-component/src/symbols';
-
 import { Observable } from 'rxjs';
 import { timer } from 'rxjs/observable/timer';
 
@@ -45,7 +43,7 @@ export function onStart(context) {
     this[sAnimPromise] = promise;
   };
 
-  this[sFire]('start', { detail: assign(context, { waitUntil }) });
+  this.fireEvent('start', { detail: assign(context, { waitUntil }) });
 }
 
 // Example usage of `waitUntil`:
@@ -88,37 +86,37 @@ export function onDOMError(context) {
   // If it's a different error, throw the generic `error` event.
   } else {
     if (process.env.DEBUG) console.error(context);
-    this[sFire]('error', { detail: context });
+    this.fireEvent('error', { detail: context });
   }
 }
 
 // If there is a network error during (pre-) fetching, fire `networkerror` event.
 export function onNetworkError(context) {
   if (process.env.DEBUG) console.error(context);
-  this[sFire]('networkerror', { detail: context });
+  this.fireEvent('networkerror', { detail: context });
 }
 
 // When using the experimental script feature,
 // fire `scripterror` event if something goes wrong during script insertion.
 export function onError(context) {
   if (process.env.DEBUG) console.error(context);
-  this[sFire]('error', { detail: context });
+  this.fireEvent('error', { detail: context });
 }
 
 // #### Others
 // These event callbacks simply fire an event and pass the context as `detail`.
 export function onReady(context) {
-  this[sFire]('ready', { detail: context });
+  this.fireEvent('ready', { detail: context });
 }
 
 export function onAfter(context) {
-  this[sFire]('after', { detail: context });
+  this.fireEvent('after', { detail: context });
 }
 
 export function onProgress(context) {
-  this[sFire]('progress', { detail: context });
+  this.fireEvent('progress', { detail: context });
 }
 
 export function onLoad(context) {
-  this[sFire]('load', { detail: context });
+  this.fireEvent('load', { detail: context });
 }

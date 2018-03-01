@@ -33,7 +33,6 @@ import 'core-js/fn/object/assign';
 // Importing the hy-compontent base libary,
 // which helps with making multiple versions of the component (Vanilla JS, WebComponent, etc...).
 import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
-import { sSetup, sSetupDOM, sFire } from 'hy-component/src/symbols';
 
 import { array, bool, number, regex, string } from 'attr-types';
 import { Set } from 'qd-set';
@@ -78,10 +77,6 @@ export const MIXIN_FEATURE_TESTS = new Set([
   'requestanimationframe',
 ]);
 
-// We export the setup symbols,
-// so that mixin users don't have to import them from hy-compnent separately.
-export { sSetup, sSetupDOM };
-
 // Patching the document fragment's `getElementById` function, which is
 // not implemented in all browsers, even some modern ones.
 DocumentFragment.prototype.getElementById = DocumentFragment.prototype.getElementById ||
@@ -97,8 +92,8 @@ export function pushStateMixin(C) {
 
     // ### Setup
     // Overriding the setup function.
-    [sSetup](el, props) {
-      super[sSetup](el, props);
+    setupComponent(el, props) {
+      super.setupComponent(el, props);
 
       // Setting up scroll restoration
       if ('scrollRestoration' in window.history && this.scrollRestoration) {
@@ -119,7 +114,7 @@ export function pushStateMixin(C) {
       updateHistoryState.call(this, { type: INIT, replace: true, url });
 
       // After all this is done, we can fire the one-time `init` event...
-      this[sFire]('init');
+      this.fireEvent('init');
 
       // ...and our custom `load` event, which gets fired on every page change.
       // We provide similar data as subsequent `load` events,
@@ -138,7 +133,7 @@ export function pushStateMixin(C) {
     }
 
     // This component has no shadow DOM, so we just return the element.
-    [sSetupDOM](el) { return el; }
+    setupShadowDOM(el) { return el; }
 
     // ### Options
     // The default values (and types) of the configuration options (required by hy-component)

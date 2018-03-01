@@ -47,13 +47,11 @@
 
     <script>
       var pushStateMixin = hyPushState.pushStateMixin;
-      var sSetup = hyPushState.sSetup;
 
       function MyComponent() {}
       var PushState = pushStateMixin(MyComponent);
       window.pushState = new PushState();
-
-      pushState[sSetup](window.pushStateEl, {
+      window.pushState.setupComponent(window.pushStateEl, {
         linkSelector: 'a[href^=".."]'
       });
     </script>

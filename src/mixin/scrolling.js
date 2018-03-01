@@ -17,7 +17,6 @@
 import { getScrollTop, getScrollHeight } from '../common';
 
 import { PUSH, POP } from './constants';
-
 import { histId } from './methods';
 
 // For convenience....

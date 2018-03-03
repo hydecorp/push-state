@@ -19,14 +19,10 @@ import { customElementMixin, CustomElement } from 'hy-component/src/custom-eleme
 import { pushStateMixin } from '../mixin';
 
 if ('customElements' in window) {
-  customElements.define(
-    'hy-push-state',
-    class extends customElementMixin(pushStateMixin(CustomElement)) {
-      static get observedAttributes() { return this.getObservedAttributes(); }
-
-      getTemplate() { return null; }
-    },
-  );
+  customElements.define('hy-push-state', class extends customElementMixin(pushStateMixin(CustomElement)) {
+    static get observedAttributes() { return this.getObservedAttributes(); }
+    getTemplate() { return null; }
+  });
 } else if (process.env.DEBUG) {
   console.warn('Couldn\'t register hy-drawer component. Did you forget to include a WebComponents polyfill?');
 }

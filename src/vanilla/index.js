@@ -17,6 +17,7 @@
 import 'core-js/fn/array/from';
 
 import { VanillaComponent } from 'hy-component/src/vanilla';
+
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
 export const VANILLA_FEATURE_TESTS = MIXIN_FEATURE_TESTS;

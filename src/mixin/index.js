@@ -37,31 +37,18 @@ import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/compon
 import { array, bool, number, regex, string } from 'attr-types';
 import { Set } from 'qd-set';
 
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
 // Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
 // but sufficient for this compoennt.
 import { URL } from '../url';
 
-import {
-  INIT,
-  HINT,
-  PUSH,
-  POP,
-} from './constants';
-
-import {
-  getTitle,
-  getReplaceElements,
-} from './update';
-
-import {
-  updateHistoryState,
-  saveScrollHistoryState,
-} from './history';
-
+import { INIT, HINT, PUSH, POP } from './constants';
+import { getTitle, getReplaceElements } from './update';
+import { updateHistoryState, saveScrollHistoryState } from './history';
 import { restoreScrollPostion } from './scrolling';
-
 import { onLoad } from './events';
-
 import { setupObservables } from './setup';
 
 export { INIT, HINT, PUSH, POP };
@@ -93,14 +80,70 @@ export function pushStateMixin(C) {
     // The name of the component (required by hy-component)
     static get componentName() { return 'hy-push-state'; }
 
+    // ### Options
+    // The default values (and types) of the configuration options (required by hy-component)
+    // See [Options](../../options.md) for usage information.
+    static get defaults() {
+      return {
+        replaceIds: [],
+        linkSelector: 'a[href]:not(.no-push-state)',
+        scrollRestoration: false,
+        duration: 0,
+        hrefRegex: null,
+        scriptSelector: null,
+        /* prefetch: true, */
+        /* repeatDelay: 500, */
+      };
+    }
+
+    static get types() {
+      return {
+        replaceIds: array,
+        linkSelector: string,
+        scrollRestoration: bool,
+        duration: number,
+        hrefRegex: regex,
+        scriptSelector: string,
+        /* prefetch: bool, */
+        /* repeatDelay: number, */
+      };
+    }
+
+    // TODO
+    static get sideEffects() {
+      return {
+        linkSelector(x) { this.linkSelector$.next(x); },
+        scrollRestoration(x) { this.scrollRestoration$.next(x); },
+      };
+    }
+
     // ### Setup
-    // Overriding the setup function.
     setupComponent(el, props) {
       super.setupComponent(el, props);
 
+      this.linkSelector$ = new Subject();
+      this.scrollRestoration$ = new Subject();
+      this.reload$ = new Subject();
+      this.teardown$ = new Subject();
+    }
+
+    // This component has no shadow DOM, so we just return the element.
+    setupShadowDOM(el) { return el; }
+
+    // Overriding the setup function.
+    connectComponent() {
+      super.connectComponent();
+
       // Setting up scroll restoration
-      if ('scrollRestoration' in window.history && this.scrollRestoration) {
-        window.history.scrollRestoration = 'manual';
+      if ('scrollRestoration' in window.history) {
+        const orig = window.history.scrollRestoration;
+
+        this.scrollRestoration$
+          .pipe(takeUntil(this.teardown$))
+          .subscribe((scrollRestoration) => {
+            window.history.scrollRestoration = scrollRestoration
+              ? 'manual' : orig;
+          });
       }
 
       // If restore the last scroll position, if any.
@@ -114,7 +157,11 @@ export function pushStateMixin(C) {
 
       // Setting the initial `history.state`.
       const url = new URL(window.location);
-      updateHistoryState.call(this, { type: INIT, replace: true, url });
+      updateHistoryState.call(this, {
+        type: INIT,
+        replace: true,
+        url,
+      });
 
       // After all this is done, we can fire the one-time `init` event...
       this.fireEvent('init');
@@ -130,47 +177,9 @@ export function pushStateMixin(C) {
         url,
         cacheNr: this.cacheNr,
       });
-
-      // Allow function chaining.
-      return this;
     }
 
-    // This component has no shadow DOM, so we just return the element.
-    setupShadowDOM(el) { return el; }
-
-    // ### Options
-    // The default values (and types) of the configuration options (required by hy-component)
-    // See [Options](../../options.md) for usage information.
-    static get defaults() {
-      return {
-        replaceIds: [],
-        linkSelector: 'a[href]:not(.no-push-state)',
-        scrollRestoration: false,
-        duration: 0,
-        _hrefRegex: null,
-        _scriptSelector: null,
-        /* prefetch: true, */
-        /* repeatDelay: 500, */
-      };
-    }
-
-    static get types() {
-      return {
-        replaceIds: array,
-        linkSelector: string,
-        scrollRestoration: bool,
-        duration: number,
-        _hrefRegex: regex,
-        _scriptSelector: string,
-        /* prefetch: bool, */
-        /* repeatDelay: number, */
-      };
-    }
-
-    // Modifying options of this component doesn't have side effects (so far).
-    static get sideEffects() {
-      return {};
-    }
+    disconnectComponent() { this.teardown$.next({}); }
 
     // ### Methods
     // Public methods of this component. See [Methods](../../methods.md) for more.

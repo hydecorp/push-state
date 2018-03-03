@@ -37,12 +37,12 @@ function shouldLoadAnchor(anchor, hrefRegex) {
 
 export function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
   return !metaKey && !ctrlKey
-    && shouldLoadAnchor(currentTarget, this._hrefRegex)
+    && shouldLoadAnchor(currentTarget, this.hrefRegex)
     && !isExternal(currentTarget);
 }
 
 export function isHintEvent({ currentTarget }) {
-  return shouldLoadAnchor(currentTarget, this._hrefRegex)
+  return shouldLoadAnchor(currentTarget, this.hrefRegex)
     && !isExternal(currentTarget)
     && !isHash(currentTarget);
 }

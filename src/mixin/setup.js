@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 // Importing the subset of RxJS functions that we are going to use.
 import { defer } from 'rxjs/observable/defer';
@@ -42,57 +42,18 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 
-// [Source](../common.md)
 import { matchesAncestors } from '../common';
-
-// [Source](../url.md)
 import { URL } from '../url';
 
-// [Source](./operators.md)
 import { unsubscribeWhen } from './operators';
-
-// [Source](./constants.md)
-import {
-  HINT,
-  PUSH,
-  POP,
-  sAnimPromise,
-} from './constants';
-
-// [Source](./methods.md)
-import {
-  histId,
-  isPushEvent,
-  isHintEvent,
-  isHashChange,
-} from './methods';
-
-// [Source](./scrolling.md)
+import { HINT, PUSH, POP } from './constants';
+import { histId, isPushEvent, isHintEvent, isHashChange } from './methods';
 import { manageScrollPostion } from './scrolling';
-
-import {
-  updateHistoryState,
-  updateHistoryStateHash,
-  saveScrollHistoryState,
-} from './history';
-
-// [Source](./fetching.md)
-import {
-  hrefToAjax,
-  recoverIfResponse,
-  getResponse,
-} from './fetching';
-
-// [Source](./script-hack.md)
+import { updateHistoryState, updateHistoryStateHash, saveScrollHistoryState } from './history';
+import { hrefToAjax, recoverIfResponse, getResponse } from './fetching';
 import { reinsertScriptTags } from './script-hack';
+import { responseToContent, updateDOM } from './update';
 
-// [Source](./update.md)
-import {
-  responseToContent,
-  updateDOM,
-} from './update';
-
-// [Source](./events.md)
 import {
   onStart,
   onDOMError,
@@ -127,14 +88,12 @@ export function setupObservables() {
   const pushSubject = new Subject();
   const hintSubject = new Subject();
 
-  // Emits a value each time the `reload` method is called on this component.
-  this.reload$ = new Subject();
-
   // This is used to reference deferred observaables.
   const ref = {};
 
   // TODO
   const push$ = pushSubject.pipe(
+    takeUntil(this.teardown$),
     filter(isPushEvent.bind(this)),
     map(event => ({
       type: PUSH,
@@ -152,6 +111,7 @@ export function setupObservables() {
   // In additon to `HINT` and `PUSH` events, there's also `POP` events, which are caused by
   // modifying the browser history, e.g. clicking the back button, etc.
   const pop$ = fromEvent(window, 'popstate').pipe(
+    takeUntil(this.teardown$),
     filter(() => window.history.state && window.history.state[histId.call(this)]),
     map(event => ({
       type: POP,
@@ -161,8 +121,10 @@ export function setupObservables() {
     })),
   );
 
+  const reload$ = this.reload$.pipe(takeUntil(this.teardown$));
+
   // TODO
-  const [hash$, page$] = merge(push$, pop$, this.reload$).pipe(
+  const [hash$, page$] = merge(push$, pop$, reload$).pipe(
     startWith({ url: new URL(window.location) }),
     pairwise(),
     share(),
@@ -189,6 +151,7 @@ export function setupObservables() {
 
   // TODO
   const hint$ = hintSubject.pipe(
+    takeUntil(this.teardown$),
     unsubscribeWhen(pauser$),
     filter(isHintEvent.bind(this)),
     map(event => ({
@@ -217,8 +180,10 @@ export function setupObservables() {
 
   // TODO
   ref.fetch$ = page$.pipe(
-    tap(updateHistoryState.bind(this)),
-    tap(onStart.bind(this)),
+    tap((context) => {
+      updateHistoryState.call(this, context);
+      onStart.call(this, context);
+    }),
     withLatestFrom(prefetch$),
     switchMap(getResponse.bind(this, prefetch$)),
     share(),
@@ -228,27 +193,38 @@ export function setupObservables() {
   const [fetchOk$, fetchError$] = ref.fetch$.pipe(partition(({ error }) => !error));
 
   // TODO
-  let main$ = fetchOk$.pipe(
+  const main$ = fetchOk$.pipe(
     map(responseToContent.bind(this)),
     observeOn(animationFrame),
-    tap(onReady.bind(this)),
-    tap(updateDOM.bind(this)),
-    tap(onAfter.bind(this)),
-    tap(manageScrollPostion.bind(this)),
-    tap({ error: e => onDOMError.call(this, e) }),
+    tap({
+      next: (context) => {
+        onReady.call(this, context);
+        updateDOM.call(this, context);
+        onAfter.call(this, context);
+        manageScrollPostion.call(this, context);
+      },
+      error: e => onDOMError.call(this, e),
+    }),
+    catchError((e, c) => c),
+
+    // If the experimental script feature is enabled,
+    // scripts tags have been stripped from the content,
+    // and this is where we insert them again.
+    switchMap(reinsertScriptTags.bind(this)),
+    tap({ error: e => onError.call(this, e) }),
     catchError((e, c) => c),
   );
 
-  // If the experimental script feature is enabled,
-  // scripts tags have been stripped from the content,
-  // and this is where we insert them again.
-  if (this._scriptSelector) {
-    main$ = main$.pipe(
+  /*
+  const main$ = this.scriptSelector$.pipe(switchMap((scriptSelector) => {
+    if (!scriptSelector) return _main$;
+    return _main$.pipe(
       switchMap(reinsertScriptTags.bind(this)),
       tap({ error: e => onError.call(this, e) }),
       catchError((e, c) => c),
     );
-  }
+  }));
+  */
 
   // #### Subscriptions
   // Subscribe to main and hash observables.
@@ -260,7 +236,7 @@ export function setupObservables() {
 
   // Fire `progress` event when fetching takes longer than expected.
   page$.pipe(switchMap(context =>
-    defer(() => this[sAnimPromise]).pipe(
+    defer(() => this.animPromise).pipe(
       takeUntil(ref.fetch$),
       mapTo(context),
     )))
@@ -271,9 +247,6 @@ export function setupObservables() {
   // and put events on the `pushSubject` and `hintSubject` observables,
   // but first we need to check if `MutationObserver` is available.
   if ('MutationObserver' in window && 'Set' in window) {
-    // An observable of mutations. The `MutationObserver` will put mutations onto it.
-    const mutation$ = new Subject();
-
     // A `Set` of `Element`s.
     // We use this to keep track of which links already have their event listeners registered.
     // TODO: can we guarantee that we won't find the same link twice?
@@ -281,7 +254,6 @@ export function setupObservables() {
 
     // Binding `next` functions to their `Subject`s,
     // so that we can pass them as callbacks directly. This is just for convenience.
-    const mutationNext = mutation$.next.bind(mutation$);
     const pushNext = pushSubject.next.bind(pushSubject);
     const hintNext = hintSubject.next.bind(hintSubject);
 
@@ -291,58 +263,70 @@ export function setupObservables() {
     // (The number could be brought down by using an `IntersectionObserver` in the future.
     // Also note that typically there will be an animation playing while this is happening,
     // so the effects are not easily noticed).
-
+    //
     // In any case, `MutationObserver` and `Set` help us keep track of which links are children
     // of this component, so that we can reliably add and remove the event listeners.
     // The function to be called for every added node:
-    const addListeners = (addedNode) => {
-      if (addedNode instanceof Element) {
-        Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach((link) => {
-          if (!links.has(link)) {
-            links.add(link);
-            link.addEventListener('click', pushNext);
-            link.addEventListener('mouseenter', hintNext, { passive: true });
-            link.addEventListener('touchstart', hintNext, { passive: true });
-            link.addEventListener('focus', hintNext, { passive: true });
-          }
-        });
+    const addLink = (link) => {
+      if (!links.has(link)) {
+        links.add(link);
+        link.addEventListener('click', pushNext);
+        link.addEventListener('mouseenter', hintNext, { passive: true });
+        link.addEventListener('touchstart', hintNext, { passive: true });
+        link.addEventListener('focus', hintNext, { passive: true });
       }
     };
+
+    const addListeners = (addedNode) => {
+      if (addedNode instanceof Element) {
+        Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(addLink);
+      }
+    };
+
 
     // Next, The function to be called for every removed node.
     // Usually the elments will be removed from the document altogher
     // when they are removed from this component,
     // but since we can't be sure, we remove the event listeners anyway.
+    const removeLink = (link) => {
+      links.delete(link);
+      link.removeEventListener('click', pushNext);
+      link.removeEventListener('mouseenter', hintNext, { passive: true });
+      link.removeEventListener('touchstart', hintNext, { passive: true });
+      link.removeEventListener('focus', hintNext, { passive: true });
+    };
+
     const removeListeners = (removedNode) => {
       if (removedNode instanceof Element) {
-        Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach((link) => {
-          links.delete(link);
-          link.removeEventListener('click', pushNext);
-          link.removeEventListener('mouseenter', hintNext, { passive: true });
-          link.removeEventListener('touchstart', hintNext, { passive: true });
-          link.removeEventListener('focus', hintNext, { passive: true });
-        });
+        Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(removeLink);
       }
     };
 
-    // The mutation observer callback simply puts all mutations on the `mutation$` observable.
-    const observer = new MutationObserver(mutations => Array.from(mutations).forEach(mutationNext));
-
-    // For every mutation, we remove the event listeners of elements that go out of the component
-    // (if any), and add event listeners for all elements that make it into the compnent (if any).
-    mutation$.pipe(unsubscribeWhen(pauser$))
+    // An observable wrapper around the mutation observer.
+    Observable.create((obs) => {
+      const next = obs.next.bind(obs);
+      new MutationObserver(mutations => Array.from(mutations).forEach(next))
+        // We're interested in nodes entering and leaving the entire subtree of this component,
+        // but not attribute changes:
+        .observe(this.el, { childList: true, subtree: true });
+    })
+      // For every mutation, we remove the event listeners of elements that go out of the component
+      // (if any), and add event listeners to all elements that make it into the compnent (if any).
+      .pipe(unsubscribeWhen(pauser$))
       .subscribe(({ addedNodes, removedNodes }) => {
         Array.from(removedNodes).forEach(removeListeners.bind(this));
         Array.from(addedNodes).forEach(addListeners.bind(this));
       });
 
-    // We're interested in nodes entering and leaving the entire subtree of this component,
-    // but not attribute changes:
-    observer.observe(this.el, { childList: true, subtree: true });
+    // TODO
+    this.linkSelector$.subscribe(() => {
+      // TODO
+      Array.from(links).forEach(removeLink);
 
-    // The mutation observer does not pick up the links that are already on the page,
-    // so we add them manually here, once.
-    addListeners.call(this, this.el);
+      // The mutation observer does not pick up the links that are already on the page,
+      // so we add them manually here, once.
+      addListeners.call(this, this.el);
+    });
 
   // If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
   // on the entire component, and check if a click occurred on one of our links.
@@ -356,4 +340,8 @@ export function setupObservables() {
       }
     });
   }
+
+  // Place initial values on the property observables.
+  this.linkSelector$.next(this.linkSelector);
+  this.scrollRestoration$.next(this.scrollRestoration);
 }

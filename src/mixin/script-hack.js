@@ -32,12 +32,12 @@ const assign = Object.assign.bind(Object);
 // ### Experimental script feature
 // TODO
 
-// This function removes all script tags (as query'ed by `_scriptSelector`) from the response.
+// This function removes all script tags (as query'ed by `scriptSelector`) from the response.
 export function tempRemoveScriptTags(replaceEls) {
   const scripts = [];
 
   replaceEls.forEach(docfrag =>
-    Array.from(docfrag.querySelectorAll(this._scriptSelector)).forEach((script) => {
+    Array.from(docfrag.querySelectorAll(this.scriptSelector)).forEach((script) => {
       const pair = [script, script.previousSibling];
       script.parentNode.removeChild(script);
       scripts.push(pair);
@@ -87,6 +87,8 @@ function insertScript([script, ref]) {
 
 // Takes a list of `script`--`ref` pairs, and inserts them into the DOM one-by-one.
 export function reinsertScriptTags(context) {
+  if (!this.scriptSelector) return of(context);
+
   const { scripts } = context;
 
   return from(scripts).pipe(

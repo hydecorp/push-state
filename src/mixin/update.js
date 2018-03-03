@@ -56,7 +56,7 @@ export function responseToContent(context) {
     throw assign(context, { relaceElMissing: true });
   }
 
-  const scripts = this._scriptSelector
+  const scripts = this.scriptSelector
     ? tempRemoveScriptTags.call(this, replaceEls)
     : [];
 

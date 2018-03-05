@@ -31,7 +31,8 @@ export function updateHistoryState({ type, replace, url: { href, hash } }) {
   if (type === PUSH || type === INIT) {
     const id = histId.call(this);
     const method = replace || href === window.location.href ? 'replaceState' : 'pushState';
-    window.history[method]({ [id]: { hash: !!hash } }, '', href);
+    const state = assign(window.history.state, { [id]: { hash: !!hash } });
+    window.history[method](state, document.title, href);
   }
 }
 

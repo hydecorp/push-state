@@ -109,7 +109,6 @@ export function pushStateMixin(C) {
       };
     }
 
-    // TODO
     static get sideEffects() {
       return {
         linkSelector(x) { this.linkSelector$.next(x); },
@@ -133,6 +132,10 @@ export function pushStateMixin(C) {
     // Overriding the setup function.
     connectComponent() {
       super.connectComponent();
+
+      if (process.env.DEBUG && !this.replaceEls && !this.el.id) {
+        console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
+      }
 
       // Setting up scroll restoration
       if ('scrollRestoration' in window.history) {

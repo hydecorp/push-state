@@ -31,15 +31,11 @@ export function getTitle(fragment) {
 export function getReplaceElements(fragment) {
   if (this.replaceIds.length > 0) {
     return this.replaceIds.map(id => fragment.getElementById(id));
+  } else if (this.el.id) {
+    return [fragment.getElementById(this.el.id)];
   } else {
-    let replaceEl;
-    if (this.el.id) {
-      replaceEl = fragment.getElementById(this.el.id);
-    } else {
-      const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
-      replaceEl = fragment.querySelectorAll(this.el.tagName)[index];
-    }
-    return [replaceEl];
+    const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
+    return [fragment.querySelectorAll(this.el.tagName)[index]];
   }
 }
 
@@ -53,7 +49,7 @@ export function responseToContent(context) {
   const replaceEls = getReplaceElements.call(this, fragment);
 
   if (replaceEls.some(x => x == null)) {
-    throw assign(context, { relaceElMissing: true });
+    throw assign(context, { replaceElMissing: true });
   }
 
   const scripts = this.scriptSelector
@@ -77,7 +73,7 @@ function replaceContentWholesale([el]) {
   this.el.innerHTML = el.innerHTML;
 }
 
-// TODO
+// TODO: doc
 function replaceContent(replaceEls) {
   if (this.replaceIds.length > 0) {
     replaceContentByIds.call(this, replaceEls);
@@ -86,7 +82,7 @@ function replaceContent(replaceEls) {
   }
 }
 
-// TODO
+// TODO: doc
 export function updateDOM(context) {
   try {
     const { title, replaceEls, type } = context;

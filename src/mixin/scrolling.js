@@ -27,7 +27,7 @@ const assign = Object.assign.bind(Object);
 
 // Given a hash, find the element of the same id on the page, and scroll it into view.
 // If no hash is provided, scroll to the top instead.
-function scrollHashIntoView(hash) {
+export function scrollHashIntoView(hash) {
   if (hash) {
     const el = document.getElementById(hash.substr(1));
     if (el) el.scrollIntoView();

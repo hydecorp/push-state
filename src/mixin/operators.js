@@ -30,7 +30,6 @@ export const unsubscribeWhen = pauser$ => (source) => {
 // #### Custom subscribe
 // A custom subscribe function that will `recover` from an error and log it to the console.
 // This is a line of last defense to make sure the entire pipeline/page doesn't crash.
-// TODO: maybe just let it crash s.t. the page reloads on the next click on a link!?
 /*
 function subscribe(ne, er, co) {
   let res = this;

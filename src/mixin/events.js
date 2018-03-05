@@ -62,13 +62,13 @@ export function onStart(context) {
 // If the retrieved documened doesn't contain the ids we are looking for
 // we can't insert the content dynamically, so we tell the browser to open the link directly.
 export function onDOMError(context) {
-  const { relaceElMissing, url } = context;
+  const { replaceElMissing, url } = context;
 
   // Ideally you should prevent this situation by adding the
   // `no-push-state` CSS class
   // on links to documents that don't match the expected document layout.
   // This only serves as a fallback.
-  if (relaceElMissing) {
+  if (replaceElMissing) {
     if (process.env.DEBUG) {
       const ids = this.replaceIds.concat(this.el.id || []).map(x => `#${x}`).join(', ');
       console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`);

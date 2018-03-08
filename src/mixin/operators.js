@@ -16,7 +16,7 @@
 
 import { never } from 'rxjs/observable/never';
 
-import { switchMap } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators/switchMap';
 
 // ### Observable extensions
 // #### Unsubscribe when

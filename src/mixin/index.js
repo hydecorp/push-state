@@ -37,8 +37,8 @@ import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/compon
 import { array, bool, number, regex, string } from 'attr-types';
 import { Set } from 'qd-set';
 
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs/Subject';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 // Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
 // but sufficient for this compoennt.

@@ -20,11 +20,9 @@ import { Observable } from 'rxjs';
 import { from } from 'rxjs/observable/from';
 import { of } from 'rxjs/observable/of';
 
-import {
-  catchError,
-  tap,
-  concatMap,
-} from 'rxjs/operators';
+import { catchError } from 'rxjs/operators/catchError';
+import { tap } from 'rxjs/operators/tap';
+import { concatMap } from 'rxjs/operators/concatMap';
 
 // For convenience....
 const assign = Object.assign.bind(Object);

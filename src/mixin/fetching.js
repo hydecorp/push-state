@@ -19,7 +19,10 @@
 
 // ## Imports
 import { of } from 'rxjs/observable/of';
-import { map, take, zip } from 'rxjs/operators';
+
+import { map } from 'rxjs/operators/map';
+import { take } from 'rxjs/operators/take';
+import { zip } from 'rxjs/operators/zip';
 
 // For convenience....
 const assign = Object.assign.bind(Object);

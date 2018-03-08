@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 
 // Importing the subset of RxJS functions that we are going to use.
 import { defer } from 'rxjs/observable/defer';
@@ -25,22 +26,20 @@ import { ajax } from 'rxjs/observable/dom/ajax';
 
 import { animationFrame } from 'rxjs/scheduler/animationFrame';
 
-import {
-  catchError,
-  tap,
-  distinctUntilChanged,
-  filter,
-  map,
-  mapTo,
-  observeOn,
-  partition,
-  pairwise,
-  share,
-  startWith,
-  switchMap,
-  takeUntil,
-  withLatestFrom,
-} from 'rxjs/operators';
+import { catchError } from 'rxjs/operators/catchError';
+import { tap } from 'rxjs/operators/tap';
+import { distinctUntilChanged } from 'rxjs/operators/distinctUntilChanged';
+import { filter } from 'rxjs/operators/filter';
+import { map } from 'rxjs/operators/map';
+import { mapTo } from 'rxjs/operators/mapTo';
+import { observeOn } from 'rxjs/operators/observeOn';
+import { partition } from 'rxjs/operators/partition';
+import { pairwise } from 'rxjs/operators/pairwise';
+import { share } from 'rxjs/operators/share';
+import { startWith } from 'rxjs/operators/startWith';
+import { switchMap } from 'rxjs/operators/switchMap';
+import { takeUntil } from 'rxjs/operators/takeUntil';
+import { withLatestFrom } from 'rxjs/operators/withLatestFrom';
 
 import { matchesAncestors } from '../common';
 import { URL } from '../url';

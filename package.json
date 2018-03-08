@@ -1,6 +1,6 @@
 {
   "name": "hy-push-state",
-  "version": "1.0.0-hydejack.15",
+  "version": "1.0.0-pre",
   "description": "Turn web sites into web apps",
   "main": "lib/vanilla/index.js",
   "scripts": {

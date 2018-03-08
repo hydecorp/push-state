@@ -72,6 +72,16 @@
     "url": "https://github.com/qwtel/hy-push-state/issues"
   },
   "homepage": "https://qwtel.com/hy-push-state/",
+  "babel": {
+    "presets": [
+      "env"
+    ],
+    "only": [
+      "./src",
+      "hy-component",
+      "camelcase"
+    ]
+  },
   "browserify": {
     "transform": [
       [

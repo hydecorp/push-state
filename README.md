@@ -69,14 +69,25 @@ which is used to create the framework-specific versions of the component.
 * `jquery`
   * [`index.js`](doc/source/jquery/index.md)
 * `mixin`
+  * [`constants.js`](doc/source/mixin/constants.md)
+  * [`events.js`](doc/source/mixin/events.md)
+  * [`fetching.js`](doc/source/mixin/fetching.md)
+  * [`history.js`](doc/source/mixin/history.md)
   * [`index.js`](doc/source/mixin/index.md)
+  * [`methods.js`](doc/source/mixin/methods.md)
+  * [`operators.js`](doc/source/mixin/operators.md)
+  * [`script-hack.js`](doc/source/mixin/script-hack.md)
+  * [`scrolling.js`](doc/source/mixin/scrolling.md)
+  * [`setup.js`](doc/source/mixin/setup.md)
+  * [`update.js`](doc/source/mixin/update.md)
 * `vanilla`
   * [`index.js`](doc/source/vanilla/index.md)
 * `webcomponent`
+  * [`html-import.s`](doc/source/webcomponent/html-import.md)
   * [`index.js`](doc/source/webcomponent/index.md)
-  * [`html-import.js`](doc/source/webcomponent/html-import.md)
 * [`common.js`](doc/source/common.md)
 * [`url.js`](doc/source/url.md)
+
 
 [pjax]: https://github.com/defunkt/jquery-pjax
 [smoothstate]: https://github.com/miguel-perez/smoothState.js

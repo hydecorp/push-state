@@ -1,5 +1,5 @@
-// # src / webcomponent / html-import.js
-// Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
+// # src / webcomponent / module.js
+// Copyright (c) 2018 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,15 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { customElementMixin, CustomElement } from 'hy-component/src/custom-element';
+// ## Overview
+// TODO
 
-import { pushStateMixin } from '../mixin';
+import { HTMLPushStateElement } from './index';
 
 const define = () => {
-  customElements.define('hy-push-state', class extends customElementMixin(pushStateMixin(CustomElement)) {
-    static get observedAttributes() { return this.getObservedAttributes(); }
-    getTemplate() { return null; }
-  });
+  window.customElements.define('hy-push-state', HTMLPushStateElement);
 };
 
 // Make sure the polyfills are ready (if they are being used).

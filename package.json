@@ -1,6 +1,6 @@
 {
   "name": "hy-push-state",
-  "version": "1.0.0-pre",
+  "version": "1.0.0-pre.0",
   "description": "Turn web sites into web apps",
   "main": "lib/vanilla/index.js",
   "scripts": {

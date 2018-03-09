@@ -78,7 +78,7 @@ You can get more fine-grained control over which elements get replaced with the 
 
 
 ## Gold Standard
-This components follows the [Web Components Gold Standard](doc/gold-standard).
+This component follows the [Web Components Gold Standard](doc/gold-standard.md).
 
 
 ## Source

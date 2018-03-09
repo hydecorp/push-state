@@ -1,7 +1,4 @@
----
-layout: page
-title: hy-push-state Personal License
----
+# hy-push-state Personal License
 
 ## License Summary
 * License concerns use of [hy-push-state][1]

@@ -1,8 +1,8 @@
 ---
-layout: page
-title: PRO–hy-push-state License
 sitemap: false
 ---
+
+# PRO–hy-push-state License
 
 ## License Summary
 * License concerns use of [hy-push-state][1]

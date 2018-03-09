@@ -1,7 +1,4 @@
----
-layout: page
-title: hy-push-state Startup License
----
+# hy-push-state Startup License
 
 ## License Summary
 * License concerns use of [hy-push-state][1]

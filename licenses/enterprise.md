@@ -1,7 +1,4 @@
----
-layout: page
-title: hy-push-state Enterprise License
----
+# hy-push-state Enterprise License
 
 ## License Summary
 * License concerns use of [hy-push-state][1]

@@ -116,3 +116,4 @@ which is used to create the framework-specific versions of the component.
 [smoothstate]: https://github.com/miguel-perez/smoothState.js
 [esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
 [rxjs]: https://github.com/ReactiveX/rxjs
+[hydejack]: https://qwtel.com/hydejack/

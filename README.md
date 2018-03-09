@@ -21,19 +21,33 @@ gives more control over timings to enable custom page transition animations.
 The component was initially developed --- and can be encountered in the wild ---
 as part of the [Hydejack](https://qwtel.com/hydejack/){:.external} Jekyll theme.
 
-**NOTE**: The current version is a custom build for Hydejack, which works fine but assumes that you don't do certain "evil" things,
-like detaching and re-attaching it to the DOM, etc. This will be fixed in the 1.0.0 release.
+**NOTE**: The current version is a pre-release. The public API may still change in important ways.
 {:.message}
 
-## License
-**hy-push-state** is [GPL-3.0](LICENSE.md)--licensed.
-Commercial licenses will be available for cases where this is not suitable.
 
 ## Examples
 * [Mixin Example](example/mixin/index.html){:.external}
 * [Vanilla JS Example](example/vanilla/index.html){:.external}
 * [jQuery Example](example/jquery/index.html){:.external}
 * [WebComponent Example](example/webcomponent/index.html){:.external}
+
+
+## License
+
+|            | Personal       | Startup       | Enterprise       |
+|:-----------|:--------------:|:-------------:|:----------------:|
+| Developers | 2              | 15            | ∞                |
+| License    | [Personal][pl] | [Startup][sl] | [Enterprise][el] |
+| Price      | $29            | $249          | $499             |
+| Buy        | TBA  | TBA | TBA    |
+{:.stretch-table}
+
+[pl]: licenses/personal.md
+[sl]: licenses/startup.md
+[el]: licenses/enterprise.md
+
+Unless you've obtained one of the licenses above, **hy-push-state** must be used in accordance with the [GPL-3.0](LICENSE.md) license.
+
 
 ## Usage
 The most straight-forward way to use **hy-push-state** is by using the vanilla JS version and load it from a CDN:
@@ -53,11 +67,13 @@ The most straight-forward way to use **hy-push-state** is by using the vanilla J
 This assumes all pages have an element with `id="pushStateEl"`, which will be used for replacement.
 You can get more fine-grained control over which elements get replaced with the [`replaceIds` option](doc/options.md#replaceids).
 
+
 ## Documentation
 
 * [Options](doc/options.md)
 * [Methods](doc/methods.md)
 * [Events](doc/events.md)
+
 
 ## Source
 The source code is written in a *literal programming* style, and should be reasonably approachable.

@@ -25,10 +25,10 @@ gives more control over timings to enable custom page transition animations.
 
 
 ## Examples
-* [Mixin Example](example/mixin/index.html){:.external}
-* [Vanilla JS Example](example/vanilla/index.html){:.external}
-* [jQuery Example](example/jquery/index.html){:.external}
-* [WebComponent Example](example/webcomponent/index.html){:.external}
+* [Mixin Example](https://qwtel.com/hy-push-state/example/mixin/){:.external}
+* [Vanilla JS Example](https://qwtel.com/hy-push-state/example/vanilla/){:.external}
+* [jQuery Example](https://qwtel.com/hy-push-state/example/jquery/){:.external}
+* [WebComponent Example](https://qwtel.com/hy-push-state/example/webcomponent/){:.external}
 
 
 ## License

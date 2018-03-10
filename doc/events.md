@@ -11,11 +11,15 @@ This event is fired *once* after the component has been initialized.
 jQuery event name
 : `init.hy.pushstate`
 
+***
+
 ## `hy-push-state-load`
 This event is fired after every dynamic page load, including the initial page load.
 
 jQuery event name
 : `load.hy.pushstate`
+
+***
 
 ## `hy-push-state-start`
 This event is fired at the beginning of every page transition, after the user clicks a link,
@@ -42,6 +46,8 @@ delaying replacing the content until the observable completes.
 jQuery event name
 : `start.hy.pushstate`
 
+***
+
 ## `hy-push-state-ready`
 This event is fired when hy-push-state is ready to replace the current content with the new content, i.e.
 it has received a response from the server and successfully parsed the content.
@@ -61,11 +67,15 @@ hyPushStateEl.addEventListener('hy-push-state-ready', ({ detail }) => {
 jQuery event name
 : `ready.hy.pushstate`
 
+***
+
 ## `hy-push-state-after`
 This event is fired immediately after hy-push-state has replaced the current content with the new content.
 
 jQuery event name
 : `after.hy.pushstate`
+
+***
 
 ## `hy-push-state-progress`
 This event is fired when fetching the new page takes longer than expected.
@@ -78,6 +88,8 @@ If `waitUntil` hasn't been called, the event will fire after [`duration`](option
 jQuery event name
 : `progress.hy.pushstate`
 
+***
+
 ## `hy-push-state-networkerror`
 This event is fired when a network error occurs while fetching a new page form the server.
 You can use this to show a custom error page,
@@ -85,6 +97,8 @@ possibly with a button to call the component's [`reload`](methods.md#reload) met
 
 jQuery event name
 : `networkerror.hy.pushstate`
+
+***
 
 ## `hy-push-state-error`
 Event for generic errors. This event is fired when when there is an error while inserting new content into the DOM.

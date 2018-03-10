@@ -28,11 +28,10 @@ jQuery attribute
 HTML attribute
 : `replace-ids` (e.g.: `replace-ids="some-id,another-id"`)
 
-### Example
-Here we have another web component `very-special` that may has some state of its own,
-so we don't want to replace it on page transitions.
-However, we still want `a` tags inside `very-special` to trigger page transitions,
-so we give unique ids (per page) to the parts we want to replace, so that `very-special` remains untouched.
+**Example**: Assume we have a web component `very-special` that has some state of its own,
+so we don't want to replace it on a page transition.
+However, we still want `a` tags inside `very-special` to trigger transitions,
+so we give unique ids (per page) to the parts we want to replace, so that `very-special` remains untouched:
 
 ```html
 <hy-push-state replace-ids="my-content,my-aside">
@@ -51,6 +50,8 @@ so we give unique ids (per page) to the parts we want to replace, so that `very-
   </very-special>
 </hy-push-state>
 ```
+
+***
 
 ## `linkSelector`
 A CSS selector to find all links that can cause a page transition.
@@ -77,7 +78,10 @@ jQuery attribute
 HTML attribute
 : `link-selector`
 
+***
+
 ## `scrollRestoration`
+TODO
 
 Type
 : `Boolean`
@@ -90,6 +94,8 @@ jQuery attribute
 
 HTML attribute
 : `scroll-restoration`
+
+***
 
 ## `duration`
 The duration of a page transition. Use this to ensure that animations have sufficient time to finish

@@ -18,8 +18,12 @@ Arguments:
     Type
     : `String` (URL)
 
+***
+
 ## `reload`
 Mimics the browser [`reload`](https://developer.mozilla.org/en-US/docs/Web/API/Location/reload) method.
+
+***
 
 ## `relpace`
 Mimics the browser [`replace`](https://developer.mozilla.org/en-US/docs/Web/API/Location/replace) method,

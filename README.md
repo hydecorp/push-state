@@ -23,8 +23,16 @@ gives more control over timings to enable custom page transition animations.
 **NOTE**: The current version is a pre-release. The public API may still change in important ways.
 {:.message}
 
+[pjax]: https://github.com/defunkt/jquery-pjax
+[smoothstate]: https://github.com/miguel-perez/smoothState.js
+[esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
+[rxjs]: https://github.com/ReactiveX/rxjs
+[hydejack]: https://qwtel.com/hydejack/
 
-## Examples
+<!--more-->
+
+## Example
+
 * [Mixin Example](https://qwtel.com/hy-push-state/example/mixin/){:.external}
 * [Vanilla JS Example](https://qwtel.com/hy-push-state/example/vanilla/){:.external}
 * [jQuery Example](https://qwtel.com/hy-push-state/example/jquery/){:.external}
@@ -41,6 +49,8 @@ gives more control over timings to enable custom page transition animations.
 | Buy        | [**Buy this**][bp] | [**Buy this**][bs] | [**Buy this**][be] |
 {:.stretch-table}
 
+Unless you've obtained one of the licenses above, **hy-push-state** must be used in accordance with the [GPL-3.0](LICENSE.md) license.
+
 [pl]: licenses/personal.md
 [sl]: licenses/startup.md
 [el]: licenses/enterprise.md
@@ -48,10 +58,14 @@ gives more control over timings to enable custom page transition animations.
 [bs]: https://gumroad.com/l/hy-push-state-startup
 [be]: https://gumroad.com/l/hy-push-state-enterprise
 
-Unless you've obtained one of the licenses above, **hy-push-state** must be used in accordance with the [GPL-3.0](LICENSE.md) license.
 
+## Documentation
 
-## Usage
+* [Options](doc/options.md)
+* [Methods](doc/methods.md)
+* [Events](doc/events.md)
+
+### Usage
 The most straight-forward way to use **hy-push-state** is by using the vanilla JS version and load it from a CDN:
 
 ~~~html
@@ -70,13 +84,6 @@ This assumes all pages have an element with `id="pushStateEl"`, which will be us
 You can get more fine-grained control over which elements get replaced with the [`replaceIds` option](doc/options.md#replaceids).
 
 
-## Documentation
-
-* [Options](doc/options.md){:.flip-title}
-* [Methods](doc/methods.md){:.flip-title}
-* [Events](doc/events.md){:.flip-title}
-
-
 ### Gold Standard
 This component follows the Web Components [Gold Standard](doc/gold-standard.md){:.flip-title}.
 
@@ -85,17 +92,17 @@ This component follows the Web Components [Gold Standard](doc/gold-standard.md){
 The source code is written in a *literal programming* style, and should be reasonably approachable.
 However, some knowledge of [RxJS] is required.
 
-The core functionality is implemented in [`mixin / index.js`](doc/source/mixin/index.md),
+The core functionality is implemented in [`mixin / index.js`](doc/source/mixin/README.md),
 which is used to create the framework-specific versions of the component.
 
 * `jquery`
-  * [`index.js`](doc/source/jquery/index.md)
+  * [`index.js`](doc/source/jquery/README.md)
 * `mixin`
   * [`constants.js`](doc/source/mixin/constants.md)
   * [`events.js`](doc/source/mixin/events.md)
   * [`fetching.js`](doc/source/mixin/fetching.md)
   * [`history.js`](doc/source/mixin/history.md)
-  * [`index.js`](doc/source/mixin/index.md)
+  * [`index.js`](doc/source/mixin/README.md)
   * [`methods.js`](doc/source/mixin/methods.md)
   * [`operators.js`](doc/source/mixin/operators.md)
   * [`script-hack.js`](doc/source/mixin/script-hack.md)
@@ -103,18 +110,11 @@ which is used to create the framework-specific versions of the component.
   * [`setup.js`](doc/source/mixin/setup.md)
   * [`update.js`](doc/source/mixin/update.md)
 * `vanilla`
-  * [`index.js`](doc/source/vanilla/index.md)
+  * [`index.js`](doc/source/vanilla/README.md)
 * `webcomponent`
   * [`html-import.s`](doc/source/webcomponent/html-import.md)
-  * [`index.js`](doc/source/webcomponent/index.md)
+  * [`index.js`](doc/source/webcomponent/README.md)
   * [`module.js`](doc/source/webcomponent/module.md)
 * [`common.js`](doc/source/common.md)
-* [`index.js`](doc/source/index.md)
+* [`index.js`](doc/source/README.md)
 * [`url.js`](doc/source/url.md)
-
-
-[pjax]: https://github.com/defunkt/jquery-pjax
-[smoothstate]: https://github.com/miguel-perez/smoothState.js
-[esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
-[rxjs]: https://github.com/ReactiveX/rxjs
-[hydejack]: https://qwtel.com/hydejack/

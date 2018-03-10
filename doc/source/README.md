@@ -1,5 +1,5 @@
-# src / vanilla / index.js
-Copyright (c) 2017 Florian Klampfer <https://qwtel.com/>
+# src / index.js
+Copyright (c) 2018 Florian Klampfer <https://qwtel.com/>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,15 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import 'core-js/fn/array/from';
+import { pushStateMixin } from './mixin';
+import { PushState } from './vanilla';
+import { HTMLPushStateElement } from './webcomponent';
 
-import { VanillaComponent } from 'hy-component/src/vanilla';
-
-import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
-
-export const VANILLA_FEATURE_TESTS = MIXIN_FEATURE_TESTS;
-
-export class PushState extends pushStateMixin(VanillaComponent) {}
+export { pushStateMixin, PushState, HTMLPushStateElement };
 ```
 
 

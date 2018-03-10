@@ -1,8 +1,8 @@
 # Documentation
 
-* [Options](options.md)
-* [Methods](methods.md)
-* [Events](events.md)
+* [Options](options.md){:.flip-title}
+* [Methods](methods.md){:.flip-title}
+* [Events](events.md){:.flip-title}
 
 ## Usage
 The most straight-forward way to use **hy-push-state** is by using the vanilla JS version and load it from a CDN:

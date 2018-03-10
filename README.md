@@ -63,9 +63,9 @@ Unless you've obtained one of the licenses above, **hy-push-state** must be used
 
 ## Documentation
 
-* [Options](doc/options.md)
-* [Methods](doc/methods.md)
-* [Events](doc/events.md)
+* [Options](doc/options.md){:.flip-title}
+* [Methods](doc/methods.md){:.flip-title}
+* [Events](doc/events.md){:.flip-title}
 
 ### Usage
 The most straight-forward way to use **hy-push-state** is by using the vanilla JS version and load it from a CDN:

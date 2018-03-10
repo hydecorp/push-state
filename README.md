@@ -72,16 +72,16 @@ You can get more fine-grained control over which elements get replaced with the 
 
 ## Documentation
 
-* [Options](doc/options.md)
-* [Methods](doc/methods.md)
-* [Events](doc/events.md)
+* [Options](doc/options.md){:.flip-title}
+* [Methods](doc/methods.md){:.flip-title}
+* [Events](doc/events.md){:.flip-title}
 
 
-## Gold Standard
-This component follows the [Web Components Gold Standard](doc/gold-standard.md).
+### Gold Standard
+This component follows the Web Components [Gold Standard](doc/gold-standard.md){:.flip-title}.
 
 
-## Source
+### Source
 The source code is written in a *literal programming* style, and should be reasonably approachable.
 However, some knowledge of [RxJS] is required.
 

@@ -109,6 +109,7 @@ which is used to create the framework-specific versions of the component.
   * [`index.js`](doc/source/webcomponent/index.md)
   * [`module.js`](doc/source/webcomponent/module.md)
 * [`common.js`](doc/source/common.md)
+* [`index.js`](doc/source/index.md)
 * [`url.js`](doc/source/url.md)
 
 

@@ -8,11 +8,11 @@
 | Buy        | [**Buy this**][bp] | [**Buy this**][bs] | [**Buy this**][be] |
 {:.stretch-table}
 
-Unless you've obtained one of the licenses above, **hy-push-state** must be used in accordance with the [GPL-3.0](LICENSE.md) license.
+Unless you've obtained one of the licenses above, **hy-push-state** must be used in accordance with the [GPL-3.0](../LICENSE.md) license.
 
-[pl]: licenses/personal.md
-[sl]: licenses/startup.md
-[el]: licenses/enterprise.md
+[pl]: personal.md
+[sl]: startup.md
+[el]: enterprise.md
 [bp]: https://gumroad.com/l/hy-push-state-personal
 [bs]: https://gumroad.com/l/hy-push-state-startup
 [be]: https://gumroad.com/l/hy-push-state-enterprise

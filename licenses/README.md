@@ -16,5 +16,3 @@ Unless you've obtained one of the licenses above, **hy-push-state** must be used
 [bp]: https://gumroad.com/l/hy-push-state-personal
 [bs]: https://gumroad.com/l/hy-push-state-startup
 [be]: https://gumroad.com/l/hy-push-state-enterprise
-
-<script src="https://gumroad.com/js/gumroad.js" defer></script>

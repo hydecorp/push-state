@@ -120,6 +120,8 @@ export function pushStateMixin(C) {
     setupComponent(el, props) {
       super.setupComponent(el, props);
 
+      this.saveScrollHistoryState = saveScrollHistoryState.bind(this);
+
       this.linkSelector$ = new Subject();
       this.scrollRestoration$ = new Subject();
       this.reload$ = new Subject();
@@ -144,8 +146,7 @@ export function pushStateMixin(C) {
         this.scrollRestoration$
           .pipe(takeUntil(this.teardown$))
           .subscribe((scrollRestoration) => {
-            window.history.scrollRestoration = scrollRestoration
-              ? 'manual' : orig;
+            window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
           });
       }
 
@@ -153,7 +154,7 @@ export function pushStateMixin(C) {
       restoreScrollPostion.call(this);
 
       // Remember the current scroll position (for F5/reloads).
-      window.addEventListener('beforeunload', saveScrollHistoryState.bind(this));
+      window.addEventListener('beforeunload', this.saveScrollHistoryState);
 
       // Calling the [setup observables function](./setup.md) function.
       setupObservables.call(this);
@@ -182,7 +183,10 @@ export function pushStateMixin(C) {
       });
     }
 
-    disconnectComponent() { this.teardown$.next({}); }
+    disconnectComponent() {
+      window.removeEventListener('beforeunload', this.saveScrollHistoryState);
+      this.teardown$.next({});
+    }
 
     // ### Methods
     // Public methods of this component. See [Methods](../../methods.md) for more.

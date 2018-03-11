@@ -6,7 +6,7 @@ Note that --- to be an idiomatic WebComponent --- all communication form the com
 {:toc}
 
 ## `hy-push-state-init`
-This event is fired *once* after the component has been initialized.
+This event is fired whenever the component gets attached to the DOM.
 
 jQuery event name
 : `init.hy.pushstate`

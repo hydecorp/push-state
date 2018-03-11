@@ -160,6 +160,8 @@ See [Options](../../options.md) for usage information.
     setupComponent(el, props) {
       super.setupComponent(el, props);
 
+      this.saveScrollHistoryState = saveScrollHistoryState.bind(this);
+
       this.linkSelector$ = new Subject();
       this.scrollRestoration$ = new Subject();
       this.reload$ = new Subject();
@@ -196,8 +198,7 @@ Setting up scroll restoration
         this.scrollRestoration$
           .pipe(takeUntil(this.teardown$))
           .subscribe((scrollRestoration) => {
-            window.history.scrollRestoration = scrollRestoration
-              ? 'manual' : orig;
+            window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
           });
       }
 ```
@@ -213,7 +214,7 @@ Remember the current scroll position (for F5/reloads).
 
 
 ```js
-      window.addEventListener('beforeunload', saveScrollHistoryState.bind(this));
+      window.addEventListener('beforeunload', this.saveScrollHistoryState);
 ```
 
 Calling the [setup observables function](./setup.md) function.
@@ -258,7 +259,10 @@ since this `load` event wasn't caused by a user interaction.
       });
     }
 
-    disconnectComponent() { this.teardown$.next({}); }
+    disconnectComponent() {
+      window.removeEventListener('beforeunload', this.saveScrollHistoryState);
+      this.teardown$.next({});
+    }
 ```
 
 ### Methods

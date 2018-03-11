@@ -89,7 +89,6 @@ export function updateDOM(context) {
 
     document.title = title;
 
-    // TODO: Is this necessary?
     if (type === PUSH) {
       window.history.replaceState(window.history.state, title, window.location);
     }

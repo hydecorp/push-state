@@ -90,7 +90,7 @@ export function setupObservables() {
   // This is used to reference deferred observaables.
   const ref = {};
 
-  // TODO
+  // TODO: doc
   const push$ = pushSubject.pipe(
     takeUntil(this.teardown$),
     filter(isPushEvent.bind(this)),
@@ -122,7 +122,7 @@ export function setupObservables() {
 
   const reload$ = this.reload$.pipe(takeUntil(this.teardown$));
 
-  // TODO
+  // TODO: doc
   const [hash$, page$] = merge(push$, pop$, reload$).pipe(
     startWith({ url: new URL(window.location) }),
     pairwise(),
@@ -148,7 +148,7 @@ export function setupObservables() {
       share(),
     );
 
-  // TODO
+  // TODO: doc
   const hint$ = hintSubject.pipe(
     takeUntil(this.teardown$),
     unsubscribeWhen(pauser$),
@@ -177,7 +177,7 @@ export function setupObservables() {
     share(),
   );
 
-  // TODO
+  // TODO: doc
   ref.fetch$ = page$.pipe(
     tap((context) => {
       updateHistoryState.call(this, context);
@@ -188,10 +188,10 @@ export function setupObservables() {
     share(),
   );
 
-  // TODO
+  // TODO: doc
   const [fetchOk$, fetchError$] = ref.fetch$.pipe(partition(({ error }) => !error));
 
-  // TODO
+  // TODO: doc
   const main$ = fetchOk$.pipe(
     map(responseToContent.bind(this)),
     observeOn(animationFrame),
@@ -213,17 +213,6 @@ export function setupObservables() {
     tap({ error: e => onError.call(this, e) }),
     catchError((e, c) => c),
   );
-
-  /*
-  const main$ = this.scriptSelector$.pipe(switchMap((scriptSelector) => {
-    if (!scriptSelector) return _main$;
-    return _main$.pipe(
-      switchMap(reinsertScriptTags.bind(this)),
-      tap({ error: e => onError.call(this, e) }),
-      catchError((e, c) => c),
-    );
-  }));
-  */
 
   // #### Subscriptions
   // Subscribe to main and hash observables.
@@ -248,7 +237,6 @@ export function setupObservables() {
   if ('MutationObserver' in window && 'Set' in window) {
     // A `Set` of `Element`s.
     // We use this to keep track of which links already have their event listeners registered.
-    // TODO: can we guarantee that we won't find the same link twice?
     const links = new Set();
 
     // Binding `next` functions to their `Subject`s,
@@ -302,16 +290,17 @@ export function setupObservables() {
     };
 
     // An observable wrapper around the mutation observer.
+    // We're only interested in nodes entering and leaving the entire subtree of this component,
+    // but not attribute changes.
     Observable.create((obs) => {
       const next = obs.next.bind(obs);
       new MutationObserver(mutations => Array.from(mutations).forEach(next))
-        // We're interested in nodes entering and leaving the entire subtree of this component,
-        // but not attribute changes:
         .observe(this.el, { childList: true, subtree: true });
     })
+      // No need keep up with the links during the loading phase:
+      .pipe(unsubscribeWhen(pauser$))
       // For every mutation, we remove the event listeners of elements that go out of the component
       // (if any), and add event listeners to all elements that make it into the compnent (if any).
-      .pipe(unsubscribeWhen(pauser$))
       .subscribe(({ addedNodes, removedNodes }) => {
         Array.from(removedNodes).forEach(removeListeners.bind(this));
         Array.from(addedNodes).forEach(addListeners.bind(this));

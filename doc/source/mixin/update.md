@@ -123,12 +123,7 @@ export function updateDOM(context) {
     const { title, replaceEls, type } = context;
 
     document.title = title;
-```
 
-TODO: Is this necessary?
-
-
-```js
     if (type === PUSH) {
       window.history.replaceState(window.history.state, title, window.location);
     }

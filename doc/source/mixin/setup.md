@@ -118,7 +118,7 @@ This is used to reference deferred observaables.
   const ref = {};
 ```
 
-TODO
+TODO: doc
 
 
 ```js
@@ -158,7 +158,7 @@ modifying the browser history, e.g. clicking the back button, etc.
   const reload$ = this.reload$.pipe(takeUntil(this.teardown$));
 ```
 
-TODO
+TODO: doc
 
 
 ```js
@@ -202,7 +202,7 @@ Start with `false`, i.e. we want the prefetch pipelien to be active
     );
 ```
 
-TODO
+TODO: doc
 
 
 ```js
@@ -249,7 +249,7 @@ Start with some value so `withLatestFrom` below doesn't "block"
   );
 ```
 
-TODO
+TODO: doc
 
 
 ```js
@@ -264,14 +264,14 @@ TODO
   );
 ```
 
-TODO
+TODO: doc
 
 
 ```js
   const [fetchOk$, fetchError$] = ref.fetch$.pipe(partition(({ error }) => !error));
 ```
 
-TODO
+TODO: doc
 
 
 ```js
@@ -300,17 +300,6 @@ and this is where we insert them again.
     tap({ error: e => onError.call(this, e) }),
     catchError((e, c) => c),
   );
-
-  /*
-  const main$ = this.scriptSelector$.pipe(switchMap((scriptSelector) => {
-    if (!scriptSelector) return _main$;
-    return _main$.pipe(
-      switchMap(reinsertScriptTags.bind(this)),
-      tap({ error: e => onError.call(this, e) }),
-      catchError((e, c) => c),
-    );
-  }));
-  */
 ```
 
 #### Subscriptions
@@ -353,7 +342,6 @@ but first we need to check if `MutationObserver` is available.
 
 A `Set` of `Element`s.
 We use this to keep track of which links already have their event listeners registered.
-TODO: can we guarantee that we won't find the same link twice?
 
 
 ```js
@@ -422,21 +410,23 @@ but since we can't be sure, we remove the event listeners anyway.
 ```
 
 An observable wrapper around the mutation observer.
+We're only interested in nodes entering and leaving the entire subtree of this component,
+but not attribute changes.
 
 
 ```js
     Observable.create((obs) => {
       const next = obs.next.bind(obs);
       new MutationObserver(mutations => Array.from(mutations).forEach(next))
+        .observe(this.el, { childList: true, subtree: true });
+    })
 ```
 
-We're interested in nodes entering and leaving the entire subtree of this component,
-but not attribute changes:
+No need keep up with the links during the loading phase:
 
 
 ```js
-        .observe(this.el, { childList: true, subtree: true });
-    })
+      .pipe(unsubscribeWhen(pauser$))
 ```
 
 For every mutation, we remove the event listeners of elements that go out of the component
@@ -444,7 +434,6 @@ For every mutation, we remove the event listeners of elements that go out of the
 
 
 ```js
-      .pipe(unsubscribeWhen(pauser$))
       .subscribe(({ addedNodes, removedNodes }) => {
         Array.from(removedNodes).forEach(removeListeners.bind(this));
         Array.from(addedNodes).forEach(addListeners.bind(this));

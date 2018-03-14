@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
 
 // Importing the subset of RxJS functions that we are going to use.
 import { from } from 'rxjs/observable/from';

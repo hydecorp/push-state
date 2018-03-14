@@ -14,8 +14,8 @@ The most straight-forward way to use **hy-push-state** is by using the vanilla J
 ~~~html
 <main id="pushStateEl"><!--content--></main>
 <script>
-  var PushState = window.hyPushState.PushState;
-  var pushState = new PushState(window.pushStateEl, { /* options */ });
+  var HyPushState = window.hyPushState.HyPushState;
+  var pushState = new HyPushState(window.pushStateEl, { /* options */ });
 </script>
 ~~~
 

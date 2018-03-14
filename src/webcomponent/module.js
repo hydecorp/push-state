@@ -17,10 +17,10 @@
 // ## Overview
 // TODO
 
-import { HTMLPushStateElement } from './index';
+import { HyPushStateElement } from './index';
 
 const define = () => {
-  window.customElements.define('hy-push-state', HTMLPushStateElement);
+  window.customElements.define('hy-push-state', HyPushStateElement);
 };
 
 // Make sure the polyfills are ready (if they are being used).

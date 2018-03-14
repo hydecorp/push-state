@@ -25,7 +25,7 @@ import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
 export const VANILLA_FEATURE_TESTS = MIXIN_FEATURE_TESTS;
 
-export class PushState extends pushStateMixin(VanillaComponent) {}
+export class HyPushState extends pushStateMixin(VanillaComponent) {}
 ```
 
 

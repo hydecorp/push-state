@@ -18,11 +18,11 @@
 // This file contains helper functions related to fetching new content.
 
 // ## Imports
-import { of } from 'rxjs/observable/of';
+import { of } from 'rxjs/_esm5/observable/of';
 
-import { map } from 'rxjs/operators/map';
-import { take } from 'rxjs/operators/take';
-import { zip } from 'rxjs/operators/zip';
+import { map } from 'rxjs/_esm5/operators/map';
+import { take } from 'rxjs/_esm5/operators/take';
+import { zip } from 'rxjs/_esm5/operators/zip';
 
 // For convenience....
 const assign = Object.assign.bind(Object);

@@ -17,36 +17,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
+import { Observable } from 'rxjs/_esm5/Observable';
+import { Subject } from 'rxjs/_esm5/Subject';
 ```
 
 Importing the subset of RxJS functions that we are going to use.
 
 
 ```js
-import { defer } from 'rxjs/observable/defer';
-import { fromEvent } from 'rxjs/observable/fromEvent';
-import { merge } from 'rxjs/observable/merge';
+import { defer } from 'rxjs/_esm5/observable/defer';
+import { fromEvent } from 'rxjs/_esm5/observable/fromEvent';
+import { merge } from 'rxjs/_esm5/observable/merge';
 
-import { ajax } from 'rxjs/observable/dom/ajax';
+import { ajax } from 'rxjs/_esm5/observable/dom/ajax';
 
-import { animationFrame } from 'rxjs/scheduler/animationFrame';
+import { animationFrame } from 'rxjs/_esm5/scheduler/animationFrame';
 
-import { catchError } from 'rxjs/operators/catchError';
-import { tap } from 'rxjs/operators/tap';
-import { distinctUntilChanged } from 'rxjs/operators/distinctUntilChanged';
-import { filter } from 'rxjs/operators/filter';
-import { map } from 'rxjs/operators/map';
-import { mapTo } from 'rxjs/operators/mapTo';
-import { observeOn } from 'rxjs/operators/observeOn';
-import { partition } from 'rxjs/operators/partition';
-import { pairwise } from 'rxjs/operators/pairwise';
-import { share } from 'rxjs/operators/share';
-import { startWith } from 'rxjs/operators/startWith';
-import { switchMap } from 'rxjs/operators/switchMap';
-import { takeUntil } from 'rxjs/operators/takeUntil';
-import { withLatestFrom } from 'rxjs/operators/withLatestFrom';
+import { catchError } from 'rxjs/_esm5/operators/catchError';
+import { tap } from 'rxjs/_esm5/operators/tap';
+import { distinctUntilChanged } from 'rxjs/_esm5/operators/distinctUntilChanged';
+import { filter } from 'rxjs/_esm5/operators/filter';
+import { map } from 'rxjs/_esm5/operators/map';
+import { mapTo } from 'rxjs/_esm5/operators/mapTo';
+import { observeOn } from 'rxjs/_esm5/operators/observeOn';
+import { partition } from 'rxjs/_esm5/operators/partition';
+import { pairwise } from 'rxjs/_esm5/operators/pairwise';
+import { share } from 'rxjs/_esm5/operators/share';
+import { startWith } from 'rxjs/_esm5/operators/startWith';
+import { switchMap } from 'rxjs/_esm5/operators/switchMap';
+import { takeUntil } from 'rxjs/_esm5/operators/takeUntil';
+import { withLatestFrom } from 'rxjs/_esm5/operators/withLatestFrom';
 
 import { matchesAncestors } from '../common';
 import { URL } from '../url';

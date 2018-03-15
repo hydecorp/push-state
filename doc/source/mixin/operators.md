@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { never } from 'rxjs/observable/never';
+import { never } from 'rxjs/_esm5/observable/never';
 
-import { switchMap } from 'rxjs/operators/switchMap';
+import { switchMap } from 'rxjs/_esm5/operators/switchMap';
 ```
 
 ### Observable extensions

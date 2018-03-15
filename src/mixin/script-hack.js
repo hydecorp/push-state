@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs/_esm5/Observable';
 
 // Importing the subset of RxJS functions that we are going to use.
-import { from } from 'rxjs/observable/from';
-import { of } from 'rxjs/observable/of';
+import { from } from 'rxjs/_esm5/observable/from';
+import { of } from 'rxjs/_esm5/observable/of';
 
-import { catchError } from 'rxjs/operators/catchError';
-import { tap } from 'rxjs/operators/tap';
-import { concatMap } from 'rxjs/operators/concatMap';
+import { catchError } from 'rxjs/_esm5/operators/catchError';
+import { tap } from 'rxjs/_esm5/operators/tap';
+import { concatMap } from 'rxjs/_esm5/operators/concatMap';
 
 // For convenience....
 const assign = Object.assign.bind(Object);

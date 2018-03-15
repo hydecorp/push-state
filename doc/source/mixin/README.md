@@ -25,27 +25,21 @@ The mixin in the main export of this file.
 ## Imports
 Including the patches for ES6+ functions, but
 there is a -lite version of the component that comes without these.
-
-
-```js
 import 'core-js/fn/array/for-each';
 import 'core-js/fn/array/from';
 import 'core-js/fn/function/bind';
 import 'core-js/fn/object/assign';
-```
 
 Importing the hy-compontent base libary,
 which helps with making multiple versions of the component (Vanilla JS, WebComponent, etc...).
 
 
 ```js
-import { componentMixin, COMPONENT_FEATURE_TESTS } from 'hy-component/src/component';
+import { componentMixin, COMPONENT_FEATURE_TESTS, Set } from 'hy-component/esm/component';
+import { array, bool, number, regex, string } from 'hy-component/esm/types';
 
-import { array, bool, number, regex, string } from 'attr-types';
-import { Set } from 'qd-set';
-
-import { Subject } from 'rxjs/Subject';
-import { takeUntil } from 'rxjs/operators/takeUntil';
+import { Subject } from 'rxjs/_esm5/Subject';
+import { takeUntil } from 'rxjs/_esm5/operators/takeUntil';
 ```
 
 Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
@@ -81,6 +75,8 @@ export const MIXIN_FEATURE_TESTS = new Set([
   'queryselector',
   'requestanimationframe',
 ]);
+
+export { Set };
 ```
 
 Patching the document fragment's `getElementById` function, which is

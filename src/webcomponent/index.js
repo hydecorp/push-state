@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import 'core-js/fn/array/from';
+// import 'core-js/fn/array/from';
 
-import { customElementMixin, CustomElement, CUSTOM_ELEMENT_FEATURE_TESTS }
-  from 'hy-component/src/custom-element';
-
-import { Set } from 'qd-set';
+import { customElementMixin, CustomElement, CUSTOM_ELEMENT_FEATURE_TESTS, Set }
+  from 'hy-component/esm/custom-element';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
@@ -27,6 +25,8 @@ export const WEBCOMPONENT_FEATURE_TESTS = new Set([
   ...CUSTOM_ELEMENT_FEATURE_TESTS,
   ...MIXIN_FEATURE_TESTS,
 ]);
+
+export { Set };
 
 export class HyPushStateElement extends customElementMixin(pushStateMixin(CustomElement)) {
   static get observedAttributes() { return this.getObservedAttributes(); }

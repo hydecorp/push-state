@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { customElementMixin, CustomElement } from 'hy-component/src/custom-element';
+import { customElementMixin, CustomElement } from 'hy-component/esm/custom-element';
 
 import { pushStateMixin } from '../mixin';
 

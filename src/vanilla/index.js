@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import 'core-js/fn/array/from';
+// import 'core-js/fn/array/from';
 
-import { VanillaComponent } from 'hy-component/src/vanilla';
+import { VanillaComponent, Set } from 'hy-component/esm/vanilla';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
 export const VANILLA_FEATURE_TESTS = MIXIN_FEATURE_TESTS;
+
+export { Set };
 
 export class HyPushState extends pushStateMixin(VanillaComponent) {}

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from 'rxjs/Observable';
-import { timer } from 'rxjs/observable/timer';
+import { Observable } from 'rxjs/_esm5/Observable';
+import { timer } from 'rxjs/_esm5/observable/timer';
 
 // For convenience....
 const assign = Object.assign.bind(Object);

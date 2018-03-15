@@ -7,8 +7,7 @@
     "clean": "rm -rf dist lib doc/source",
     "test": "eslint src webpack.config.js",
     "format": "prettier-eslint --write \"src/**/*.js\"",
-    "build":
-      "npm run build:dev & npm run build:prod & npm run build:lib & npm run build:doc & wait",
+    "build": "npm run build:dev & npm run build:prod & npm run build:lib & npm run build:doc & wait",
     "build:lib": "babel src --out-dir lib",
     "build:prod": "webpack --env prod --display-optimization-bailout",
     "build:dev": "webpack --env dev --display-optimization-bailout",
@@ -72,16 +71,28 @@
   },
   "homepage": "https://qwtel.com/hy-push-state/",
   "babel": {
-    "presets": ["env"],
-    "only": ["./src", "rxjs", "hy-component", "camelcase"]
+    "presets": [
+      "env"
+    ],
+    "only": [
+      "./src",
+      "rxjs",
+      "hy-component"
+    ]
   },
   "browserify": {
     "transform": [
       [
         "babelify",
         {
-          "presets": ["env"],
-          "only": ["./src", "rxjs", "hy-component", "camelcase"]
+          "presets": [
+            "env"
+          ],
+          "only": [
+            "./src",
+            "rxjs",
+            "hy-component"
+          ]
         }
       ],
       [

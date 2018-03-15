@@ -225,10 +225,10 @@ export function setupObservables() {
   // We use a `MutationObserver` to keep track of all the links inside the component,
   // and put events on the `pushSubject` and `hintSubject` observables,
   // but first we need to check if `MutationObserver` is available.
-  if ('MutationObserver' in window && 'Set' in window) {
+  if ('MutationObserver' in window && 'WeakSet' in window) {
     // A `Set` of `Element`s.
     // We use this to keep track of which links already have their event listeners registered.
-    const links = new Set();
+    const links = new WeakSet();
 
     // Binding `next` functions to their `Subject`s,
     // so that we can pass them as callbacks directly. This is just for convenience.
@@ -284,13 +284,13 @@ export function setupObservables() {
     // but not attribute changes.
     Observable.create((obs) => {
       const next = obs.next.bind(obs);
-      new MutationObserver(mutations => Array.from(mutations).forEach(next)).observe(this.el, {
+      this.mutationObserver = new MutationObserver(mutations =>
+        Array.from(mutations).forEach(next));
+      this.mutationObserver.observe(this.el, {
         childList: true,
         subtree: true,
       });
     })
-      // No need keep up with the links during the loading phase:
-      .pipe(unsubscribeWhen(pauser$))
       // For every mutation, we remove the event listeners of elements that go out of the component
       // (if any), and add event listeners to all elements that make it into the compnent (if any).
       .subscribe(({ addedNodes, removedNodes }) => {

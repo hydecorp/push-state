@@ -19,10 +19,17 @@ import { customElementMixin, CustomElement } from 'hy-component/esm/custom-eleme
 import { pushStateMixin } from '../mixin';
 
 const define = () => {
-  customElements.define('hy-push-state', class extends customElementMixin(pushStateMixin(CustomElement)) {
-    static get observedAttributes() { return this.getObservedAttributes(); }
-    getTemplate() { return null; }
-  });
+  customElements.define(
+    'hy-push-state',
+    class extends customElementMixin(pushStateMixin(CustomElement)) {
+      static get observedAttributes() {
+        return this.getObservedAttributes();
+      }
+      getTemplate() {
+        return null;
+      }
+    },
+  );
 };
 
 // Make sure the polyfills are ready (if they are being used).
@@ -31,5 +38,5 @@ if ('customElements' in window || (window.WebComponents && window.WebComponents.
 } else if (window.WebComponents) {
   window.addEventListener('WebComponentsReady', define);
 } else if (process.env.DEBUG) {
-  console.warn('Couldn\'t register component. Did you forget to include a WebComponents polyfill?');
+  console.warn("Couldn't register component. Did you forget to include a WebComponents polyfill?");
 }

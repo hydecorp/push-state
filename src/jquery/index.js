@@ -16,7 +16,11 @@
 
 // import 'core-js/fn/array/from';
 
-import { JQueryComponent, defineJQueryComponent, Set } from 'hy-component/src/define-jquery-component';
+import {
+  JQueryComponent,
+  defineJQueryComponent,
+  Set,
+} from 'hy-component/src/define-jquery-component';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
@@ -25,6 +29,11 @@ JQUERY_FEATURE_TESTS.delete('customevent');
 
 export { Set };
 
-defineJQueryComponent('hy.pushstate', class extends pushStateMixin(JQueryComponent) {
-  setupShadowDOM($el) { return $el; }
-});
+defineJQueryComponent(
+  'hy.pushstate',
+  class extends pushStateMixin(JQueryComponent) {
+    setupShadowDOM($el) {
+      return $el;
+    }
+  },
+);

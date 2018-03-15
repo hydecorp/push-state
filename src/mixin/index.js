@@ -69,16 +69,20 @@ export { Set };
 
 // Patching the document fragment's `getElementById` function, which is
 // not implemented in all browsers, even some modern ones.
-DocumentFragment.prototype.getElementById = DocumentFragment.prototype.getElementById ||
-  function getElementById(id) { return this.querySelector(`#${id}`); };
-
+DocumentFragment.prototype.getElementById =
+  DocumentFragment.prototype.getElementById ||
+  function getElementById(id) {
+    return this.querySelector(`#${id}`);
+  };
 
 // ## Push state mixin
 export function pushStateMixin(C) {
   // TODO: see ES6 mixins...
   return class extends componentMixin(C) {
     // The name of the component (required by hy-component)
-    static get componentName() { return 'hy-push-state'; }
+    static get componentName() {
+      return 'hy-push-state';
+    }
 
     // ### Options
     // The default values (and types) of the configuration options (required by hy-component)
@@ -111,8 +115,12 @@ export function pushStateMixin(C) {
 
     static get sideEffects() {
       return {
-        linkSelector(x) { this.linkSelector$.next(x); },
-        scrollRestoration(x) { this.scrollRestoration$.next(x); },
+        linkSelector(x) {
+          this.linkSelector$.next(x);
+        },
+        scrollRestoration(x) {
+          this.scrollRestoration$.next(x);
+        },
       };
     }
 
@@ -129,7 +137,9 @@ export function pushStateMixin(C) {
     }
 
     // This component has no shadow DOM, so we just return the element.
-    setupShadowDOM(el) { return el; }
+    setupShadowDOM(el) {
+      return el;
+    }
 
     // Overriding the setup function.
     connectComponent() {
@@ -143,11 +153,9 @@ export function pushStateMixin(C) {
       if ('scrollRestoration' in window.history) {
         const orig = window.history.scrollRestoration;
 
-        this.scrollRestoration$
-          .pipe(takeUntil(this.teardown$))
-          .subscribe((scrollRestoration) => {
-            window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
-          });
+        this.scrollRestoration$.pipe(takeUntil(this.teardown$)).subscribe((scrollRestoration) => {
+          window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
+        });
       }
 
       // If restore the last scroll position, if any.

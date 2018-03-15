@@ -70,8 +70,13 @@ export function onDOMError(context) {
   // This only serves as a fallback.
   if (replaceElMissing) {
     if (process.env.DEBUG) {
-      const ids = this.replaceIds.concat(this.el.id || []).map(x => `#${x}`).join(', ');
-      console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`);
+      const ids = this.replaceIds
+        .concat(this.el.id || [])
+        .map(x => `#${x}`)
+        .join(', ');
+      console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${
+        window.location
+      }'. Opening the link directly.`);
     }
 
     // To open the link directly, we first pop one entry off the browser history.
@@ -79,9 +84,11 @@ export function onDOMError(context) {
     // We then wait for a short time and change the document's location.
     // TODO: If we didn't call `pushState` optimistically we wouldn't have to do this.
     window.history.back();
-    setTimeout(() => { document.location.href = url; }, 100);
+    setTimeout(() => {
+      document.location.href = url;
+    }, 100);
 
-  // If it's a different error, throw the generic `error` event.
+    // If it's a different error, throw the generic `error` event.
   } else {
     if (process.env.DEBUG) console.error(context);
     this.fireEvent('error', { detail: context });

@@ -38,9 +38,7 @@ export function isExternal({ protocol, host }) {
 }
 
 export function isHash({ hash, origin, pathname }) {
-  return hash !== ''
-    && origin === window.location.origin
-    && pathname === window.location.pathname;
+  return hash !== '' && origin === window.location.origin && pathname === window.location.pathname;
 }
 
 export function getScrollHeight() {

@@ -31,20 +31,24 @@ export function histId() {
 
 // ### Event filters
 function shouldLoadAnchor(anchor, hrefRegex) {
-  return anchor && anchor.target === ''
-    && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
+  return anchor && anchor.target === '' && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
 }
 
 export function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
-  return !metaKey && !ctrlKey
-    && shouldLoadAnchor(currentTarget, this.hrefRegex)
-    && !isExternal(currentTarget);
+  return (
+    !metaKey &&
+    !ctrlKey &&
+    shouldLoadAnchor(currentTarget, this.hrefRegex) &&
+    !isExternal(currentTarget)
+  );
 }
 
 export function isHintEvent({ currentTarget }) {
-  return shouldLoadAnchor(currentTarget, this.hrefRegex)
-    && !isExternal(currentTarget)
-    && !isHash(currentTarget);
+  return (
+    shouldLoadAnchor(currentTarget, this.hrefRegex) &&
+    !isExternal(currentTarget) &&
+    !isHash(currentTarget)
+  );
 }
 
 // Determines if a pair of context's constitutes a hash change (vs. a page chagne)
@@ -54,6 +58,5 @@ export function isHashChange([
   { url: { pathname: prevPathname } },
   { url: { pathname, hash }, type },
 ]) {
-  return pathname === prevPathname
-    && (type === POP || (type === PUSH && hash !== ''));
+  return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ''));
 }

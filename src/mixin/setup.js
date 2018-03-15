@@ -71,9 +71,7 @@ const assign = Object.assign.bind(Object);
 // We use `cacheNr` as it is a convenient (hacky) way of circumventing
 // `distinctUntilChanged` when retrying requests.
 function compareContext(p, q) {
-  return p.url.href === q.url.href
-    && p.error === q.error
-    && p.cacheNr === q.cacheNr;
+  return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
 }
 
 // ### Setup observable
@@ -123,16 +121,14 @@ export function setupObservables() {
   const reload$ = this.reload$.pipe(takeUntil(this.teardown$));
 
   // TODO: doc
-  const [hash$, page$] = merge(push$, pop$, reload$).pipe(
-    startWith({ url: new URL(window.location) }),
-    pairwise(),
-    share(),
-    partition(isHashChange),
-  )
-    .map(obs$ => obs$.pipe(
-      map(([, x]) => x),
+  const [hash$, page$] = merge(push$, pop$, reload$)
+    .pipe(
+      startWith({ url: new URL(window.location) }),
+      pairwise(),
       share(),
-    ));
+      partition(isHashChange),
+    )
+    .map(obs$ => obs$.pipe(map(([, x]) => x), share()));
 
   // We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
   // while a _certain_ page load is going on.
@@ -143,10 +139,7 @@ export function setupObservables() {
     // a response event means we want to resume prefetching.
     merge(page$.pipe(mapTo(true)), ref.fetch$.pipe(mapTo(false))))
     // Start with `false`, i.e. we want the prefetch pipelien to be active
-    .pipe(
-      startWith(false),
-      share(),
-    );
+    .pipe(startWith(false), share());
 
   // TODO: doc
   const hint$ = hintSubject.pipe(
@@ -223,11 +216,9 @@ export function setupObservables() {
   fetchError$.subscribe(onNetworkError.bind(this));
 
   // Fire `progress` event when fetching takes longer than expected.
-  page$.pipe(switchMap(context =>
-    defer(() => this.animPromise).pipe(
-      takeUntil(ref.fetch$),
-      mapTo(context),
-    )))
+  page$
+    .pipe(switchMap(context =>
+      defer(() => this.animPromise).pipe(takeUntil(ref.fetch$), mapTo(context))))
     .subscribe(onProgress.bind(this));
 
   // #### Keeping track of links
@@ -270,7 +261,6 @@ export function setupObservables() {
       }
     };
 
-
     // Next, The function to be called for every removed node.
     // Usually the elments will be removed from the document altogher
     // when they are removed from this component,
@@ -294,8 +284,10 @@ export function setupObservables() {
     // but not attribute changes.
     Observable.create((obs) => {
       const next = obs.next.bind(obs);
-      new MutationObserver(mutations => Array.from(mutations).forEach(next))
-        .observe(this.el, { childList: true, subtree: true });
+      new MutationObserver(mutations => Array.from(mutations).forEach(next)).observe(this.el, {
+        childList: true,
+        subtree: true,
+      });
     })
       // No need keep up with the links during the loading phase:
       .pipe(unsubscribeWhen(pauser$))
@@ -316,9 +308,9 @@ export function setupObservables() {
       addListeners.call(this, this.el);
     });
 
-  // If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
-  // on the entire component, and check if a click occurred on one of our links.
-  // Note that we can't reliably generate hints this way, so we don't.
+    // If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
+    // on the entire component, and check if a click occurred on one of our links.
+    // Note that we can't reliably generate hints this way, so we don't.
   } else {
     this.el.addEventListener('click', (event) => {
       const anchor = matchesAncestors.call(event.target, this.linkSelector);

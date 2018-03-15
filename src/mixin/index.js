@@ -135,7 +135,7 @@ export function pushStateMixin(C) {
     connectComponent() {
       super.connectComponent();
 
-      if (process.env.DEBUG && !this.replaceEls && !this.el.id) {
+      if (process.env.DEBUG && !this.replaceIds && !this.el.id) {
         console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
       }
 

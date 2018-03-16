@@ -5,22 +5,82 @@
 * [Events](events.md){:.flip-title}
 
 ## Usage
-The most straight-forward way to use **hy-push-state** is by using the vanilla JS version and load it from a CDN:
+### Web Component
+The Web Component is the preferred way of using **hy-push-state**, but requires Web Component support in the browser or a [polyfill](https://github.com/webcomponents/webcomponentsjs).
+
+#### Bundled ES6 Module
+This is the version that is going to have native support across all major browsers the soonest.
 
 ~~~html
-<script src="https://unpkg.com/hy-push-state/dist/vanilla/hy-push-state.min.js"></script>
+<script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state-module.min.js"></script>
+
+<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
 ~~~
 
+#### HTML Import
+Some browsers have put support for HTML Imports on hold, but it is easily polyfilled.
+
 ~~~html
-<main id="pushStateEl"><!--content--></main>
+<link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.min.html">
+
+<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+~~~
+
+#### Unbundled ES6 Module (experimental)
+The unpkg CDN can rewrite all "bare" import paths with valid unpkg URLs by passing the `?module` query parameter.
+This allows importing **hy-push-state**'s source directly.
+Note that this will result in possibly hundreds of separate requests.
+
+~~~html
+<script>window.process = { env: { DEBUG: true } };</script>
+<script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
+
+<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+~~~
+
+### jQuery
+
+~~~html
+<div id="pushStateEl" data-link-selector="a[href]"><!--content--></div>
+
+<script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
+<script src="https://unpkg.com/hy-push-state/dist/jquery/hy-push-state.min.js"></script>
 <script>
-  var HyPushState = window.hyPushState.HyPushState;
-  var pushState = new HyPushState(window.pushStateEl, { /* options */ });
+  $('#pushStateEl').pushstate()
 </script>
 ~~~
 
-This assumes all pages have an element with `id="pushStateEl"`, which will be used for replacement.
-You can get more fine-grained control over which elements get replaced with the [`replaceIds` option](doc/options.md#replaceids).
+### Vanilla
+~~~html
+<div id="pushStateEl"><!--content--></div>
+
+<script src="https://unpkg.com/hy-push-state/dist/vanilla/hy-push-state.min.js"></script>
+<script>
+  var HyPushState = window.hyPushState.HyPushState;
+  var pushState = new HyPushState(window.pushStateEl, {
+    linkSelector: 'a[href]',
+  });
+</script>
+~~~
+
+
+## Size
+The size of the minified bundle hovers around 80kb, or ~19kb gziped.
+
+```
+320K dist/jquery/hy-push-state.js
+ 79K dist/jquery/hy-push-state.min.js
+309K dist/mixin/hy-push-state.js
+ 76K dist/mixin/hy-push-state.min.js
+312K dist/vanilla/hy-push-state.js
+ 76K dist/vanilla/hy-push-state.min.js
+322K dist/webcomponent/hy-push-state-html-import.js
+ 81K dist/webcomponent/hy-push-state-html-import.min.js
+323K dist/webcomponent/hy-push-state-module.js
+ 81K dist/webcomponent/hy-push-state-module.min.js
+322K dist/webcomponent/hy-push-state.js
+ 81K dist/webcomponent/hy-push-state.min.js
+```
 
 
 ## Gold Standard

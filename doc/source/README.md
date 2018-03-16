@@ -22,9 +22,12 @@ import { HyPushState, VANILLA_FEATURE_TESTS } from './vanilla';
 import { HyPushStateElement, WEBCOMPONENT_FEATURE_TESTS } from './webcomponent';
 
 export {
-  pushStateMixin, MIXIN_FEATURE_TESTS,
-  HyPushState, VANILLA_FEATURE_TESTS,
-  HyPushStateElement, WEBCOMPONENT_FEATURE_TESTS,
+  pushStateMixin,
+  MIXIN_FEATURE_TESTS,
+  HyPushState,
+  VANILLA_FEATURE_TESTS,
+  HyPushStateElement,
+  WEBCOMPONENT_FEATURE_TESTS,
 };
 ```
 

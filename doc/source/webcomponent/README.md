@@ -19,8 +19,12 @@ import 'core-js/fn/array/from';
 
 ```js
 
-import { customElementMixin, CustomElement, CUSTOM_ELEMENT_FEATURE_TESTS, Set }
-  from 'hy-component/esm/custom-element';
+import {
+  customElementMixin,
+  CustomElement,
+  CUSTOM_ELEMENT_FEATURE_TESTS,
+  Set,
+} from 'hy-component/src/custom-element';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 
@@ -32,8 +36,12 @@ export const WEBCOMPONENT_FEATURE_TESTS = new Set([
 export { Set };
 
 export class HyPushStateElement extends customElementMixin(pushStateMixin(CustomElement)) {
-  static get observedAttributes() { return this.getObservedAttributes(); }
-  getTemplate() { return null; }
+  static get observedAttributes() {
+    return this.getObservedAttributes();
+  }
+  getTemplate() {
+    return null;
+  }
 }
 ```
 

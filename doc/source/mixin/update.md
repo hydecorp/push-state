@@ -71,9 +71,7 @@ export function responseToContent(context) {
     throw assign(context, { replaceElMissing: true });
   }
 
-  const scripts = this.scriptSelector
-    ? tempRemoveScriptTags.call(this, replaceEls)
-    : [];
+  const scripts = this.scriptSelector ? tempRemoveScriptTags.call(this, replaceEls) : [];
 
   return assign(context, { title, replaceEls, scripts });
 }
@@ -84,11 +82,9 @@ Replaces the old elments with the new one, one-by-one.
 
 ```js
 function replaceContentByIds(elements) {
-  this.replaceIds
-    .map(id => document.getElementById(id))
-    .forEach((oldElement, i) => {
-      oldElement.parentNode.replaceChild(elements[i], oldElement);
-    });
+  this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
+    oldElement.parentNode.replaceChild(elements[i], oldElement);
+  });
 }
 ```
 

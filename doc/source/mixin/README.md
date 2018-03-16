@@ -35,8 +35,8 @@ which helps with making multiple versions of the component (Vanilla JS, WebCompo
 
 
 ```js
-import { componentMixin, COMPONENT_FEATURE_TESTS, Set } from 'hy-component/esm/component';
-import { array, bool, number, regex, string } from 'hy-component/esm/types';
+import { componentMixin, COMPONENT_FEATURE_TESTS, Set } from 'hy-component/src/component';
+import { array, bool, number, regex, string } from 'hy-component/src/types';
 
 import { Subject } from 'rxjs/_esm5/Subject';
 import { takeUntil } from 'rxjs/_esm5/operators/takeUntil';
@@ -84,8 +84,11 @@ not implemented in all browsers, even some modern ones.
 
 
 ```js
-DocumentFragment.prototype.getElementById = DocumentFragment.prototype.getElementById ||
-  function getElementById(id) { return this.querySelector(`#${id}`); };
+DocumentFragment.prototype.getElementById =
+  DocumentFragment.prototype.getElementById ||
+  function getElementById(id) {
+    return this.querySelector(`#${id}`);
+  };
 ```
 
 ## Push state mixin
@@ -106,7 +109,9 @@ The name of the component (required by hy-component)
 
 
 ```js
-    static get componentName() { return 'hy-push-state'; }
+    static get componentName() {
+      return 'hy-push-state';
+    }
 ```
 
 ### Options
@@ -143,8 +148,12 @@ See [Options](../../options.md) for usage information.
 
     static get sideEffects() {
       return {
-        linkSelector(x) { this.linkSelector$.next(x); },
-        scrollRestoration(x) { this.scrollRestoration$.next(x); },
+        linkSelector(x) {
+          this.linkSelector$.next(x);
+        },
+        scrollRestoration(x) {
+          this.scrollRestoration$.next(x);
+        },
       };
     }
 ```
@@ -169,7 +178,9 @@ This component has no shadow DOM, so we just return the element.
 
 
 ```js
-    setupShadowDOM(el) { return el; }
+    setupShadowDOM(el) {
+      return el;
+    }
 ```
 
 Overriding the setup function.
@@ -179,7 +190,7 @@ Overriding the setup function.
     connectComponent() {
       super.connectComponent();
 
-      if (process.env.DEBUG && !this.replaceEls && !this.el.id) {
+      if (process.env.DEBUG && !this.replaceIds && !this.el.id) {
         console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
       }
 ```
@@ -191,11 +202,9 @@ Setting up scroll restoration
       if ('scrollRestoration' in window.history) {
         const orig = window.history.scrollRestoration;
 
-        this.scrollRestoration$
-          .pipe(takeUntil(this.teardown$))
-          .subscribe((scrollRestoration) => {
-            window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
-          });
+        this.scrollRestoration$.pipe(takeUntil(this.teardown$)).subscribe((scrollRestoration) => {
+          window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
+        });
       }
 ```
 

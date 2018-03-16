@@ -88,8 +88,8 @@ but we return an observable that only completes once the script has fired its `l
 
 
 ```js
-  return script.src !== '' ?
-    Observable.create((observer) => {
+  return script.src !== ''
+    ? Observable.create((observer) => {
       script.addEventListener('load', (x) => {
         document.write = originalWrite;
         observer.complete(x);
@@ -101,13 +101,8 @@ but we return an observable that only completes once the script has fired its `l
       });
 
       ref.parentNode.insertBefore(script, ref.nextSibling);
-    }) :
-```
-
-Otherwise we insert it into the DOM and reset the `document.write` function.
-
-
-```js
+    })
+    : // Otherwise we insert it into the DOM and reset the `document.write` function.
     of({}).pipe(tap(() => {
       ref.parentNode.insertBefore(script, ref.nextSibling);
       document.write = originalWrite;
@@ -124,10 +119,13 @@ export function reinsertScriptTags(context) {
 
   const { scripts } = context;
 
-  return from(scripts).pipe(
-    concatMap(insertScript),
-    catchError((error) => { throw assign(context, { error }); }),
-  )
+  return from(scripts)
+    .pipe(
+      concatMap(insertScript),
+      catchError((error) => {
+        throw assign(context, { error });
+      }),
+    )
     .toPromise()
     .then(() => context);
 }

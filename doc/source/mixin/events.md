@@ -98,8 +98,13 @@ This only serves as a fallback.
 ```js
   if (replaceElMissing) {
     if (process.env.DEBUG) {
-      const ids = this.replaceIds.concat(this.el.id || []).map(x => `#${x}`).join(', ');
-      console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`);
+      const ids = this.replaceIds
+        .concat(this.el.id || [])
+        .map(x => `#${x}`)
+        .join(', ');
+      console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${
+        window.location
+      }'. Opening the link directly.`);
     }
 ```
 
@@ -111,7 +116,9 @@ TODO: If we didn't call `pushState` optimistically we wouldn't have to do this.
 
 ```js
     window.history.back();
-    setTimeout(() => { document.location.href = url; }, 100);
+    setTimeout(() => {
+      document.location.href = url;
+    }, 100);
 ```
 
 If it's a different error, throw the generic `error` event.

@@ -86,9 +86,7 @@ We use `cacheNr` as it is a convenient (hacky) way of circumventing
 
 ```js
 function compareContext(p, q) {
-  return p.url.href === q.url.href
-    && p.error === q.error
-    && p.cacheNr === q.cacheNr;
+  return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
 }
 ```
 
@@ -162,16 +160,14 @@ TODO: doc
 
 
 ```js
-  const [hash$, page$] = merge(push$, pop$, reload$).pipe(
-    startWith({ url: new URL(window.location) }),
-    pairwise(),
-    share(),
-    partition(isHashChange),
-  )
-    .map(obs$ => obs$.pipe(
-      map(([, x]) => x),
+  const [hash$, page$] = merge(push$, pop$, reload$)
+    .pipe(
+      startWith({ url: new URL(window.location) }),
+      pairwise(),
       share(),
-    ));
+      partition(isHashChange),
+    )
+    .map(obs$ => obs$.pipe(map(([, x]) => x), share()));
 ```
 
 We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
@@ -196,10 +192,7 @@ Start with `false`, i.e. we want the prefetch pipelien to be active
 
 
 ```js
-    .pipe(
-      startWith(false),
-      share(),
-    );
+    .pipe(startWith(false), share());
 ```
 
 TODO: doc
@@ -322,11 +315,9 @@ Fire `progress` event when fetching takes longer than expected.
 
 
 ```js
-  page$.pipe(switchMap(context =>
-    defer(() => this.animPromise).pipe(
-      takeUntil(ref.fetch$),
-      mapTo(context),
-    )))
+  page$
+    .pipe(switchMap(context =>
+      defer(() => this.animPromise).pipe(takeUntil(ref.fetch$), mapTo(context))))
     .subscribe(onProgress.bind(this));
 ```
 
@@ -337,7 +328,7 @@ but first we need to check if `MutationObserver` is available.
 
 
 ```js
-  if ('MutationObserver' in window && 'Set' in window) {
+  if ('MutationObserver' in window && 'WeakSet' in window) {
 ```
 
 A `Set` of `Element`s.
@@ -345,7 +336,7 @@ We use this to keep track of which links already have their event listeners regi
 
 
 ```js
-    const links = new Set();
+    const links = new WeakSet();
 ```
 
 Binding `next` functions to their `Subject`s,
@@ -417,16 +408,13 @@ but not attribute changes.
 ```js
     Observable.create((obs) => {
       const next = obs.next.bind(obs);
-      new MutationObserver(mutations => Array.from(mutations).forEach(next))
-        .observe(this.el, { childList: true, subtree: true });
+      this.mutationObserver = new MutationObserver(mutations =>
+        Array.from(mutations).forEach(next));
+      this.mutationObserver.observe(this.el, {
+        childList: true,
+        subtree: true,
+      });
     })
-```
-
-No need keep up with the links during the loading phase:
-
-
-```js
-      .pipe(unsubscribeWhen(pauser$))
 ```
 
 For every mutation, we remove the event listeners of elements that go out of the component

@@ -19,7 +19,7 @@ import 'core-js/fn/array/from';
 
 ```js
 
-import { VanillaComponent, Set } from 'hy-component/esm/vanilla';
+import { VanillaComponent, Set } from 'hy-component/src/vanilla';
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from '../mixin';
 

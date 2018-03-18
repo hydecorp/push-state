@@ -268,7 +268,7 @@ Yes.
 
 > ✓ Overridable Methods — Does the component provide internal methods for key functionality, such that a subclass can override those methods to refine their behavior?
 
-No, currently does not expose enough of its internal methods. TODO
+Yes.
 
 
 ## Development

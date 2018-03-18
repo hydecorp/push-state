@@ -24,39 +24,39 @@ import { PUSH, POP } from './constants';
 // effectively turning them into (private) methods. Since the final export is a mixin,
 // we want to avoid potentially conflicting names as much as possible.
 
-// Returns an identifier to mark frames on the history stack.
-export function histId() {
-  return this.el.id || this.constructor.componentName;
-}
+export const helperMixin = C =>
+  class extends C {
+    // Returns an identifier to mark frames on the history stack.
+    histId() {
+      return this.el.id || this.constructor.componentName;
+    }
 
-// ### Event filters
-function shouldLoadAnchor(anchor, hrefRegex) {
-  return anchor && anchor.target === '' && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
-}
+    // ### Event filters
+    shouldLoadAnchor(anchor, hrefRegex) {
+      return anchor && anchor.target === '' && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
+    }
 
-export function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
-  return (
-    !metaKey &&
-    !ctrlKey &&
-    shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-    !isExternal(currentTarget)
-  );
-}
+    isPushEvent({ metaKey, ctrlKey, currentTarget }) {
+      return (
+        !metaKey &&
+        !ctrlKey &&
+        this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
+        !isExternal(currentTarget)
+      );
+    }
 
-export function isHintEvent({ currentTarget }) {
-  return (
-    shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-    !isExternal(currentTarget) &&
-    !isHash(currentTarget)
-  );
-}
+    isHintEvent({ currentTarget }) {
+      return (
+        this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
+        !isExternal(currentTarget) &&
+        !isHash(currentTarget)
+      );
+    }
 
-// Determines if a pair of context's constitutes a hash change (vs. a page chagne)
-// We take as a hash change when the pathname of the URLs is the same,
-// and the `hash` isn't empty.
-export function isHashChange([
-  { url: { pathname: prevPathname } },
-  { url: { pathname, hash }, type },
-]) {
-  return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ''));
-}
+    // Determines if a pair of context's constitutes a hash change (vs. a page chagne)
+    // We take as a hash change when the pathname of the URLs is the same,
+    // and the `hash` isn't empty.
+    isHashChange([{ url: { pathname: prevPathname } }, { url: { pathname, hash }, type }]) {
+      return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ''));
+    }
+  };

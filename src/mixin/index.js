@@ -43,11 +43,7 @@ import { takeUntil } from 'rxjs/_esm5/operators/takeUntil';
 import { URL } from '../url';
 
 import { INIT, HINT, PUSH, POP } from './constants';
-import { getTitle, getReplaceElements } from './update';
-import { updateHistoryState, saveScrollHistoryState } from './history';
-import { restoreScrollPostion } from './scrolling';
-import { onLoad } from './events';
-import { setupObservables } from './setup';
+import { setupObservablesMixin } from './setup';
 
 export { INIT, HINT, PUSH, POP };
 
@@ -76,9 +72,8 @@ DocumentFragment.prototype.getElementById =
   };
 
 // ## Push state mixin
-export function pushStateMixin(C) {
-  // TODO: see ES6 mixins...
-  return class extends componentMixin(C) {
+export const pushStateMixin = C =>
+  class extends setupObservablesMixin(componentMixin(C)) {
     // The name of the component (required by hy-component)
     static get componentName() {
       return 'hy-push-state';
@@ -128,7 +123,7 @@ export function pushStateMixin(C) {
     setupComponent(el, props) {
       super.setupComponent(el, props);
 
-      this.saveScrollHistoryState = saveScrollHistoryState.bind(this);
+      this.saveScrollHistoryState = this.saveScrollHistoryState.bind(this);
 
       this.linkSelector$ = new Subject();
       this.scrollRestoration$ = new Subject();
@@ -159,21 +154,17 @@ export function pushStateMixin(C) {
       }
 
       // If restore the last scroll position, if any.
-      restoreScrollPostion.call(this);
+      this.restoreScrollPostion();
 
       // Remember the current scroll position (for F5/reloads).
       window.addEventListener('beforeunload', this.saveScrollHistoryState);
 
       // Calling the [setup observables function](./setup.md) function.
-      setupObservables.call(this);
+      this.setupObservables();
 
       // Setting the initial `history.state`.
       const url = new URL(window.location);
-      updateHistoryState.call(this, {
-        type: INIT,
-        replace: true,
-        url,
-      });
+      this.updateHistoryState({ type: INIT, replace: true, url });
 
       // After all this is done, we can fire the one-time `init` event...
       this.fireEvent('init');
@@ -182,10 +173,10 @@ export function pushStateMixin(C) {
       // We provide similar data as subsequent `load` events,
       // however we can't provide an `anchor` or `event`,
       // since this `load` event wasn't caused by a user interaction.
-      onLoad.call(this, {
+      this.onLoad({
         type: INIT,
-        title: getTitle.call(this, document),
-        replaceEls: getReplaceElements.call(this, document),
+        title: this.getTitle(document),
+        replaceEls: this.getReplaceElements(document),
         url,
         cacheNr: this.cacheNr,
       });
@@ -224,7 +215,6 @@ export function pushStateMixin(C) {
       });
     }
   };
-}
 
 // [rxjs]: https://github.com/ReactiveX/rxjs
 // [esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/

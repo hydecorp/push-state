@@ -17,7 +17,6 @@
 import { getScrollTop, getScrollHeight } from '../common';
 
 import { PUSH, POP } from './constants';
-import { histId } from './methods';
 
 // For convenience....
 const assign = Object.assign.bind(Object);
@@ -25,47 +24,50 @@ const assign = Object.assign.bind(Object);
 // ### Managing scroll positions
 // The following functions deal with managing the scroll position of the site.
 
-// Given a hash, find the element of the same id on the page, and scroll it into view.
-// If no hash is provided, scroll to the top instead.
-export function scrollHashIntoView(hash) {
-  if (hash) {
-    const el = document.getElementById(hash.substr(1));
-    if (el) el.scrollIntoView();
-    else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
-  } else window.scroll(window.pageXOffset, 0);
-}
+export const scrollMixin = C =>
+  class extends C {
+    // Given a hash, find the element of the same id on the page, and scroll it into view.
+    // If no hash is provided, scroll to the top instead.
+    scrollHashIntoView(hash) {
+      if (hash) {
+        const el = document.getElementById(hash.substr(1));
+        if (el) el.scrollIntoView();
+        else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
+      } else window.scroll(window.pageXOffset, 0);
+    }
 
-// Takes the current history state, and restores the scroll position.
-export function restoreScrollPostion() {
-  const id = histId.call(this); // TODO
-  const state = (window.history.state && window.history.state[id]) || {};
+    // Takes the current history state, and restores the scroll position.
+    restoreScrollPostion() {
+      const id = this.histId(); // TODO
+      const state = (window.history.state && window.history.state[id]) || {};
 
-  if (state.scrollTop != null) {
-    document.body.style.minHeight = state.scrollHeight;
-    window.scroll(window.pageXOffset, state.scrollTop);
-    /* document.body.style.minHeight = ''; */
-  } else if (state.hash) {
-    scrollHashIntoView(window.location.hash);
-  }
-}
+      if (state.scrollTop != null) {
+        document.body.style.minHeight = state.scrollHeight;
+        window.scroll(window.pageXOffset, state.scrollTop);
+        /* document.body.style.minHeight = ''; */
+      } else if (state.hash) {
+        this.scrollHashIntoView(window.location.hash);
+      }
+    }
 
-// TODO
-export function manageScrollPostion({ type, url: { hash } }) {
-  if (type === PUSH) {
-    scrollHashIntoView(hash);
-  }
+    // TODO
+    manageScrollPostion({ type, url: { hash } }) {
+      if (type === PUSH) {
+        this.scrollHashIntoView(hash);
+      }
 
-  if (type === POP && this.scrollRestoration) {
-    restoreScrollPostion.call(this);
-  }
-}
+      if (type === POP && this.scrollRestoration) {
+        this.restoreScrollPostion();
+      }
+    }
 
-export function saveScrollPosition(state) {
-  const id = histId.call(this);
-  return assign(state, {
-    [id]: assign(state[id] || {}, {
-      scrollTop: getScrollTop(),
-      scrollHeight: getScrollHeight(),
-    }),
-  });
-}
+    saveScrollPosition(state) {
+      const id = this.histId();
+      return assign(state, {
+        [id]: assign(state[id] || {}, {
+          scrollTop: getScrollTop(),
+          scrollHeight: getScrollHeight(),
+        }),
+      });
+    }
+  };

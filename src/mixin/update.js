@@ -17,80 +17,83 @@
 import { fragmentFromString } from '../common';
 
 import { PUSH } from './constants';
-import { tempRemoveScriptTags } from './script-hack';
+import { scriptMixin } from './script-hack';
 
 // For convenience....
 const assign = Object.assign.bind(Object);
 
-// Extracts the title of the page
-export function getTitle(fragment) {
-  return (fragment.querySelector('title') || {}).textContent;
-}
-
-// Extracts the elements to be replaced
-export function getReplaceElements(fragment) {
-  if (this.replaceIds.length > 0) {
-    return this.replaceIds.map(id => fragment.getElementById(id));
-  } else if (this.el.id) {
-    return [fragment.getElementById(this.el.id)];
-  } else {
-    const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
-    return [fragment.querySelectorAll(this.el.tagName)[index]];
-  }
-}
-
-// Takes the response string and turns it into document fragments
-// that can be inserted into the DOM.
-export function responseToContent(context) {
-  const { response } = context;
-
-  const fragment = fragmentFromString(response);
-  const title = getTitle.call(this, fragment);
-  const replaceEls = getReplaceElements.call(this, fragment);
-
-  if (replaceEls.some(x => x == null)) {
-    throw assign(context, { replaceElMissing: true });
-  }
-
-  const scripts = this.scriptSelector ? tempRemoveScriptTags.call(this, replaceEls) : [];
-
-  return assign(context, { title, replaceEls, scripts });
-}
-
-// Replaces the old elments with the new one, one-by-one.
-function replaceContentByIds(elements) {
-  this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
-    oldElement.parentNode.replaceChild(elements[i], oldElement);
-  });
-}
-
-// When no `relaceIds` are set, replace the entire content of the component (slow).
-function replaceContentWholesale([el]) {
-  this.el.innerHTML = el.innerHTML;
-}
-
-// TODO: doc
-function replaceContent(replaceEls) {
-  if (this.replaceIds.length > 0) {
-    replaceContentByIds.call(this, replaceEls);
-  } else {
-    replaceContentWholesale.call(this, replaceEls);
-  }
-}
-
-// TODO: doc
-export function updateDOM(context) {
-  try {
-    const { title, replaceEls, type } = context;
-
-    document.title = title;
-
-    if (type === PUSH) {
-      window.history.replaceState(window.history.state, title, window.location);
+export const updateMixin = C =>
+  class extends scriptMixin(C) {
+    // Extracts the title of the page
+    getTitle(fragment) {
+      return (fragment.querySelector('title') || {}).textContent;
     }
 
-    replaceContent.call(this, replaceEls);
-  } catch (error) {
-    throw assign(context, { error });
-  }
-}
+    // Extracts the elements to be replaced
+    getReplaceElements(fragment) {
+      if (this.replaceIds.length > 0) {
+        return this.replaceIds.map(id => fragment.getElementById(id));
+      } else if (this.el.id) {
+        return [fragment.getElementById(this.el.id)];
+      } else {
+        const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
+        return [fragment.querySelectorAll(this.el.tagName)[index]];
+      }
+    }
+
+    // Takes the response string and turns it into document fragments
+    // that can be inserted into the DOM.
+    responseToContent(context) {
+      const { response } = context;
+
+      const fragment = fragmentFromString(response);
+      const title = this.getTitle(fragment);
+      const replaceEls = this.getReplaceElements(fragment);
+
+      if (replaceEls.some(x => x == null)) {
+        throw assign(context, { replaceElMissing: true });
+      }
+
+      const scripts = this.scriptSelector ? this.tempRemoveScriptTags(replaceEls) : [];
+
+      return assign(context, { title, replaceEls, scripts });
+    }
+
+    // Replaces the old elments with the new one, one-by-one.
+    replaceContentByIds(elements) {
+      this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
+        oldElement.parentNode.replaceChild(elements[i], oldElement);
+      });
+    }
+
+    // When no `relaceIds` are set, replace the entire content of the component (slow).
+    replaceContentWholesale([el]) {
+      this.el.innerHTML = el.innerHTML;
+    }
+
+    // TODO: doc
+    replaceContent(replaceEls) {
+      if (this.replaceIds.length > 0) {
+        this.replaceContentByIds(replaceEls);
+      } else {
+        this.replaceContentWholesale(replaceEls);
+      }
+    }
+
+    // TODO: doc
+    updateDOM(context) {
+      try {
+        const { title, replaceEls, type } = context;
+
+        document.title = title;
+
+        if (type === PUSH) {
+          window.history.replaceState(window.history.state, title, window.location);
+        }
+
+        this.replaceContent(replaceEls);
+      } catch (error) {
+        throw assign(context, { error });
+      }
+    }
+  };

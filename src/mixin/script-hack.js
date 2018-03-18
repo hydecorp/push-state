@@ -29,71 +29,73 @@ const assign = Object.assign.bind(Object);
 
 // ### Experimental script feature
 // TODO
+export const scriptMixin = C =>
+  class extends C {
+    // This function removes all script tags (as query'ed by `scriptSelector`) from the response.
+    tempRemoveScriptTags(replaceEls) {
+      const scripts = [];
 
-// This function removes all script tags (as query'ed by `scriptSelector`) from the response.
-export function tempRemoveScriptTags(replaceEls) {
-  const scripts = [];
+      replaceEls.forEach(docfrag =>
+        Array.from(docfrag.querySelectorAll(this.scriptSelector)).forEach((script) => {
+          const pair = [script, script.previousSibling];
+          script.parentNode.removeChild(script);
+          scripts.push(pair);
+        }));
 
-  replaceEls.forEach(docfrag =>
-    Array.from(docfrag.querySelectorAll(this.scriptSelector)).forEach((script) => {
-      const pair = [script, script.previousSibling];
-      script.parentNode.removeChild(script);
-      scripts.push(pair);
-    }));
+      return scripts;
+    }
 
-  return scripts;
-}
+    // Attempts to (synchronously) insert a `script` tag into the DOM, *before* a given `ref` element.
+    insertScript([script, ref]) {
+      // Temporarily overwrite `document.wirte` to simulate its behavior during the initial load.
+      // This only works because scripts are inserted one-at-a-time (via `concatMap`).
+      const originalWrite = document.write;
 
-// Attempts to (synchronously) insert a `script` tag into the DOM, *before* a given `ref` element.
-function insertScript([script, ref]) {
-  // Temporarily overwrite `document.wirte` to simulate its behavior during the initial load.
-  // This only works because scripts are inserted one-at-a-time (via `concatMap`).
-  const originalWrite = document.write;
+      document.write = (...args) => {
+        const temp = document.createElement('div');
+        temp.innerHTML = args.join();
+        Array.from(temp.childNodes).forEach((node) => {
+          ref.parentNode.insertBefore(node, ref.nextSibling);
+        });
+      };
 
-  document.write = (...args) => {
-    const temp = document.createElement('div');
-    temp.innerHTML = args.join();
-    Array.from(temp.childNodes).forEach((node) => {
-      ref.parentNode.insertBefore(node, ref.nextSibling);
-    });
+      // If the script tag needs to fetch its source code, we insert it into the DOM,
+      // but we return an observable that only completes once the script has fired its `load` event.
+      return script.src !== ''
+        ? Observable.create((observer) => {
+          script.addEventListener('load', (x) => {
+            document.write = originalWrite;
+            observer.complete(x);
+          });
+
+          script.addEventListener('error', (x) => {
+            document.write = originalWrite;
+            observer.error(x);
+          });
+
+          ref.parentNode.insertBefore(script, ref.nextSibling);
+        })
+        : // Otherwise we insert it into the DOM and reset the `document.write` function.
+        of({}).pipe(tap(() => {
+          ref.parentNode.insertBefore(script, ref.nextSibling);
+          document.write = originalWrite;
+        }));
+    }
+
+    // Takes a list of `script`--`ref` pairs, and inserts them into the DOM one-by-one.
+    reinsertScriptTags(context) {
+      if (!this.scriptSelector) return of(context);
+
+      const { scripts } = context;
+
+      return from(scripts)
+        .pipe(
+          concatMap(this.insertScript.bind(this)),
+          catchError((error) => {
+            throw assign(context, { error });
+          }),
+        )
+        .toPromise()
+        .then(() => context);
+    }
   };
-
-  // If the script tag needs to fetch its source code, we insert it into the DOM,
-  // but we return an observable that only completes once the script has fired its `load` event.
-  return script.src !== ''
-    ? Observable.create((observer) => {
-      script.addEventListener('load', (x) => {
-        document.write = originalWrite;
-        observer.complete(x);
-      });
-
-      script.addEventListener('error', (x) => {
-        document.write = originalWrite;
-        observer.error(x);
-      });
-
-      ref.parentNode.insertBefore(script, ref.nextSibling);
-    })
-    : // Otherwise we insert it into the DOM and reset the `document.write` function.
-    of({}).pipe(tap(() => {
-      ref.parentNode.insertBefore(script, ref.nextSibling);
-      document.write = originalWrite;
-    }));
-}
-
-// Takes a list of `script`--`ref` pairs, and inserts them into the DOM one-by-one.
-export function reinsertScriptTags(context) {
-  if (!this.scriptSelector) return of(context);
-
-  const { scripts } = context;
-
-  return from(scripts)
-    .pipe(
-      concatMap(insertScript),
-      catchError((error) => {
-        throw assign(context, { error });
-      }),
-    )
-    .toPromise()
-    .then(() => context);
-}

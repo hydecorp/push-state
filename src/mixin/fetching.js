@@ -27,45 +27,48 @@ import { zip } from 'rxjs/_esm5/operators/zip';
 // For convenience....
 const assign = Object.assign.bind(Object);
 
-// ## Fetching
-export function hrefToAjax({ url }) {
-  return {
-    method: 'GET',
-    responseType: 'text',
-    url,
+export const fetchMixin = C =>
+  class extends C {
+    // ## Fetching
+    hrefToAjax({ url }) {
+      return {
+        method: 'GET',
+        responseType: 'text',
+        url,
+      };
+    }
+
+    // The `ajax` method will throw when it encoutners an a 400+ status code,
+    // however these are still valid responses from the server that can be shown using this component.
+    // This assumes error pages have the same HTML strcuture as the other pages though.
+    recoverIfResponse(context, error) {
+      const { status, xhr } = error;
+
+      // If we have a response, recover and continue with the pipeline.
+      if (xhr && xhr.response && status > 400) {
+        return of(assign(context, { response: xhr.response }));
+      }
+
+      // If we don't have a response, this is an acutal error that should be dealt with.
+      return of(assign(context, { error }));
+    }
+
+    // This function returns the request that matches a given URL.
+    // The way the pipeline is set up,
+    // it is either the `latestPrefetch` value (when the request is already completed),
+    // or the next value on the prefetch observable (when still in progress).
+    getFetch$({ url: { href } }, latestPrefetch, prefetch$) {
+      return href === latestPrefetch.url.href && latestPrefetch.error == null
+        ? of(latestPrefetch)
+        : prefetch$.pipe(take(1));
+    }
+
+    // Returns an observable that emits exactly one notice, which contains the response.
+    // It will not emit until an (optional) page transition animation completes.
+    getResponse(prefetch$, [context, latestPrefetch]) {
+      return this.getFetch$(context, latestPrefetch, prefetch$).pipe(
+        map(fetch => assign(fetch, context)),
+        zip(this.animPromise, x => x),
+      );
+    }
   };
-}
-
-// The `ajax` method will throw when it encoutners an a 400+ status code,
-// however these are still valid responses from the server that can be shown using this component.
-// This assumes error pages have the same HTML strcuture as the other pages though.
-export function recoverIfResponse(context, error) {
-  const { status, xhr } = error;
-
-  // If we have a response, recover and continue with the pipeline.
-  if (xhr && xhr.response && status > 400) {
-    return of(assign(context, { response: xhr.response }));
-  }
-
-  // If we don't have a response, this is an acutal error that should be dealt with.
-  return of(assign(context, { error }));
-}
-
-// This function returns the request that matches a given URL.
-// The way the pipeline is set up,
-// it is either the `latestPrefetch` value (when the request is already completed),
-// or the next value on the prefetch observable (when still in progress).
-function getFetch$({ url: { href } }, latestPrefetch, prefetch$) {
-  return href === latestPrefetch.url.href && latestPrefetch.error == null
-    ? of(latestPrefetch)
-    : prefetch$.pipe(take(1));
-}
-
-// Returns an observable that emits exactly one notice, which contains the response.
-// It will not emit until an (optional) page transition animation completes.
-export function getResponse(prefetch$, [context, latestPrefetch]) {
-  return getFetch$(context, latestPrefetch, prefetch$).pipe(
-    map(fetch => assign(fetch, context)),
-    zip(this.animPromise, x => x),
-  );
-}

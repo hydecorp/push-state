@@ -12,7 +12,7 @@ The Web Component is the preferred way of using **hy-push-state**, but requires 
 This is the version that is going to have native support across all major browsers the soonest.
 
 ~~~html
-<script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state-module.min.js"></script>
+<script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/module.js"></script>
 
 <hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
 ~~~
@@ -21,7 +21,7 @@ This is the version that is going to have native support across all major browse
 Some browsers have put support for HTML Imports on hold, but it is easily polyfilled.
 
 ~~~html
-<link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.min.html">
+<link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
 
 <hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
 ~~~
@@ -44,7 +44,7 @@ Note that this will result in possibly hundreds of separate requests.
 <div id="pushStateEl" data-link-selector="a[href]"><!--content--></div>
 
 <script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
-<script src="https://unpkg.com/hy-push-state/dist/jquery/hy-push-state.min.js"></script>
+<script src="https://unpkg.com/hy-push-state/dist/jquery"></script>
 <script>
   $('#pushStateEl').pushstate()
 </script>
@@ -54,7 +54,7 @@ Note that this will result in possibly hundreds of separate requests.
 ~~~html
 <div id="pushStateEl"><!--content--></div>
 
-<script src="https://unpkg.com/hy-push-state/dist/vanilla/hy-push-state.min.js"></script>
+<script src="https://unpkg.com/hy-push-state/dist/vanilla"></script>
 <script>
   var HyPushState = window.hyPushState.HyPushState;
   var pushState = new HyPushState(window.pushStateEl, {
@@ -65,21 +65,21 @@ Note that this will result in possibly hundreds of separate requests.
 
 
 ## Size
-The size of the minified bundle hovers around 80kb, or ~19kb gziped.
+The size of the minified bundle hovers around 90kb, or ~20kb gziped.
 
 ```
-320K dist/jquery/hy-push-state.js
- 79K dist/jquery/hy-push-state.min.js
-309K dist/mixin/hy-push-state.js
- 76K dist/mixin/hy-push-state.min.js
-312K dist/vanilla/hy-push-state.js
- 76K dist/vanilla/hy-push-state.min.js
-322K dist/webcomponent/hy-push-state-html-import.js
- 81K dist/webcomponent/hy-push-state-html-import.min.js
-323K dist/webcomponent/hy-push-state-module.js
- 81K dist/webcomponent/hy-push-state-module.min.js
-322K dist/webcomponent/hy-push-state.js
- 81K dist/webcomponent/hy-push-state.min.js
+340K dist/jquery/index.js
+ 89K dist/jquery/index.min.js
+329K dist/mixin/index.js
+ 85K dist/mixin/index.min.js
+332K dist/vanilla/index.js
+ 86K dist/vanilla/index.min.js
+342K dist/webcomponent/html-import.js
+ 90K dist/webcomponent/html-import.min.js
+342K dist/webcomponent/index.js
+ 90K dist/webcomponent/index.min.js
+343K dist/webcomponent/module.js
+ 90K dist/webcomponent/module.min.js
 ```
 
 

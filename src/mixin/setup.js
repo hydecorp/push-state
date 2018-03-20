@@ -24,15 +24,12 @@ import { merge } from 'rxjs/_esm5/observable/merge';
 
 import { ajax } from 'rxjs/_esm5/observable/dom/ajax';
 
-import { animationFrame } from 'rxjs/_esm5/scheduler/animationFrame';
-
 import { catchError } from 'rxjs/_esm5/operators/catchError';
 import { tap } from 'rxjs/_esm5/operators/tap';
 import { distinctUntilChanged } from 'rxjs/_esm5/operators/distinctUntilChanged';
 import { filter } from 'rxjs/_esm5/operators/filter';
 import { map } from 'rxjs/_esm5/operators/map';
 import { mapTo } from 'rxjs/_esm5/operators/mapTo';
-import { observeOn } from 'rxjs/_esm5/operators/observeOn';
 import { partition } from 'rxjs/_esm5/operators/partition';
 import { pairwise } from 'rxjs/_esm5/operators/pairwise';
 import { share } from 'rxjs/_esm5/operators/share';
@@ -175,16 +172,13 @@ export const setupObservablesMixin = C =>
       // TODO: doc
       const main$ = fetchOk$.pipe(
         map(this.responseToContent.bind(this)),
-        observeOn(animationFrame),
-        tap({
-          next: (context) => {
-            this.onReady(context);
-            this.updateDOM(context);
-            this.onAfter(context);
-            this.manageScrollPostion(context);
-          },
-          error: e => this.onDOMError(e),
+        tap((context) => {
+          this.onReady(context);
+          this.updateDOM(context);
+          this.onAfter(context);
+          this.manageScrollPostion(context);
         }),
+        tap({ error: e => this.onDOMError(e) }),
         catchError((e, c) => c),
 
         // If the experimental script feature is enabled,

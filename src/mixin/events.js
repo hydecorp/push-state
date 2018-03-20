@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from 'rxjs/_esm5/Observable';
-import { timer } from 'rxjs/_esm5/observable/timer';
+import { Observable } from "rxjs/_esm5/Observable";
+import { timer } from "rxjs/_esm5/observable/timer";
 
 // For convenience....
 const assign = Object.assign.bind(Object);
@@ -35,14 +35,17 @@ export const eventMixin = C =>
       // The `waitUntil` function lets users of this component override the animation promise.
       // This allows for event-based code execution, rather than timing-based, which prevents hiccups
       // and glitches when, for example, painting takes longer than expected.
-      const waitUntil = (promise) => {
-        if (process.env.DEBUG && !(promise instanceof Promise || promise instanceof Observable)) {
-          console.warn('waitUntil expects a Promise as first argument.');
+      const waitUntil = promise => {
+        if (
+          process.env.DEBUG &&
+          !(promise instanceof Promise || promise instanceof Observable)
+        ) {
+          console.warn("waitUntil expects a Promise as first argument.");
         }
         this.animPromise = promise;
       };
 
-      this.fireEvent('start', { detail: assign(context, { waitUntil }) });
+      this.fireEvent("start", { detail: assign(context, { waitUntil }) });
     }
 
     // Example usage of `waitUntil`:
@@ -74,10 +77,12 @@ export const eventMixin = C =>
           const ids = this.replaceIds
             .concat(this.el.id || [])
             .map(x => `#${x}`)
-            .join(', ');
-          console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${
-            window.location
-          }'. Opening the link directly.`);
+            .join(", ");
+          console.warn(
+            `Couldn't find one or more ids of '${ids}' in the document at '${
+              window.location
+            }'. Opening the link directly.`
+          );
         }
 
         // To open the link directly, we first pop one entry off the browser history.
@@ -92,38 +97,38 @@ export const eventMixin = C =>
         // If it's a different error, throw the generic `error` event.
       } else {
         if (process.env.DEBUG) console.error(context);
-        this.fireEvent('error', { detail: context });
+        this.fireEvent("error", { detail: context });
       }
     }
 
     // If there is a network error during (pre-) fetching, fire `networkerror` event.
     onNetworkError(context) {
       if (process.env.DEBUG) console.error(context);
-      this.fireEvent('networkerror', { detail: context });
+      this.fireEvent("networkerror", { detail: context });
     }
 
     // When using the experimental script feature,
     // fire `scripterror` event if something goes wrong during script insertion.
     onError(context) {
       if (process.env.DEBUG) console.error(context);
-      this.fireEvent('error', { detail: context });
+      this.fireEvent("error", { detail: context });
     }
 
     // #### Others
     // These event callbacks simply fire an event and pass the context as `detail`.
     onReady(context) {
-      this.fireEvent('ready', { detail: context });
+      this.fireEvent("ready", { detail: context });
     }
 
     onAfter(context) {
-      this.fireEvent('after', { detail: context });
+      this.fireEvent("after", { detail: context });
     }
 
     onProgress(context) {
-      this.fireEvent('progress', { detail: context });
+      this.fireEvent("progress", { detail: context });
     }
 
     onLoad(context) {
-      this.fireEvent('load', { detail: context });
+      this.fireEvent("load", { detail: context });
     }
   };

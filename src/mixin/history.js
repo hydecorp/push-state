@@ -18,9 +18,9 @@
 // This file contains helper funtions related to managing the History API.
 
 // ## Imports
-import { PUSH, INIT } from './constants';
+import { PUSH, INIT } from "./constants";
 // import { histId } from './methods';
-import { scrollMixin } from './scrolling';
+import { scrollMixin } from "./scrolling";
 
 // For convenience....
 const assign = Object.assign.bind(Object);
@@ -32,8 +32,13 @@ export const historyMixin = C =>
     updateHistoryState({ type, replace, url: { href, hash } }) {
       if (type === PUSH || type === INIT) {
         const id = this.histId();
-        const method = replace || href === window.location.href ? 'replaceState' : 'pushState';
-        const state = assign(window.history.state || {}, { [id]: { hash: !!hash } });
+        const method =
+          replace || href === window.location.href
+            ? "replaceState"
+            : "pushState";
+        const state = assign(window.history.state || {}, {
+          [id]: { hash: !!hash }
+        });
         window.history[method](state, document.title, href);
       }
     }
@@ -44,12 +49,16 @@ export const historyMixin = C =>
       if (type === PUSH) {
         const id = this.histId();
         const currState = assign(window.history.state, {
-          [id]: assign(window.history.state[id], { hash: true }),
+          [id]: assign(window.history.state[id], { hash: true })
         });
         const nextState = {
-          [id]: { hash: true },
+          [id]: { hash: true }
         };
-        window.history.replaceState(currState, document.title, window.location.href);
+        window.history.replaceState(
+          currState,
+          document.title,
+          window.location.href
+        );
         window.history.pushState(nextState, document.title, href);
       }
 

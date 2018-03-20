@@ -32,18 +32,22 @@
 
 // Importing the hy-compontent base libary,
 // which helps with making multiple versions of the component (Vanilla JS, WebComponent, etc...).
-import { componentMixin, COMPONENT_FEATURE_TESTS, Set } from 'hy-component/src/component';
-import { array, bool, number, regex, string } from 'hy-component/src/types';
+import {
+  componentMixin,
+  COMPONENT_FEATURE_TESTS,
+  Set
+} from "hy-component/src/component";
+import { array, bool, number, regex, string } from "hy-component/src/types";
 
-import { Subject } from 'rxjs/_esm5/Subject';
-import { takeUntil } from 'rxjs/_esm5/operators/takeUntil';
+import { Subject } from "rxjs/_esm5/Subject";
+import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 
 // Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
 // but sufficient for this compoennt.
-import { URL } from '../url';
+import { URL } from "../url";
 
-import { INIT, HINT, PUSH, POP } from './constants';
-import { setupObservablesMixin } from './setup';
+import { INIT, HINT, PUSH, POP } from "./constants";
+import { setupObservablesMixin } from "./setup";
 
 export { INIT, HINT, PUSH, POP };
 
@@ -53,12 +57,12 @@ export { INIT, HINT, PUSH, POP };
 // is part of the code below.
 export const MIXIN_FEATURE_TESTS = new Set([
   ...COMPONENT_FEATURE_TESTS,
-  'documentfragment',
-  'eventlistener',
-  'history',
-  'promises',
-  'queryselector',
-  'requestanimationframe',
+  "documentfragment",
+  "eventlistener",
+  "history",
+  "promises",
+  "queryselector",
+  "requestanimationframe"
 ]);
 
 export { Set };
@@ -76,7 +80,7 @@ export const pushStateMixin = C =>
   class extends setupObservablesMixin(componentMixin(C)) {
     // The name of the component (required by hy-component)
     static get componentName() {
-      return 'hy-push-state';
+      return "hy-push-state";
     }
 
     // ### Options
@@ -85,11 +89,11 @@ export const pushStateMixin = C =>
     static get defaults() {
       return {
         replaceIds: [],
-        linkSelector: 'a[href]:not(.no-push-state)',
+        linkSelector: "a[href]:not(.no-push-state)",
         scrollRestoration: false,
         duration: 0,
         hrefRegex: null,
-        scriptSelector: null,
+        scriptSelector: null
         /* prefetch: true, */
         /* repeatDelay: 500, */
       };
@@ -102,7 +106,7 @@ export const pushStateMixin = C =>
         scrollRestoration: bool,
         duration: number,
         hrefRegex: regex,
-        scriptSelector: string,
+        scriptSelector: string
         /* prefetch: bool, */
         /* repeatDelay: number, */
       };
@@ -115,7 +119,7 @@ export const pushStateMixin = C =>
         },
         scrollRestoration(x) {
           this.scrollRestoration$.next(x);
-        },
+        }
       };
     }
 
@@ -145,19 +149,23 @@ export const pushStateMixin = C =>
       }
 
       // Setting up scroll restoration
-      if ('scrollRestoration' in window.history) {
+      if ("scrollRestoration" in window.history) {
         const orig = window.history.scrollRestoration;
 
-        this.scrollRestoration$.pipe(takeUntil(this.teardown$)).subscribe((scrollRestoration) => {
-          window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
-        });
+        this.scrollRestoration$
+          .pipe(takeUntil(this.teardown$))
+          .subscribe(scrollRestoration => {
+            window.history.scrollRestoration = scrollRestoration
+              ? "manual"
+              : orig;
+          });
       }
 
       // If restore the last scroll position, if any.
       this.restoreScrollPostion();
 
       // Remember the current scroll position (for F5/reloads).
-      window.addEventListener('beforeunload', this.saveScrollHistoryState);
+      window.addEventListener("beforeunload", this.saveScrollHistoryState);
 
       // Calling the [setup observables function](./setup.md) function.
       this.setupObservables();
@@ -167,7 +175,7 @@ export const pushStateMixin = C =>
       this.updateHistoryState({ type: INIT, replace: true, url });
 
       // After all this is done, we can fire the one-time `init` event...
-      this.fireEvent('init');
+      this.fireEvent("init");
 
       // ...and our custom `load` event, which gets fired on every page change.
       // We provide similar data as subsequent `load` events,
@@ -178,12 +186,12 @@ export const pushStateMixin = C =>
         title: this.getTitle(document),
         replaceEls: this.getReplaceElements(document),
         url,
-        cacheNr: this.cacheNr,
+        cacheNr: this.cacheNr
       });
     }
 
     disconnectComponent() {
-      window.removeEventListener('beforeunload', this.saveScrollHistoryState);
+      window.removeEventListener("beforeunload", this.saveScrollHistoryState);
       this.teardown$.next({});
     }
 
@@ -193,7 +201,7 @@ export const pushStateMixin = C =>
       this.reload$.next({
         type: PUSH,
         url: new URL(url, window.location),
-        cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
+        cacheNr: ++this.cacheNr // eslint-disable-line no-plusplus
       });
     }
 
@@ -202,7 +210,7 @@ export const pushStateMixin = C =>
         type: PUSH,
         url: new URL(window.location.href),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
-        replace: true,
+        replace: true
       });
     }
 
@@ -211,7 +219,7 @@ export const pushStateMixin = C =>
         type: PUSH,
         url: new URL(url, window.location),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
-        replace: true,
+        replace: true
       });
     }
   };

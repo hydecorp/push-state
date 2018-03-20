@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { isExternal, isHash } from '../common';
+import { isExternal, isHash } from "../common";
 
-import { PUSH, POP } from './constants';
+import { PUSH, POP } from "./constants";
 
 // ## Functions
 // What you will notice about the following helper functions is that many make reference to `this`.
@@ -33,7 +33,11 @@ export const helperMixin = C =>
 
     // ### Event filters
     shouldLoadAnchor(anchor, hrefRegex) {
-      return anchor && anchor.target === '' && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
+      return (
+        anchor &&
+        anchor.target === "" &&
+        (!hrefRegex || anchor.href.search(hrefRegex) !== -1)
+      );
     }
 
     isPushEvent({ metaKey, ctrlKey, currentTarget }) {
@@ -56,7 +60,13 @@ export const helperMixin = C =>
     // Determines if a pair of context's constitutes a hash change (vs. a page chagne)
     // We take as a hash change when the pathname of the URLs is the same,
     // and the `hash` isn't empty.
-    isHashChange([{ url: { pathname: prevPathname } }, { url: { pathname, hash }, type }]) {
-      return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ''));
+    isHashChange([
+      { url: { pathname: prevPathname } },
+      { url: { pathname, hash }, type }
+    ]) {
+      return (
+        pathname === prevPathname &&
+        (type === POP || (type === PUSH && hash !== ""))
+      );
     }
   };

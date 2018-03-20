@@ -38,13 +38,17 @@ export function isExternal({ protocol, host }) {
 }
 
 export function isHash({ hash, origin, pathname }) {
-  return hash !== '' && origin === window.location.origin && pathname === window.location.pathname;
+  return (
+    hash !== "" &&
+    origin === window.location.origin &&
+    pathname === window.location.pathname
+  );
 }
 
 export function getScrollHeight() {
   const h = document.documentElement;
   const b = document.body;
-  const sh = 'scrollHeight';
+  const sh = "scrollHeight";
   return h[sh] || b[sh];
 }
 

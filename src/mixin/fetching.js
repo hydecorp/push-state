@@ -18,11 +18,11 @@
 // This file contains helper functions related to fetching new content.
 
 // ## Imports
-import { of } from 'rxjs/_esm5/observable/of';
+import { of } from "rxjs/_esm5/observable/of";
 
-import { map } from 'rxjs/_esm5/operators/map';
-import { take } from 'rxjs/_esm5/operators/take';
-import { zip } from 'rxjs/_esm5/operators/zip';
+import { map } from "rxjs/_esm5/operators/map";
+import { take } from "rxjs/_esm5/operators/take";
+import { zip } from "rxjs/_esm5/operators/zip";
 
 // For convenience....
 const assign = Object.assign.bind(Object);
@@ -32,9 +32,9 @@ export const fetchMixin = C =>
     // ## Fetching
     hrefToAjax({ url }) {
       return {
-        method: 'GET',
-        responseType: 'text',
-        url,
+        method: "GET",
+        responseType: "text",
+        url
       };
     }
 
@@ -68,7 +68,7 @@ export const fetchMixin = C =>
     getResponse(prefetch$, [context, latestPrefetch]) {
       return this.getFetch$(context, latestPrefetch, prefetch$).pipe(
         map(fetch => assign(fetch, context)),
-        zip(this.animPromise, x => x),
+        zip(this.animPromise, x => x)
       );
     }
   };

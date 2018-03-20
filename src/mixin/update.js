@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { fragmentFromString } from '../common';
+import { fragmentFromString } from "../common";
 
-import { PUSH } from './constants';
-import { scriptMixin } from './script-hack';
+import { PUSH } from "./constants";
+import { scriptMixin } from "./script-hack";
 
 // For convenience....
 const assign = Object.assign.bind(Object);
@@ -26,7 +26,7 @@ export const updateMixin = C =>
   class extends scriptMixin(C) {
     // Extracts the title of the page
     getTitle(fragment) {
-      return (fragment.querySelector('title') || {}).textContent;
+      return (fragment.querySelector("title") || {}).textContent;
     }
 
     // Extracts the elements to be replaced
@@ -36,7 +36,9 @@ export const updateMixin = C =>
       } else if (this.el.id) {
         return [fragment.getElementById(this.el.id)];
       } else {
-        const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
+        const index = Array.from(
+          document.getElementsByTagName(this.el.tagName)
+        ).indexOf(this.el);
         return [fragment.querySelectorAll(this.el.tagName)[index]];
       }
     }
@@ -54,16 +56,20 @@ export const updateMixin = C =>
         throw assign(context, { replaceElMissing: true });
       }
 
-      const scripts = this.scriptSelector ? this.tempRemoveScriptTags(replaceEls) : [];
+      const scripts = this.scriptSelector
+        ? this.tempRemoveScriptTags(replaceEls)
+        : [];
 
       return assign(context, { title, replaceEls, scripts });
     }
 
     // Replaces the old elments with the new one, one-by-one.
     replaceContentByIds(elements) {
-      this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
-        oldElement.parentNode.replaceChild(elements[i], oldElement);
-      });
+      this.replaceIds
+        .map(id => document.getElementById(id))
+        .forEach((oldElement, i) => {
+          oldElement.parentNode.replaceChild(elements[i], oldElement);
+        });
     }
 
     // When no `relaceIds` are set, replace the entire content of the component (slow).
@@ -88,7 +94,11 @@ export const updateMixin = C =>
         document.title = title;
 
         if (type === PUSH) {
-          window.history.replaceState(window.history.state, title, window.location);
+          window.history.replaceState(
+            window.history.state,
+            title,
+            window.location
+          );
         }
 
         this.replaceContent(replaceEls);

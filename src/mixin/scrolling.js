@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { getScrollTop, getScrollHeight } from '../common';
+import { getScrollTop, getScrollHeight } from "../common";
 
-import { PUSH, POP } from './constants';
+import { PUSH, POP } from "./constants";
 
 // For convenience....
 const assign = Object.assign.bind(Object);
@@ -32,7 +32,8 @@ export const scrollMixin = C =>
       if (hash) {
         const el = document.getElementById(hash.substr(1));
         if (el) el.scrollIntoView();
-        else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
+        else if (process.env.DEBUG)
+          console.warn(`Can't find element with id ${hash}`);
       } else window.scroll(window.pageXOffset, 0);
     }
 
@@ -66,8 +67,8 @@ export const scrollMixin = C =>
       return assign(state, {
         [id]: assign(state[id] || {}, {
           scrollTop: getScrollTop(),
-          scrollHeight: getScrollHeight(),
-        }),
+          scrollHeight: getScrollHeight()
+        })
       });
     }
   };

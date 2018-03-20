@@ -16,7 +16,7 @@
 
 // These are some 'types' that we use throught the component.
 // Going with strings here instead of classes + instanceof / dynamic dispatch for simplicity.
-export const INIT = 'init';
-export const HINT = 'hint';
-export const PUSH = 'push';
-export const POP = 'pop';
+export const INIT = "init";
+export const HINT = "hint";
+export const PUSH = "push";
+export const POP = "pop";

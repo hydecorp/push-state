@@ -14,52 +14,58 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from 'rxjs/_esm5/Observable';
-import { Subject } from 'rxjs/_esm5/Subject';
+import { Observable } from "rxjs/_esm5/Observable";
+import { Subject } from "rxjs/_esm5/Subject";
 
 // Importing the subset of RxJS functions that we are going to use.
-import { defer } from 'rxjs/_esm5/observable/defer';
-import { fromEvent } from 'rxjs/_esm5/observable/fromEvent';
-import { merge } from 'rxjs/_esm5/observable/merge';
+import { defer } from "rxjs/_esm5/observable/defer";
+import { fromEvent } from "rxjs/_esm5/observable/fromEvent";
+import { merge } from "rxjs/_esm5/observable/merge";
 
-import { ajax } from 'rxjs/_esm5/observable/dom/ajax';
+import { ajax } from "rxjs/_esm5/observable/dom/ajax";
 
-import { catchError } from 'rxjs/_esm5/operators/catchError';
-import { tap } from 'rxjs/_esm5/operators/tap';
-import { distinctUntilChanged } from 'rxjs/_esm5/operators/distinctUntilChanged';
-import { filter } from 'rxjs/_esm5/operators/filter';
-import { map } from 'rxjs/_esm5/operators/map';
-import { mapTo } from 'rxjs/_esm5/operators/mapTo';
-import { partition } from 'rxjs/_esm5/operators/partition';
-import { pairwise } from 'rxjs/_esm5/operators/pairwise';
-import { share } from 'rxjs/_esm5/operators/share';
-import { startWith } from 'rxjs/_esm5/operators/startWith';
-import { switchMap } from 'rxjs/_esm5/operators/switchMap';
-import { takeUntil } from 'rxjs/_esm5/operators/takeUntil';
-import { withLatestFrom } from 'rxjs/_esm5/operators/withLatestFrom';
+import { catchError } from "rxjs/_esm5/operators/catchError";
+import { tap } from "rxjs/_esm5/operators/tap";
+import { distinctUntilChanged } from "rxjs/_esm5/operators/distinctUntilChanged";
+import { filter } from "rxjs/_esm5/operators/filter";
+import { map } from "rxjs/_esm5/operators/map";
+import { mapTo } from "rxjs/_esm5/operators/mapTo";
+import { partition } from "rxjs/_esm5/operators/partition";
+import { pairwise } from "rxjs/_esm5/operators/pairwise";
+import { share } from "rxjs/_esm5/operators/share";
+import { startWith } from "rxjs/_esm5/operators/startWith";
+import { switchMap } from "rxjs/_esm5/operators/switchMap";
+import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
+import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { matchesAncestors } from '../common';
-import { URL } from '../url';
+import { matchesAncestors } from "../common";
+import { URL } from "../url";
 
-import { HINT, PUSH, POP } from './constants';
-import { unsubscribeWhen } from './operators';
+import { HINT, PUSH, POP } from "./constants";
+import { unsubscribeWhen } from "./operators";
 
-import { helperMixin } from './methods';
-import { historyMixin } from './history';
-import { fetchMixin } from './fetching';
-import { updateMixin } from './update';
-import { eventMixin } from './events';
+import { helperMixin } from "./methods";
+import { historyMixin } from "./history";
+import { fetchMixin } from "./fetching";
+import { updateMixin } from "./update";
+import { eventMixin } from "./events";
 
 // For convenience...
 const assign = Object.assign.bind(Object);
 
 export const setupObservablesMixin = C =>
-  class extends eventMixin(updateMixin(fetchMixin(historyMixin(helperMixin(C))))) {
+  class extends eventMixin(
+    updateMixin(fetchMixin(historyMixin(helperMixin(C))))
+  ) {
     // A compare function for contexts, used in combination with `distinctUntilChanged`.
     // We use `cacheNr` as it is a convenient (hacky) way of circumventing
     // `distinctUntilChanged` when retrying requests.
     compareContext(p, q) {
-      return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
+      return (
+        p.url.href === q.url.href &&
+        p.error === q.error &&
+        p.cacheNr === q.cacheNr
+      );
     }
 
     // ### Setup observable
@@ -82,25 +88,27 @@ export const setupObservablesMixin = C =>
           url: new URL(event.currentTarget.href),
           anchor: event.currentTarget,
           event,
-          cacheNr: this.cacheNr,
+          cacheNr: this.cacheNr
         })),
         tap(({ event }) => {
           event.preventDefault();
           this.saveScrollHistoryState();
-        }),
+        })
       );
 
       // In additon to `HINT` and `PUSH` events, there's also `POP` events, which are caused by
       // modifying the browser history, e.g. clicking the back button, etc.
-      const pop$ = fromEvent(window, 'popstate').pipe(
+      const pop$ = fromEvent(window, "popstate").pipe(
         takeUntil(this.teardown$),
-        filter(() => window.history.state && window.history.state[this.histId()]),
+        filter(
+          () => window.history.state && window.history.state[this.histId()]
+        ),
         map(event => ({
           type: POP,
           url: new URL(window.location),
           event,
-          cacheNr: this.cacheNr,
-        })),
+          cacheNr: this.cacheNr
+        }))
       );
 
       const reload$ = this.reload$.pipe(takeUntil(this.teardown$));
@@ -111,7 +119,7 @@ export const setupObservablesMixin = C =>
           startWith({ url: new URL(window.location) }),
           pairwise(),
           share(),
-          partition(this.isHashChange),
+          partition(this.isHashChange)
         )
         .map(obs$ => obs$.pipe(map(([, x]) => x), share()));
 
@@ -122,7 +130,8 @@ export const setupObservablesMixin = C =>
       const pauser$ = defer(() =>
         // A page change event means we want to pause prefetching, while
         // a response event means we want to resume prefetching.
-        merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false))))
+        merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false)))
+      )
         // Start with `false`, i.e. we want the prefetch pipelien to be active
         .pipe(startWith(false), share());
 
@@ -136,8 +145,8 @@ export const setupObservablesMixin = C =>
           url: new URL(event.currentTarget.href),
           anchor: event.currentTarget,
           event,
-          cacheNr: this.cacheNr,
-        })),
+          cacheNr: this.cacheNr
+        }))
       );
 
       // The stream of (pre-)fetch events.
@@ -148,31 +157,34 @@ export const setupObservablesMixin = C =>
         switchMap(context =>
           ajax(this.hrefToAjax(context)).pipe(
             map(({ response }) => assign(context, { response })),
-            catchError(error => this.recoverIfResponse(context, error)),
-          )),
+            catchError(error => this.recoverIfResponse(context, error))
+          )
+        ),
         // Start with some value so `withLatestFrom` below doesn't "block"
         startWith({ url: {} }),
-        share(),
+        share()
       );
 
       // TODO: doc
       this.fetch$ = page$.pipe(
-        tap((context) => {
+        tap(context => {
           this.updateHistoryState(context);
           this.onStart(context);
         }),
         withLatestFrom(prefetch$),
         switchMap(this.getResponse.bind(this, prefetch$)),
-        share(),
+        share()
       );
 
       // TODO: doc
-      const [fetchOk$, fetchError$] = this.fetch$.pipe(partition(({ error }) => !error));
+      const [fetchOk$, fetchError$] = this.fetch$.pipe(
+        partition(({ error }) => !error)
+      );
 
       // TODO: doc
       const main$ = fetchOk$.pipe(
         map(this.responseToContent.bind(this)),
-        tap((context) => {
+        tap(context => {
           this.onReady(context);
           this.updateDOM(context);
           this.onAfter(context);
@@ -186,7 +198,7 @@ export const setupObservablesMixin = C =>
         // and this is where we insert them again.
         switchMap(this.reinsertScriptTags.bind(this)),
         tap({ error: e => this.onError(e) }),
-        catchError((e, c) => c),
+        catchError((e, c) => c)
       );
 
       // #### Subscriptions
@@ -199,15 +211,21 @@ export const setupObservablesMixin = C =>
 
       // Fire `progress` event when fetching takes longer than expected.
       page$
-        .pipe(switchMap(context =>
-          defer(() => this.animPromise).pipe(takeUntil(this.fetch$), mapTo(context))))
+        .pipe(
+          switchMap(context =>
+            defer(() => this.animPromise).pipe(
+              takeUntil(this.fetch$),
+              mapTo(context)
+            )
+          )
+        )
         .subscribe(this.onProgress.bind(this));
 
       // #### Keeping track of links
       // We use a `MutationObserver` to keep track of all the links inside the component,
       // and put events on the `pushSubject` and `hintSubject` observables,
       // but first we need to check if `MutationObserver` is available.
-      if ('MutationObserver' in window && 'WeakSet' in window) {
+      if ("MutationObserver" in window && "WeakSet" in window) {
         // A `Set` of `Element`s.
         // We use this to keep track of which links already have their event listeners registered.
         const links = new WeakSet();
@@ -227,19 +245,21 @@ export const setupObservablesMixin = C =>
         // In any case, `MutationObserver` and `Set` help us keep track of which links are children
         // of this component, so that we can reliably add and remove the event listeners.
         // The function to be called for every added node:
-        const addLink = (link) => {
+        const addLink = link => {
           if (!links.has(link)) {
             links.add(link);
-            link.addEventListener('click', pushNext);
-            link.addEventListener('mouseenter', hintNext, { passive: true });
-            link.addEventListener('touchstart', hintNext, { passive: true });
-            link.addEventListener('focus', hintNext, { passive: true });
+            link.addEventListener("click", pushNext);
+            link.addEventListener("mouseenter", hintNext, { passive: true });
+            link.addEventListener("touchstart", hintNext, { passive: true });
+            link.addEventListener("focus", hintNext, { passive: true });
           }
         };
 
-        const addListeners = (addedNode) => {
+        const addListeners = addedNode => {
           if (addedNode instanceof Element) {
-            Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(addLink);
+            Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(
+              addLink
+            );
           }
         };
 
@@ -247,30 +267,33 @@ export const setupObservablesMixin = C =>
         // Usually the elments will be removed from the document altogher
         // when they are removed from this component,
         // but since we can't be sure, we remove the event listeners anyway.
-        const removeLink = (link) => {
+        const removeLink = link => {
           links.delete(link);
-          link.removeEventListener('click', pushNext);
-          link.removeEventListener('mouseenter', hintNext, { passive: true });
-          link.removeEventListener('touchstart', hintNext, { passive: true });
-          link.removeEventListener('focus', hintNext, { passive: true });
+          link.removeEventListener("click", pushNext);
+          link.removeEventListener("mouseenter", hintNext, { passive: true });
+          link.removeEventListener("touchstart", hintNext, { passive: true });
+          link.removeEventListener("focus", hintNext, { passive: true });
         };
 
-        const removeListeners = (removedNode) => {
+        const removeListeners = removedNode => {
           if (removedNode instanceof Element) {
-            Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(removeLink);
+            Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(
+              removeLink
+            );
           }
         };
 
         // An observable wrapper around the mutation observer.
         // We're only interested in nodes entering and leaving the entire subtree of this component,
         // but not attribute changes.
-        Observable.create((obs) => {
+        Observable.create(obs => {
           const next = obs.next.bind(obs);
           this.mutationObserver = new MutationObserver(mutations =>
-            Array.from(mutations).forEach(next));
+            Array.from(mutations).forEach(next)
+          );
           this.mutationObserver.observe(this.el, {
             childList: true,
-            subtree: true,
+            subtree: true
           });
         })
           // For every mutation, we remove the event listeners of elements that go out of the component
@@ -294,7 +317,7 @@ export const setupObservablesMixin = C =>
         // on the entire component, and check if a click occurred on one of our links.
         // Note that we can't reliably generate hints this way, so we don't.
       } else {
-        this.el.addEventListener('click', (event) => {
+        this.el.addEventListener("click", event => {
           const anchor = matchesAncestors.call(event.target, this.linkSelector);
           if (anchor && anchor.href) {
             event.currentTarget = anchor; // eslint-disable-line no-param-reassign

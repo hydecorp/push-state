@@ -17,17 +17,22 @@
 // ## Overview
 // TODO
 
-import { HyPushStateElement } from './index';
+import { HyPushStateElement } from "./index";
 
 const define = () => {
-  window.customElements.define('hy-push-state', HyPushStateElement);
+  window.customElements.define("hy-push-state", HyPushStateElement);
 };
 
 // Make sure the polyfills are ready (if they are being used).
-if ('customElements' in window || (window.WebComponents && window.WebComponents.ready)) {
+if (
+  "customElements" in window ||
+  (window.WebComponents && window.WebComponents.ready)
+) {
   define();
 } else if (window.WebComponents) {
-  window.addEventListener('WebComponentsReady', define);
+  window.addEventListener("WebComponentsReady", define);
 } else if (process.env.DEBUG) {
-  console.warn("Couldn't register component. Did you forget to include a WebComponents polyfill?");
+  console.warn(
+    "Couldn't register component. Did you forget to include a WebComponents polyfill?"
+  );
 }

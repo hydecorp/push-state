@@ -12,20 +12,13 @@ without causing Flash of White, Flash of Unstyled Content, etc.
 **hy-push-state** is similar to [pjax] and [smoothState], but offers a more advanced pre-fetching logic and
 gives more control over timings to enable custom page transition animations.
 
-**hy-push-state** can be used in a variety of ways:
-* As **WebComponent**, both as *ES6 Module* and *HTML Import*
-* As **jQuery** plugin
-* As **Vanilla** JavaScript class
-* Possibly as part of your own component hierarchy as [ES6 Mixin][esmixins].
-
-**hy-drawer** is used by hundreds of sites as part of the [Hydejack]{:.external} Jekyll theme.
+**hy-push-state** is used by hundreds of sites as part of the [Hydejack]{:.external} Jekyll theme.
 
 **NOTE**: The current version is a pre-release. The public API may still change in important ways.
 {:.message}
 
 [pjax]: https://github.com/defunkt/jquery-pjax
 [smoothstate]: https://github.com/miguel-perez/smoothState.js
-[esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
 [rxjs]: https://github.com/ReactiveX/rxjs
 [hydejack]: https://qwtel.com/hydejack/
 
@@ -61,13 +54,25 @@ Unless you've obtained one of the licenses above, **hy-push-state** must be used
 
 ## Documentation
 
-* [Options](doc/options.md){:.flip-title}
-* [Methods](doc/methods.md){:.flip-title}
-* [Events](doc/events.md){:.flip-title}
+* [Options](doc/options.md)
+* [Methods](doc/methods.md)
+* [Events](doc/events.md)
 
 ### Usage
+**hy-push-state** can be used in a variety of ways:
+* As [Web Component](#web-component), both as *ES6 Module* and *HTML Import*
+* As [jQuery](#jquery)
+* As [Vanilla](#vanilla) JavaScript class
+* (Advanced) Possibly as part of your own component hierarchy as [ES6 Mixin][esmixins].
+* (Advanced) As part of your bundled frontend code.
+
+[esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
+
 #### Web Component
-The Web Component is the preferred way of using **hy-push-state**, but requires Web Component support in the browser or a [polyfill](https://github.com/webcomponents/webcomponentsjs).
+The Web Component is the preferred way of using **hy-push-state**, but requires Web Component [support] in the browser or a [polyfill].
+
+[support]: https://caniuse.com/#feat=template,custom-elementsv1,shadowdomv1,es6-module,imports
+[polyfill]: https://github.com/webcomponents/webcomponentsjs
 
 ##### Bundled ES6 Module
 This is the version that is going to have native support across all major browsers the soonest.
@@ -79,7 +84,7 @@ This is the version that is going to have native support across all major browse
 ~~~
 
 ##### HTML Import
-Some browsers have put support for HTML Imports on hold, but it is easily polyfilled.
+Some browsers have decided against implementing HTML Imports, but they are easily polyfilled.
 
 ~~~html
 <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
@@ -94,6 +99,7 @@ Note that this will result in possibly hundreds of separate requests.
 
 ~~~html
 <script>window.process = { env: { DEBUG: true } };</script>
+
 <script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
 
 <hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
@@ -124,24 +130,23 @@ Note that this will result in possibly hundreds of separate requests.
 </script>
 ~~~
 
-
 ### Size
-The size of the minified bundle hovers around 90kb, or ~20kb gziped.
+The size of the minified bundle hovers around 90kb, or ~20kb gzipped.
 
-```
-340K dist/jquery/index.js
- 89K dist/jquery/index.min.js
-329K dist/mixin/index.js
- 85K dist/mixin/index.min.js
-332K dist/vanilla/index.js
- 86K dist/vanilla/index.min.js
-342K dist/webcomponent/html-import.js
- 90K dist/webcomponent/html-import.min.js
-342K dist/webcomponent/index.js
- 90K dist/webcomponent/index.min.js
-343K dist/webcomponent/module.js
- 90K dist/webcomponent/module.min.js
-```
+| File | Size |
+|:-----|-----:|
+| `dist/jquery/index.js` | 340K |
+| `dist/jquery/index.min.js` |  89K |
+| `dist/mixin/index.js` | 329K |
+| `dist/mixin/index.min.js` |  85K |
+| `dist/vanilla/index.js` | 332K |
+| `dist/vanilla/index.min.js` |  86K |
+| `dist/webcomponent/html-import.js` | 342K |
+| `dist/webcomponent/html-import.min.js` |  90K |
+| `dist/webcomponent/index.js` | 342K |
+| `dist/webcomponent/index.min.js` |  90K |
+| `dist/webcomponent/module.js` | 343K |
+| `dist/webcomponent/module.min.js` |  90K |
 
 
 ### Gold Standard
@@ -178,3 +183,5 @@ which is used to create the framework-specific versions of the component.
 * [`common.js`](doc/source/common.md)
 * [`index.js`](doc/source/README.md)
 * [`url.js`](doc/source/url.md)
+
+[rxjs]: https://github.com/ReactiveX/rxjs

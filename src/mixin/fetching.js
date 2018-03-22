@@ -30,14 +30,6 @@ const assign = Object.assign.bind(Object);
 export const fetchMixin = C =>
   class extends C {
     // ## Fetching
-    hrefToAjax({ url }) {
-      return {
-        method: "GET",
-        responseType: "text",
-        url
-      };
-    }
-
     // The `ajax` method will throw when it encoutners an a 400+ status code,
     // however these are still valid responses from the server that can be shown using this component.
     // This assumes error pages have the same HTML strcuture as the other pages though.

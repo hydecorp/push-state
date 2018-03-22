@@ -50,9 +50,6 @@ import { fetchMixin } from "./fetching";
 import { updateMixin } from "./update";
 import { eventMixin } from "./events";
 
-// For convenience...
-const assign = Object.assign.bind(Object);
-
 export const setupObservablesMixin = C =>
   class extends eventMixin(
     updateMixin(fetchMixin(historyMixin(helperMixin(C))))
@@ -155,8 +152,12 @@ export const setupObservablesMixin = C =>
         // Don't abort a request if the user "jiggles" over a link
         distinctUntilChanged(this.compareContext.bind(this)),
         switchMap(context =>
-          ajax(this.hrefToAjax(context)).pipe(
-            map(({ response }) => assign(context, { response })),
+          ajax({
+            method: "GET",
+            responseType: "text",
+            url: context.url
+          }).pipe(
+            map(({ response }) => Object.assign(context, { response })),
             catchError(error => this.recoverIfResponse(context, error))
           )
         ),

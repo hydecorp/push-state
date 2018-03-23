@@ -1,0 +1,17 @@
+{
+  "name": "hy-push-state",
+  "description": "Turn static web sites into dynamic web apps",
+  "main": "src/index.js",
+  "authors": [
+    "Florian Klampfer <mail@qwtel.com> (https://qwtel.com/)"
+  ],
+  "license": "GPL-3.0",
+  "homepage": "https://qwtel.com/hy-push-state/",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

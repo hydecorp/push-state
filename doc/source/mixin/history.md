@@ -21,54 +21,65 @@ This file contains helper funtions related to managing the History API.
 
 
 ```js
-import { PUSH, INIT } from './constants';
+import { PUSH, INIT } from "./constants";
+```
+
 import { histId } from './methods';
-import { scrollHashIntoView, saveScrollPosition } from './scrolling';
-```
-
-For convenience....
 
 
 ```js
-const assign = Object.assign.bind(Object);
+import { scrollMixin } from "./scrolling";
+
+export const historyMixin = C =>
+  class extends scrollMixin(C) {
 ```
 
-## Update History State
-Add a new entry on the history stack, assuming the href is differnt.
+## Update History state
+add a new entry on the history stack, assuming the href is differnt.
 
 
 ```js
-export function updateHistoryState({ type, replace, url: { href, hash } }) {
-  if (type === PUSH || type === INIT) {
-    const id = histId.call(this);
-    const method = replace || href === window.location.href ? 'replaceState' : 'pushState';
-    const state = assign(window.history.state || {}, { [id]: { hash: !!hash } });
-    window.history[method](state, document.title, href);
-  }
-}
+    updateHistoryState({ type, replace, url: { href, hash } }) {
+      if (type === PUSH || type === INIT) {
+        const id = this.histId();
+        const method =
+          replace || href === window.location.href
+            ? "replaceState"
+            : "pushState";
+        const state = Object.assign(window.history.state || {}, {
+          [id]: { hash: !!hash }
+        });
+        window.history[method](state, document.title, href);
+      }
+    }
 
-export function updateHistoryStateHash({ type, url }) {
-  const { hash, href } = url;
+    updateHistoryStateHash({ type, url }) {
+      const { hash, href } = url;
 
-  if (type === PUSH) {
-    const id = histId.call(this);
-    const currState = assign(window.history.state, {
-      [id]: assign(window.history.state[id], { hash: true }),
-    });
-    const nextState = {
-      [id]: { hash: true },
-    };
-    window.history.replaceState(currState, document.title, window.location.href);
-    window.history.pushState(nextState, document.title, href);
-  }
+      if (type === PUSH) {
+        const id = this.histId();
+        const currState = Object.assign(window.history.state, {
+          [id]: Object.assign(window.history.state[id], { hash: true })
+        });
+        const nextState = {
+          [id]: { hash: true }
+        };
+        window.history.replaceState(
+          currState,
+          document.title,
+          window.location.href
+        );
+        window.history.pushState(nextState, document.title, href);
+      }
 
-  scrollHashIntoView(hash);
-}
+      this.scrollHashIntoView(hash);
+    }
 
-export function saveScrollHistoryState() {
-  const state = saveScrollPosition.call(this, window.history.state || {});
-  window.history.replaceState(state, document.title, window.location);
-}
+    saveScrollHistoryState() {
+      const state = this.saveScrollPosition(window.history.state || {});
+      window.history.replaceState(state, document.title, window.location);
+    }
+  };
 ```
 
 

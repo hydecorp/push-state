@@ -17,42 +17,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { fragmentFromString } from '../common';
+import { fragmentFromString } from "../common";
 
-import { PUSH } from './constants';
-import { tempRemoveScriptTags } from './script-hack';
-```
+import { PUSH } from "./constants";
+import { scriptMixin } from "./script-hack";
 
-For convenience....
-
-
-```js
-const assign = Object.assign.bind(Object);
+export const updateMixin = C =>
+  class extends scriptMixin(C) {
 ```
 
 Extracts the title of the page
 
 
 ```js
-export function getTitle(fragment) {
-  return (fragment.querySelector('title') || {}).textContent;
-}
+    getTitle(fragment) {
+      return (fragment.querySelector("title") || {}).textContent;
+    }
 ```
 
 Extracts the elements to be replaced
 
 
 ```js
-export function getReplaceElements(fragment) {
-  if (this.replaceIds.length > 0) {
-    return this.replaceIds.map(id => fragment.getElementById(id));
-  } else if (this.el.id) {
-    return [fragment.getElementById(this.el.id)];
-  } else {
-    const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
-    return [fragment.querySelectorAll(this.el.tagName)[index]];
-  }
-}
+    getReplaceElements(fragment) {
+      if (this.replaceIds.length > 0) {
+        return this.replaceIds.map(id => fragment.getElementById(id));
+      } else if (this.el.id) {
+        return [fragment.getElementById(this.el.id)];
+      } else {
+        const index = Array.from(
+          document.getElementsByTagName(this.el.tagName)
+        ).indexOf(this.el);
+        return [fragment.querySelectorAll(this.el.tagName)[index]];
+      }
+    }
 ```
 
 Takes the response string and turns it into document fragments
@@ -60,75 +58,84 @@ that can be inserted into the DOM.
 
 
 ```js
-export function responseToContent(context) {
-  const { response } = context;
+    responseToContent(context) {
+      const { response } = context;
 
-  const fragment = fragmentFromString(response);
-  const title = getTitle.call(this, fragment);
-  const replaceEls = getReplaceElements.call(this, fragment);
+      const fragment = fragmentFromString(response);
+      const title = this.getTitle(fragment);
+      const replaceEls = this.getReplaceElements(fragment);
 
-  if (replaceEls.some(x => x == null)) {
-    throw assign(context, { replaceElMissing: true });
-  }
+      if (replaceEls.some(x => x == null)) {
+        throw Object.assign(context, { replaceElMissing: true });
+      }
 
-  const scripts = this.scriptSelector ? tempRemoveScriptTags.call(this, replaceEls) : [];
+      const scripts = this.scriptSelector
+        ? this.tempRemoveScriptTags(replaceEls)
+        : [];
 
-  return assign(context, { title, replaceEls, scripts });
-}
+      return Object.assign(context, { title, replaceEls, scripts });
+    }
 ```
 
 Replaces the old elments with the new one, one-by-one.
 
 
 ```js
-function replaceContentByIds(elements) {
-  this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
-    oldElement.parentNode.replaceChild(elements[i], oldElement);
-  });
-}
+    replaceContentByIds(elements) {
+      this.replaceIds
+        .map(id => document.getElementById(id))
+        .forEach((oldElement, i) => {
+          oldElement.parentNode.replaceChild(elements[i], oldElement);
+        });
+    }
 ```
 
 When no `relaceIds` are set, replace the entire content of the component (slow).
 
 
 ```js
-function replaceContentWholesale([el]) {
-  this.el.innerHTML = el.innerHTML;
-}
-```
-
-TODO: doc
-
-
-```js
-function replaceContent(replaceEls) {
-  if (this.replaceIds.length > 0) {
-    replaceContentByIds.call(this, replaceEls);
-  } else {
-    replaceContentWholesale.call(this, replaceEls);
-  }
-}
-```
-
-TODO: doc
-
-
-```js
-export function updateDOM(context) {
-  try {
-    const { title, replaceEls, type } = context;
-
-    document.title = title;
-
-    if (type === PUSH) {
-      window.history.replaceState(window.history.state, title, window.location);
+    replaceContentWholesale([el]) {
+      this.el.innerHTML = el.innerHTML;
     }
+```
 
-    replaceContent.call(this, replaceEls);
-  } catch (error) {
-    throw assign(context, { error });
-  }
-}
+TODO: doc
+
+
+```js
+    replaceContent(replaceEls) {
+      if (this.replaceIds.length > 0) {
+        this.replaceContentByIds(replaceEls);
+      } else {
+        this.replaceContentWholesale(replaceEls);
+      }
+    }
+```
+
+TODO: doc
+
+
+```js
+    updateDOM(context) {
+      try {
+        const { title, replaceEls, type } = context;
+
+        document.title = title;
+
+        if (type === PUSH) {
+          window.history.replaceState(
+            window.history.state,
+            title,
+            window.location
+          );
+        }
+
+        this.replaceContent(replaceEls);
+      } catch (error) {
+        throw Object.assign(context, { error });
+      }
+    }
+  };
 ```
 
 

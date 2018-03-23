@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { pushStateMixin, MIXIN_FEATURE_TESTS } from './mixin';
-import { HyPushState, VANILLA_FEATURE_TESTS } from './vanilla';
-import { HyPushStateElement, WEBCOMPONENT_FEATURE_TESTS } from './webcomponent';
+import { pushStateMixin, MIXIN_FEATURE_TESTS } from "./mixin";
+import { HyPushState, VANILLA_FEATURE_TESTS } from "./vanilla";
+import { HyPushStateElement, WEBCOMPONENT_FEATURE_TESTS } from "./webcomponent";
 
 export {
   pushStateMixin,
@@ -27,7 +27,7 @@ export {
   HyPushState,
   VANILLA_FEATURE_TESTS,
   HyPushStateElement,
-  WEBCOMPONENT_FEATURE_TESTS,
+  WEBCOMPONENT_FEATURE_TESTS
 };
 ```
 

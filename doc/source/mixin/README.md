@@ -35,11 +35,16 @@ which helps with making multiple versions of the component (Vanilla JS, WebCompo
 
 
 ```js
-import { componentMixin, COMPONENT_FEATURE_TESTS, Set } from 'hy-component/src/component';
-import { array, bool, number, regex, string } from 'hy-component/src/types';
+import {
+  componentMixin,
+  COMPONENT_FEATURE_TESTS,
+  Set
+} from "hy-component/src/component";
+import { rxjsMixin } from "hy-component/src/rxjs";
+import { array, bool, number, regex, string } from "hy-component/src/types";
 
-import { Subject } from 'rxjs/_esm5/Subject';
-import { takeUntil } from 'rxjs/_esm5/operators/takeUntil';
+import { Subject } from "rxjs/_esm5/Subject";
+import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 ```
 
 Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
@@ -47,14 +52,10 @@ but sufficient for this compoennt.
 
 
 ```js
-import { URL } from '../url';
+import { URL } from "../url";
 
-import { INIT, HINT, PUSH, POP } from './constants';
-import { getTitle, getReplaceElements } from './update';
-import { updateHistoryState, saveScrollHistoryState } from './history';
-import { restoreScrollPostion } from './scrolling';
-import { onLoad } from './events';
-import { setupObservables } from './setup';
+import { INIT, HINT, PUSH, POP } from "./constants";
+import { setupObservablesMixin } from "./setup";
 
 export { INIT, HINT, PUSH, POP };
 ```
@@ -68,12 +69,12 @@ is part of the code below.
 ```js
 export const MIXIN_FEATURE_TESTS = new Set([
   ...COMPONENT_FEATURE_TESTS,
-  'documentfragment',
-  'eventlistener',
-  'history',
-  'promises',
-  'queryselector',
-  'requestanimationframe',
+  "documentfragment",
+  "eventlistener",
+  "history",
+  "promises",
+  "queryselector",
+  "requestanimationframe"
 ]);
 
 export { Set };
@@ -95,14 +96,8 @@ DocumentFragment.prototype.getElementById =
 
 
 ```js
-export function pushStateMixin(C) {
-```
-
-TODO: see ES6 mixins...
-
-
-```js
-  return class extends componentMixin(C) {
+export const pushStateMixin = C =>
+  class extends setupObservablesMixin(rxjsMixin(componentMixin(C))) {
 ```
 
 The name of the component (required by hy-component)
@@ -110,7 +105,7 @@ The name of the component (required by hy-component)
 
 ```js
     static get componentName() {
-      return 'hy-push-state';
+      return "hy-push-state";
     }
 ```
 
@@ -120,19 +115,6 @@ See [Options](../../options.md) for usage information.
 
 
 ```js
-    static get defaults() {
-      return {
-        replaceIds: [],
-        linkSelector: 'a[href]:not(.no-push-state)',
-        scrollRestoration: false,
-        duration: 0,
-        hrefRegex: null,
-        scriptSelector: null,
-        /* prefetch: true, */
-        /* repeatDelay: 500, */
-      };
-    }
-
     static get types() {
       return {
         replaceIds: array,
@@ -140,20 +122,18 @@ See [Options](../../options.md) for usage information.
         scrollRestoration: bool,
         duration: number,
         hrefRegex: regex,
-        scriptSelector: string,
-        /* prefetch: bool, */
-        /* repeatDelay: number, */
+        scriptSelector: string
       };
     }
 
-    static get sideEffects() {
+    static get defaults() {
       return {
-        linkSelector(x) {
-          this.linkSelector$.next(x);
-        },
-        scrollRestoration(x) {
-          this.scrollRestoration$.next(x);
-        },
+        replaceIds: [],
+        linkSelector: "a[href]:not(.no-push-state)",
+        scrollRestoration: false,
+        duration: 0,
+        hrefRegex: null,
+        scriptSelector: null
       };
     }
 ```
@@ -165,12 +145,9 @@ See [Options](../../options.md) for usage information.
     setupComponent(el, props) {
       super.setupComponent(el, props);
 
-      this.saveScrollHistoryState = saveScrollHistoryState.bind(this);
+      this.saveScrollHistoryState = this.saveScrollHistoryState.bind(this);
 
-      this.linkSelector$ = new Subject();
-      this.scrollRestoration$ = new Subject();
       this.reload$ = new Subject();
-      this.teardown$ = new Subject();
     }
 ```
 
@@ -188,8 +165,6 @@ Overriding the setup function.
 
 ```js
     connectComponent() {
-      super.connectComponent();
-
       if (process.env.DEBUG && !this.replaceIds && !this.el.id) {
         console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
       }
@@ -199,12 +174,16 @@ Setting up scroll restoration
 
 
 ```js
-      if ('scrollRestoration' in window.history) {
+      if ("scrollRestoration" in window.history) {
         const orig = window.history.scrollRestoration;
 
-        this.scrollRestoration$.pipe(takeUntil(this.teardown$)).subscribe((scrollRestoration) => {
-          window.history.scrollRestoration = scrollRestoration ? 'manual' : orig;
-        });
+        this.subjects.scrollRestoration
+          .pipe(takeUntil(this.subjects.disconnect))
+          .subscribe(scrollRestoration => {
+            window.history.scrollRestoration = scrollRestoration
+              ? "manual"
+              : orig;
+          });
       }
 ```
 
@@ -212,21 +191,22 @@ If restore the last scroll position, if any.
 
 
 ```js
-      restoreScrollPostion.call(this);
+      this.restoreScrollPostion();
 ```
 
 Remember the current scroll position (for F5/reloads).
 
 
 ```js
-      window.addEventListener('beforeunload', this.saveScrollHistoryState);
+      window.addEventListener("beforeunload", this.saveScrollHistoryState);
 ```
 
 Calling the [setup observables function](./setup.md) function.
 
 
 ```js
-      setupObservables.call(this);
+      this.setupObservables();
+      super.connectComponent();
 ```
 
 Setting the initial `history.state`.
@@ -234,18 +214,14 @@ Setting the initial `history.state`.
 
 ```js
       const url = new URL(window.location);
-      updateHistoryState.call(this, {
-        type: INIT,
-        replace: true,
-        url,
-      });
+      this.updateHistoryState({ type: INIT, replace: true, url });
 ```
 
 After all this is done, we can fire the one-time `init` event...
 
 
 ```js
-      this.fireEvent('init');
+      this.fireEvent("init");
 ```
 
 ...and our custom `load` event, which gets fired on every page change.
@@ -255,18 +231,18 @@ since this `load` event wasn't caused by a user interaction.
 
 
 ```js
-      onLoad.call(this, {
+      this.onLoad({
         type: INIT,
-        title: getTitle.call(this, document),
-        replaceEls: getReplaceElements.call(this, document),
+        title: this.getTitle(document),
+        replaceEls: this.getReplaceElements(document),
         url,
-        cacheNr: this.cacheNr,
+        cacheNr: this.cacheNr
       });
     }
 
     disconnectComponent() {
-      window.removeEventListener('beforeunload', this.saveScrollHistoryState);
-      this.teardown$.next({});
+      super.disconnectComponent();
+      window.removeEventListener("beforeunload", this.saveScrollHistoryState);
     }
 ```
 
@@ -279,7 +255,7 @@ Public methods of this component. See [Methods](../../methods.md) for more.
       this.reload$.next({
         type: PUSH,
         url: new URL(url, window.location),
-        cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
+        cacheNr: ++this.cacheNr // eslint-disable-line no-plusplus
       });
     }
 
@@ -288,7 +264,7 @@ Public methods of this component. See [Methods](../../methods.md) for more.
         type: PUSH,
         url: new URL(window.location.href),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
-        replace: true,
+        replace: true
       });
     }
 
@@ -297,11 +273,10 @@ Public methods of this component. See [Methods](../../methods.md) for more.
         type: PUSH,
         url: new URL(url, window.location),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
-        replace: true,
+        replace: true
       });
     }
   };
-}
 ```
 
 [rxjs]: https://github.com/ReactiveX/rxjs

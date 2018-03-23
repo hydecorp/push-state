@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { never } from 'rxjs/_esm5/observable/never';
+import { never } from "rxjs/_esm5/observable/never";
 
-import { switchMap } from 'rxjs/_esm5/operators/switchMap';
+import { switchMap } from "rxjs/_esm5/operators/switchMap";
 ```
 
 ### Observable extensions
@@ -29,7 +29,7 @@ and re-subscribes when it emits a falsy value.
 
 
 ```js
-export const unsubscribeWhen = pauser$ => (source) => {
+export const unsubscribeWhen = pauser$ => source => {
   if (process.env.DEBUG && !pauser$) throw Error();
   return pauser$.pipe(switchMap(paused => (paused ? never() : source)));
 };

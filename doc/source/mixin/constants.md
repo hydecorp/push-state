@@ -19,10 +19,10 @@ Going with strings here instead of classes + instanceof / dynamic dispatch for s
 
 
 ```js
-export const INIT = 'init';
-export const HINT = 'hint';
-export const PUSH = 'push';
-export const POP = 'pop';
+export const INIT = "init";
+export const HINT = "hint";
+export const PUSH = "push";
+export const POP = "pop";
 ```
 
 

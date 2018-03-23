@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { isExternal, isHash } from '../common';
+import { isExternal, isHash } from "../common";
 
-import { PUSH, POP } from './constants';
+import { PUSH, POP } from "./constants";
 ```
 
 ## Functions
@@ -28,39 +28,50 @@ This is because they are invoked with the `::` operator, binding `this` to the c
 effectively turning them into (private) methods. Since the final export is a mixin,
 we want to avoid potentially conflicting names as much as possible.
 
+
+```js
+
+export const helperMixin = C =>
+  class extends C {
+```
+
 Returns an identifier to mark frames on the history stack.
 
 
 ```js
-export function histId() {
-  return this.el.id || this.constructor.componentName;
-}
+    histId() {
+      return this.el.id || this.constructor.componentName;
+    }
 ```
 
 ### Event filters
 
 
 ```js
-function shouldLoadAnchor(anchor, hrefRegex) {
-  return anchor && anchor.target === '' && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
-}
+    shouldLoadAnchor(anchor, hrefRegex) {
+      return (
+        anchor &&
+        anchor.target === "" &&
+        (!hrefRegex || anchor.href.search(hrefRegex) !== -1)
+      );
+    }
 
-export function isPushEvent({ metaKey, ctrlKey, currentTarget }) {
-  return (
-    !metaKey &&
-    !ctrlKey &&
-    shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-    !isExternal(currentTarget)
-  );
-}
+    isPushEvent({ metaKey, ctrlKey, currentTarget }) {
+      return (
+        !metaKey &&
+        !ctrlKey &&
+        this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
+        !isExternal(currentTarget)
+      );
+    }
 
-export function isHintEvent({ currentTarget }) {
-  return (
-    shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-    !isExternal(currentTarget) &&
-    !isHash(currentTarget)
-  );
-}
+    isHintEvent({ currentTarget }) {
+      return (
+        this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
+        !isExternal(currentTarget) &&
+        !isHash(currentTarget)
+      );
+    }
 ```
 
 Determines if a pair of context's constitutes a hash change (vs. a page chagne)
@@ -69,12 +80,16 @@ and the `hash` isn't empty.
 
 
 ```js
-export function isHashChange([
-  { url: { pathname: prevPathname } },
-  { url: { pathname, hash }, type },
-]) {
-  return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ''));
-}
+    isHashChange([
+      { url: { pathname: prevPathname } },
+      { url: { pathname, hash }, type }
+    ]) {
+      return (
+        pathname === prevPathname &&
+        (type === POP || (type === PUSH && hash !== ""))
+      );
+    }
+  };
 ```
 
 

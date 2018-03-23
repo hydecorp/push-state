@@ -17,77 +17,78 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { getScrollTop, getScrollHeight } from '../common';
+import { getScrollTop, getScrollHeight } from "../common";
 
-import { PUSH, POP } from './constants';
-import { histId } from './methods';
-```
-
-For convenience....
-
-
-```js
-const assign = Object.assign.bind(Object);
+import { PUSH, POP } from "./constants";
 ```
 
 ### Managing scroll positions
 The following functions deal with managing the scroll position of the site.
+
+
+```js
+
+export const scrollMixin = C =>
+  class extends C {
+```
 
 Given a hash, find the element of the same id on the page, and scroll it into view.
 If no hash is provided, scroll to the top instead.
 
 
 ```js
-export function scrollHashIntoView(hash) {
-  if (hash) {
-    const el = document.getElementById(hash.substr(1));
-    if (el) el.scrollIntoView();
-    else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
-  } else window.scroll(window.pageXOffset, 0);
-}
+    scrollHashIntoView(hash) {
+      if (hash) {
+        const el = document.getElementById(hash.substr(1));
+        if (el) el.scrollIntoView();
+        else if (process.env.DEBUG)
+          console.warn(`Can't find element with id ${hash}`);
+      } else window.scroll(window.pageXOffset, 0);
+    }
 ```
 
 Takes the current history state, and restores the scroll position.
 
 
 ```js
-export function restoreScrollPostion() {
-  const id = histId.call(this); // TODO
-  const state = (window.history.state && window.history.state[id]) || {};
+    restoreScrollPostion() {
+      const id = this.histId(); // TODO
+      const state = (window.history.state && window.history.state[id]) || {};
 
-  if (state.scrollTop != null) {
-    document.body.style.minHeight = state.scrollHeight;
-    window.scroll(window.pageXOffset, state.scrollTop);
-    /* document.body.style.minHeight = ''; */
-  } else if (state.hash) {
-    scrollHashIntoView(window.location.hash);
-  }
-}
+      if (state.scrollTop != null) {
+        document.body.style.minHeight = state.scrollHeight;
+        window.scroll(window.pageXOffset, state.scrollTop);
+        /* document.body.style.minHeight = ''; */
+      } else if (state.hash) {
+        this.scrollHashIntoView(window.location.hash);
+      }
+    }
 ```
 
 TODO
 
 
 ```js
-export function manageScrollPostion({ type, url: { hash } }) {
-  if (type === PUSH) {
-    scrollHashIntoView(hash);
-  }
+    manageScrollPostion({ type, url: { hash } }) {
+      if (type === PUSH) {
+        this.scrollHashIntoView(hash);
+      }
 
-  if (type === POP && this.scrollRestoration) {
-    restoreScrollPostion.call(this);
-  }
-}
+      if (type === POP && this.scrollRestoration) {
+        this.restoreScrollPostion();
+      }
+    }
 
-export function saveScrollPosition(state) {
-  const id = histId.call(this);
-  return assign(state, {
-    [id]: assign(state[id] || {}, {
-      scrollTop: getScrollTop(),
-      scrollHeight: getScrollHeight(),
-    }),
-  });
-}
+    saveScrollPosition(state) {
+      const id = this.histId();
+      return Object.assign(state, {
+        [id]: Object.assign(state[id] || {}, {
+          scrollTop: getScrollTop(),
+          scrollHeight: getScrollHeight()
+        })
+      });
+    }
+  };
 ```
 
 

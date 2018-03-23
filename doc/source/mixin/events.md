@@ -17,26 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { Observable } from 'rxjs/_esm5/Observable';
-import { timer } from 'rxjs/_esm5/observable/timer';
-```
-
-For convenience....
-
-
-```js
-const assign = Object.assign.bind(Object);
+import { Observable } from "rxjs/_esm5/Observable";
+import { timer } from "rxjs/_esm5/observable/timer";
 ```
 
 ### Event functions
 These functions are called at various points along the observable pipeline to fire events,
 and cause other side effects.
 
+
+```js
+export const eventMixin = C =>
+  class extends C {
+```
+
 #### On start
 
 
 ```js
-export function onStart(context) {
+    onStart(context) {
 ```
 
 By default, hy-push-state will wait at least `duration` ms before replacing the content,
@@ -45,7 +44,7 @@ The behavior is encoded with a promise that resolves after `duration` ms.
 
 
 ```js
-  this.animPromise = timer(this.duration);
+      this.animPromise = timer(this.duration);
 ```
 
 The `waitUntil` function lets users of this component override the animation promise.
@@ -54,15 +53,20 @@ and glitches when, for example, painting takes longer than expected.
 
 
 ```js
-  const waitUntil = (promise) => {
-    if (process.env.DEBUG && !(promise instanceof Promise || promise instanceof Observable)) {
-      console.warn('waitUntil expects a Promise as first argument.');
-    }
-    this.animPromise = promise;
-  };
+      const waitUntil = promise => {
+        if (
+          process.env.DEBUG &&
+          !(promise instanceof Promise || promise instanceof Observable)
+        ) {
+          console.warn("waitUntil expects a Promise as first argument.");
+        }
+        this.animPromise = promise;
+      };
 
-  this.fireEvent('start', { detail: assign(context, { waitUntil }) });
-}
+      this.fireEvent("start", {
+        detail: Object.assign(context, { waitUntil })
+      });
+    }
 ```
 
 Example usage of `waitUntil`:
@@ -85,8 +89,8 @@ we can't insert the content dynamically, so we tell the browser to open the link
 
 
 ```js
-export function onDOMError(context) {
-  const { replaceElMissing, url } = context;
+    onDOMError(context) {
+      const { replaceElMissing, url } = context;
 ```
 
 Ideally you should prevent this situation by adding the
@@ -96,16 +100,18 @@ This only serves as a fallback.
 
 
 ```js
-  if (replaceElMissing) {
-    if (process.env.DEBUG) {
-      const ids = this.replaceIds
-        .concat(this.el.id || [])
-        .map(x => `#${x}`)
-        .join(', ');
-      console.warn(`Couldn't find one or more ids of '${ids}' in the document at '${
-        window.location
-      }'. Opening the link directly.`);
-    }
+      if (replaceElMissing) {
+        if (process.env.DEBUG) {
+          const ids = this.replaceIds
+            .concat(this.el.id || [])
+            .map(x => `#${x}`)
+            .join(", ");
+          console.warn(
+            `Couldn't find one or more ids of '${ids}' in the document at '${
+              window.location
+            }'. Opening the link directly.`
+          );
+        }
 ```
 
 To open the link directly, we first pop one entry off the browser history.
@@ -115,31 +121,31 @@ TODO: If we didn't call `pushState` optimistically we wouldn't have to do this.
 
 
 ```js
-    window.history.back();
-    setTimeout(() => {
-      document.location.href = url;
-    }, 100);
+        window.history.back();
+        setTimeout(() => {
+          document.location.href = url;
+        }, 100);
 ```
 
 If it's a different error, throw the generic `error` event.
 
 
 ```js
-  } else {
-    if (process.env.DEBUG) console.error(context);
-    this.fireEvent('error', { detail: context });
-  }
-}
+      } else {
+        if (process.env.DEBUG) console.error(context);
+        this.fireEvent("error", { detail: context });
+      }
+    }
 ```
 
 If there is a network error during (pre-) fetching, fire `networkerror` event.
 
 
 ```js
-export function onNetworkError(context) {
-  if (process.env.DEBUG) console.error(context);
-  this.fireEvent('networkerror', { detail: context });
-}
+    onNetworkError(context) {
+      if (process.env.DEBUG) console.error(context);
+      this.fireEvent("networkerror", { detail: context });
+    }
 ```
 
 When using the experimental script feature,
@@ -147,10 +153,10 @@ fire `scripterror` event if something goes wrong during script insertion.
 
 
 ```js
-export function onError(context) {
-  if (process.env.DEBUG) console.error(context);
-  this.fireEvent('error', { detail: context });
-}
+    onError(context) {
+      if (process.env.DEBUG) console.error(context);
+      this.fireEvent("error", { detail: context });
+    }
 ```
 
 #### Others
@@ -158,21 +164,22 @@ These event callbacks simply fire an event and pass the context as `detail`.
 
 
 ```js
-export function onReady(context) {
-  this.fireEvent('ready', { detail: context });
-}
+    onReady(context) {
+      this.fireEvent("ready", { detail: context });
+    }
 
-export function onAfter(context) {
-  this.fireEvent('after', { detail: context });
-}
+    onAfter(context) {
+      this.fireEvent("after", { detail: context });
+    }
 
-export function onProgress(context) {
-  this.fireEvent('progress', { detail: context });
-}
+    onProgress(context) {
+      this.fireEvent("progress", { detail: context });
+    }
 
-export function onLoad(context) {
-  this.fireEvent('load', { detail: context });
-}
+    onLoad(context) {
+      this.fireEvent("load", { detail: context });
+    }
+  };
 ```
 
 

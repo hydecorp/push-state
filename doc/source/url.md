@@ -18,26 +18,25 @@ limitations under the License.
 
 export let URL = window.URL;
 
-if (!URL || !URL.prototype || !('href' in URL.prototype)) {
-  URL = function (url, base) {
-    if (!url)
-      throw new TypeError('Invalid argument');
+if (!URL || !URL.prototype || !("href" in URL.prototype)) {
+  URL = function(url, base) {
+    if (!url) throw new TypeError("Invalid argument");
 
-    var doc = document.implementation.createHTMLDocument('');
+    var doc = document.implementation.createHTMLDocument("");
     if (base) {
-      var baseElement = doc.createElement('base');
+      var baseElement = doc.createElement("base");
       baseElement.href = base;
       doc.head.appendChild(baseElement);
     }
-    var anchorElement = doc.createElement('a');
+    var anchorElement = doc.createElement("a");
     anchorElement.href = url;
     doc.body.appendChild(anchorElement);
 
-    if (anchorElement.protocol === ':' || !/:/.test(anchorElement.href))
-      throw new TypeError('Invalid URL');
+    if (anchorElement.protocol === ":" || !/:/.test(anchorElement.href))
+      throw new TypeError("Invalid URL");
 
-    Object.defineProperty(this, '_anchorElement', {value: anchorElement});
-  }
+    Object.defineProperty(this, "_anchorElement", { value: anchorElement });
+  };
 
   URL.prototype = {
     toString: function() {
@@ -130,7 +129,7 @@ if (!URL || !URL.prototype || !('href' in URL.prototype)) {
     return oldURL.revokeObjectURL.apply(oldURL, arguments);
   };
 
-  Object.defineProperty(URL.prototype, 'toString', {enumerable: false});
+  Object.defineProperty(URL.prototype, "toString", { enumerable: false });
 }
 ```
 

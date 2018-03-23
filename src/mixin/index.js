@@ -37,6 +37,7 @@ import {
   COMPONENT_FEATURE_TESTS,
   Set
 } from "hy-component/src/component";
+import { rxjsMixin } from "hy-component/src/rxjs";
 import { array, bool, number, regex, string } from "hy-component/src/types";
 
 import { Subject } from "rxjs/_esm5/Subject";
@@ -77,7 +78,7 @@ DocumentFragment.prototype.getElementById =
 
 // ## Push state mixin
 export const pushStateMixin = C =>
-  class extends setupObservablesMixin(componentMixin(C)) {
+  class extends setupObservablesMixin(rxjsMixin(componentMixin(C))) {
     // The name of the component (required by hy-component)
     static get componentName() {
       return "hy-push-state";
@@ -86,19 +87,6 @@ export const pushStateMixin = C =>
     // ### Options
     // The default values (and types) of the configuration options (required by hy-component)
     // See [Options](../../options.md) for usage information.
-    static get defaults() {
-      return {
-        replaceIds: [],
-        linkSelector: "a[href]:not(.no-push-state)",
-        scrollRestoration: false,
-        duration: 0,
-        hrefRegex: null,
-        scriptSelector: null
-        /* prefetch: true, */
-        /* repeatDelay: 500, */
-      };
-    }
-
     static get types() {
       return {
         replaceIds: array,
@@ -107,19 +95,17 @@ export const pushStateMixin = C =>
         duration: number,
         hrefRegex: regex,
         scriptSelector: string
-        /* prefetch: bool, */
-        /* repeatDelay: number, */
       };
     }
 
-    static get sideEffects() {
+    static get defaults() {
       return {
-        linkSelector(x) {
-          this.linkSelector$.next(x);
-        },
-        scrollRestoration(x) {
-          this.scrollRestoration$.next(x);
-        }
+        replaceIds: [],
+        linkSelector: "a[href]:not(.no-push-state)",
+        scrollRestoration: false,
+        duration: 0,
+        hrefRegex: null,
+        scriptSelector: null
       };
     }
 
@@ -129,10 +115,7 @@ export const pushStateMixin = C =>
 
       this.saveScrollHistoryState = this.saveScrollHistoryState.bind(this);
 
-      this.linkSelector$ = new Subject();
-      this.scrollRestoration$ = new Subject();
       this.reload$ = new Subject();
-      this.teardown$ = new Subject();
     }
 
     // This component has no shadow DOM, so we just return the element.
@@ -142,8 +125,6 @@ export const pushStateMixin = C =>
 
     // Overriding the setup function.
     connectComponent() {
-      super.connectComponent();
-
       if (process.env.DEBUG && !this.replaceIds && !this.el.id) {
         console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
       }
@@ -152,8 +133,8 @@ export const pushStateMixin = C =>
       if ("scrollRestoration" in window.history) {
         const orig = window.history.scrollRestoration;
 
-        this.scrollRestoration$
-          .pipe(takeUntil(this.teardown$))
+        this.subjects.scrollRestoration
+          .pipe(takeUntil(this.subjects.disconnect))
           .subscribe(scrollRestoration => {
             window.history.scrollRestoration = scrollRestoration
               ? "manual"
@@ -169,6 +150,7 @@ export const pushStateMixin = C =>
 
       // Calling the [setup observables function](./setup.md) function.
       this.setupObservables();
+      super.connectComponent();
 
       // Setting the initial `history.state`.
       const url = new URL(window.location);
@@ -191,8 +173,8 @@ export const pushStateMixin = C =>
     }
 
     disconnectComponent() {
+      super.disconnectComponent();
       window.removeEventListener("beforeunload", this.saveScrollHistoryState);
-      this.teardown$.next({});
     }
 
     // ### Methods

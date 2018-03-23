@@ -78,7 +78,7 @@ export const setupObservablesMixin = C =>
 
       // TODO: doc
       const push$ = pushSubject.pipe(
-        takeUntil(this.teardown$),
+        takeUntil(this.subjects.disconnect),
         filter(this.isPushEvent.bind(this)),
         map(event => ({
           type: PUSH,
@@ -96,7 +96,7 @@ export const setupObservablesMixin = C =>
       // In additon to `HINT` and `PUSH` events, there's also `POP` events, which are caused by
       // modifying the browser history, e.g. clicking the back button, etc.
       const pop$ = fromEvent(window, "popstate").pipe(
-        takeUntil(this.teardown$),
+        takeUntil(this.subjects.disconnect),
         filter(
           () => window.history.state && window.history.state[this.histId()]
         ),
@@ -108,7 +108,7 @@ export const setupObservablesMixin = C =>
         }))
       );
 
-      const reload$ = this.reload$.pipe(takeUntil(this.teardown$));
+      const reload$ = this.reload$.pipe(takeUntil(this.subjects.disconnect));
 
       // TODO: doc
       const [hash$, page$] = merge(push$, pop$, reload$)
@@ -134,7 +134,7 @@ export const setupObservablesMixin = C =>
 
       // TODO: doc
       const hint$ = hintSubject.pipe(
-        takeUntil(this.teardown$),
+        takeUntil(this.subjects.disconnect),
         unsubscribeWhen(pauser$),
         filter(this.isHintEvent.bind(this)),
         map(event => ({
@@ -305,7 +305,7 @@ export const setupObservablesMixin = C =>
           });
 
         // TODO
-        this.linkSelector$.subscribe(() => {
+        this.subjects.linkSelector.subscribe(() => {
           // TODO
           Array.from(links).forEach(removeLink);
 
@@ -328,7 +328,9 @@ export const setupObservablesMixin = C =>
       }
 
       // Place initial values on the property observables.
+      /*
       this.linkSelector$.next(this.linkSelector);
       this.scrollRestoration$.next(this.scrollRestoration);
+      */
     }
   };

@@ -24,9 +24,6 @@ import { map } from "rxjs/_esm5/operators/map";
 import { take } from "rxjs/_esm5/operators/take";
 import { zip } from "rxjs/_esm5/operators/zip";
 
-// For convenience....
-const assign = Object.assign.bind(Object);
-
 export const fetchMixin = C =>
   class extends C {
     // ## Fetching
@@ -38,11 +35,11 @@ export const fetchMixin = C =>
 
       // If we have a response, recover and continue with the pipeline.
       if (xhr && xhr.response && status > 400) {
-        return of(assign(context, { response: xhr.response }));
+        return of(Object.assign(context, { response: xhr.response }));
       }
 
       // If we don't have a response, this is an acutal error that should be dealt with.
-      return of(assign(context, { error }));
+      return of(Object.assign(context, { error }));
     }
 
     // This function returns the request that matches a given URL.
@@ -59,7 +56,7 @@ export const fetchMixin = C =>
     // It will not emit until an (optional) page transition animation completes.
     getResponse(prefetch$, [context, latestPrefetch]) {
       return this.getFetch$(context, latestPrefetch, prefetch$).pipe(
-        map(fetch => assign(fetch, context)),
+        map(fetch => Object.assign(fetch, context)),
         zip(this.animPromise, x => x)
       );
     }

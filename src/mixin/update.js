@@ -19,9 +19,6 @@ import { fragmentFromString } from "../common";
 import { PUSH } from "./constants";
 import { scriptMixin } from "./script-hack";
 
-// For convenience....
-const assign = Object.assign.bind(Object);
-
 export const updateMixin = C =>
   class extends scriptMixin(C) {
     // Extracts the title of the page
@@ -53,14 +50,14 @@ export const updateMixin = C =>
       const replaceEls = this.getReplaceElements(fragment);
 
       if (replaceEls.some(x => x == null)) {
-        throw assign(context, { replaceElMissing: true });
+        throw Object.assign(context, { replaceElMissing: true });
       }
 
       const scripts = this.scriptSelector
         ? this.tempRemoveScriptTags(replaceEls)
         : [];
 
-      return assign(context, { title, replaceEls, scripts });
+      return Object.assign(context, { title, replaceEls, scripts });
     }
 
     // Replaces the old elments with the new one, one-by-one.
@@ -103,7 +100,7 @@ export const updateMixin = C =>
 
         this.replaceContent(replaceEls);
       } catch (error) {
-        throw assign(context, { error });
+        throw Object.assign(context, { error });
       }
     }
   };

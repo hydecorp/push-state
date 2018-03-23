@@ -17,9 +17,6 @@
 import { Observable } from "rxjs/_esm5/Observable";
 import { timer } from "rxjs/_esm5/observable/timer";
 
-// For convenience....
-const assign = Object.assign.bind(Object);
-
 // ### Event functions
 // These functions are called at various points along the observable pipeline to fire events,
 // and cause other side effects.
@@ -45,7 +42,9 @@ export const eventMixin = C =>
         this.animPromise = promise;
       };
 
-      this.fireEvent("start", { detail: assign(context, { waitUntil }) });
+      this.fireEvent("start", {
+        detail: Object.assign(context, { waitUntil })
+      });
     }
 
     // Example usage of `waitUntil`:

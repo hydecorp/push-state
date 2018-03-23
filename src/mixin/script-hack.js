@@ -24,9 +24,6 @@ import { catchError } from "rxjs/_esm5/operators/catchError";
 import { tap } from "rxjs/_esm5/operators/tap";
 import { concatMap } from "rxjs/_esm5/operators/concatMap";
 
-// For convenience....
-const assign = Object.assign.bind(Object);
-
 // ### Experimental script feature
 // TODO
 export const scriptMixin = C =>
@@ -97,7 +94,7 @@ export const scriptMixin = C =>
         .pipe(
           concatMap(this.insertScript.bind(this)),
           catchError(error => {
-            throw assign(context, { error });
+            throw Object.assign(context, { error });
           })
         )
         .toPromise()

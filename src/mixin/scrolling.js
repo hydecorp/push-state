@@ -18,9 +18,6 @@ import { getScrollTop, getScrollHeight } from "../common";
 
 import { PUSH, POP } from "./constants";
 
-// For convenience....
-const assign = Object.assign.bind(Object);
-
 // ### Managing scroll positions
 // The following functions deal with managing the scroll position of the site.
 
@@ -64,8 +61,8 @@ export const scrollMixin = C =>
 
     saveScrollPosition(state) {
       const id = this.histId();
-      return assign(state, {
-        [id]: assign(state[id] || {}, {
+      return Object.assign(state, {
+        [id]: Object.assign(state[id] || {}, {
           scrollTop: getScrollTop(),
           scrollHeight: getScrollHeight()
         })

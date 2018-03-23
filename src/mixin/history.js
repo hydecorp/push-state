@@ -22,9 +22,6 @@ import { PUSH, INIT } from "./constants";
 // import { histId } from './methods';
 import { scrollMixin } from "./scrolling";
 
-// For convenience....
-const assign = Object.assign.bind(Object);
-
 export const historyMixin = C =>
   class extends scrollMixin(C) {
     // ## Update History state
@@ -36,7 +33,7 @@ export const historyMixin = C =>
           replace || href === window.location.href
             ? "replaceState"
             : "pushState";
-        const state = assign(window.history.state || {}, {
+        const state = Object.assign(window.history.state || {}, {
           [id]: { hash: !!hash }
         });
         window.history[method](state, document.title, href);
@@ -48,8 +45,8 @@ export const historyMixin = C =>
 
       if (type === PUSH) {
         const id = this.histId();
-        const currState = assign(window.history.state, {
-          [id]: assign(window.history.state[id], { hash: true })
+        const currState = Object.assign(window.history.state, {
+          [id]: Object.assign(window.history.state[id], { hash: true })
         });
         const nextState = {
           [id]: { hash: true }

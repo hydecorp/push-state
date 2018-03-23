@@ -8,8 +8,8 @@
     <link href="../style.css" rel="stylesheet">
     <style>aside.wrapper { color: #fff; background: #f17641; }</style>
 
-    <script src="https://unpkg.com/@webcomponents/webcomponentsjs@1"></script>
-    <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
+    <script src="https://unpkg.com/@webcomponents/webcomponentsjs@1.1.0"></script>
+    <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html"> 
     <!-- <link rel="import" href="../../dist/webcomponent/hy-push-state.html"> -->
   </head>
   <body>
@@ -17,7 +17,7 @@
       <p>Current implementation: <span>WebComponent</span></p>
     </aside>
     <div class="wrapper">
-      <hy-push-state id="pushStateEl" link-selector="a[href^='..']">
+      <hy-push-state id="pushStateEl" link-selector="a[href^='..']" scroll-restoration>
         <main>
           <h1>WebComponent Example</h1>
           <ul>
@@ -41,6 +41,13 @@
 
           <h2>Arcu bibendum</h2>
           <p>At varius vel pharetra vel. Id neque aliquam vestibulum morbi blandit cursus risus at ultrices. Placerat duis ultricies lacus sed turpis tincidunt id aliquet risus. Et pharetra pharetra massa massa. Arcu non sodales neque sodales ut etiam. Pharetra diam sit amet nisl suscipit adipiscing bibendum est ultricies. Enim nec dui nunc mattis. Id interdum velit laoreet id. Sed lectus vestibulum mattis ullamcorper velit. Nullam ac tortor vitae purus faucibus ornare suspendisse sed nisi. Nunc non blandit massa enim nec dui. Id venenatis a condimentum vitae sapien pellentesque. Libero volutpat sed cras ornare arcu dui vivamus arcu felis. Tempus egestas sed sed risus. Nisi porta lorem mollis aliquam ut porttitor leo a. Mattis rhoncus urna neque viverra.
+
+          <ul>
+            <li><a href="../mixin/index.html">Mixin Example</a></li>
+            <li><a href="../vanilla/index.html">Vanilla JS Example</a></li>
+            <li><a href="../jquery/index.html">jQuery Example</a></li>
+            <li><a href="../webcomponent/index.html">WebComponent Example</a></li>
+          </ul>
         </main>
       </hy-push-state>
     </div>

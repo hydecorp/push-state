@@ -40,21 +40,21 @@ export const helperMixin = C =>
       );
     }
 
-    isPushEvent({ metaKey, ctrlKey, currentTarget }) {
+    isPushEvent({ url, anchor, event: { metaKey, ctrlKey } }) {
       return (
         !metaKey &&
         !ctrlKey &&
-        this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-        !isExternal(currentTarget, new URL(this.origin))
+        this.shouldLoadAnchor(anchor, this.hrefRegex) &&
+        !isExternal(url, new URL(this.origin))
       );
     }
 
-    isHintEvent({ currentTarget }) {
-      return (
-        this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-        !isExternal(currentTarget, new URL(this.origin)) &&
-        !isHash(currentTarget, new URL(this.origin))
-      );
+    isHintEvent({ url, anchor }) {
+      if (!this.shouldLoadAnchor(anchor, this.hrefRegex)) return false;
+      else {
+        const location = new URL(this.origin);
+        return !isExternal(url, location) && !isHash(url, location);
+      }
     }
 
     // Determines if a pair of context's constitutes a hash change (vs. a page chagne)

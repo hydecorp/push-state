@@ -79,7 +79,6 @@ export const setupObservablesMixin = C =>
       // TODO: doc
       const push$ = pushSubject.pipe(
         takeUntil(this.subjects.disconnect),
-        filter(this.isPushEvent.bind(this)),
         map(event => ({
           type: PUSH,
           url: new URL(event.currentTarget.href, this.origin),
@@ -87,6 +86,7 @@ export const setupObservablesMixin = C =>
           event,
           cacheNr: this.cacheNr
         })),
+        filter(this.isPushEvent.bind(this)),
         tap(({ event }) => {
           event.preventDefault();
           this.saveScrollHistoryState();
@@ -136,14 +136,14 @@ export const setupObservablesMixin = C =>
       const hint$ = hintSubject.pipe(
         takeUntil(this.subjects.disconnect),
         unsubscribeWhen(pauser$),
-        filter(this.isHintEvent.bind(this)),
         map(event => ({
           type: HINT,
           url: new URL(event.currentTarget.href, this.origin),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr
-        }))
+        })),
+        filter(this.isHintEvent.bind(this))
       );
 
       // The stream of (pre-)fetch events.

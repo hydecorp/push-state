@@ -94,3 +94,25 @@ data_social:
   download:
     name: Download
     icon: icon-box-add
+
+keywords:
+  - page-transitions
+  - ajax
+  - pjax
+  - smoothstate
+  - hydejack
+  - vanilla
+  - jquery
+  - animations
+  - rxjs
+  - vanilla-js
+  - custom-element
+  - jquery-plugin
+  - history-api
+  - web-components
+  - webcomponent
+  - history-management
+  - prefetch
+  - page-loader
+  - prefetcher
+  - reactive

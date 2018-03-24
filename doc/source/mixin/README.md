@@ -92,6 +92,14 @@ DocumentFragment.prototype.getElementById =
   };
 ```
 
+Prevent errors when loading component via native ES6 module support.
+
+
+```js
+window.process = window.process || {};
+window.process.env = window.process.env || {};
+```
+
 ## Push state mixin
 
 
@@ -123,7 +131,7 @@ See [Options](../../options.md) for usage information.
         duration: number,
         hrefRegex: regex,
         scriptSelector: string,
-        origin: string
+        initialHref: string
       };
     }
 
@@ -135,8 +143,52 @@ See [Options](../../options.md) for usage information.
         duration: 0,
         hrefRegex: null,
         scriptSelector: null,
-        origin: window.location.origin
+        initialHref: window.location.href
       };
+    }
+```
+
+### Properties
+We expose the same properties as `window.location`
+(in many ways this component can be thought of as a "replacement" for the global `Location` object).
+Currently they are read-only.
+
+
+```js
+    get hash() {
+      return this._url.hash;
+    }
+
+    get host() {
+      return this._url.host;
+    }
+
+    get hostname() {
+      return this._url.hostname;
+    }
+
+    get href() {
+      return this._url.href;
+    }
+
+    get origin() {
+      return this._url.origin;
+    }
+
+    get pathname() {
+      return this._url.pathname;
+    }
+
+    get port() {
+      return this._url.port;
+    }
+
+    get protocol() {
+      return this._url.protocol;
+    }
+
+    get search() {
+      return this._url.search;
     }
 ```
 
@@ -256,27 +308,16 @@ Public methods of this component. See [Methods](../../methods.md) for more.
     assign(url) {
       this.reload$.next({
         type: PUSH,
-        url: new URL(url, this.origin),
+        url: new URL(url, this.href),
         cacheNr: ++this.cacheNr // eslint-disable-line no-plusplus
       });
     }
 
     reload() {
-```
-
-FIXME: Reload currently doesn't work with external origins.
-Need to keep track of the current page to reload the correct url.
-Possibly combine this with History API support for external origins
-through search paramters, e.g. /curr/page.html?hy-push-state-url=https://external.com/page.html
-
-
-```js
-      if (this.origin !== window.location.origin) return;
-
       this.reload$.next({
         type: PUSH,
-        url: new URL(window.location.href),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
+        url: new URL(this.href),
         replace: true
       });
     }
@@ -284,7 +325,7 @@ through search paramters, e.g. /curr/page.html?hy-push-state-url=https://externa
     replace(url) {
       this.reload$.next({
         type: PUSH,
-        url: new URL(url, this.origin),
+        url: new URL(url, this.href),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
         replace: true
       });

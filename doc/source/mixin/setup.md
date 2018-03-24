@@ -45,7 +45,7 @@ import { switchMap } from "rxjs/_esm5/operators/switchMap";
 import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { matches, matchesAncestors } from "../common";
+import { isExternal, matches, matchesAncestors } from "../common";
 import { URL } from "../url";
 
 import { HINT, PUSH, POP } from "./constants";
@@ -105,7 +105,7 @@ TODO: doc
         takeUntil(this.subjects.disconnect),
         map(event => ({
           type: PUSH,
-          url: new URL(event.currentTarget.href, this.origin),
+          url: new URL(event.currentTarget.href, this.href),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr
@@ -130,7 +130,7 @@ modifying the browser history, e.g. clicking the back button, etc.
         ),
         map(event => ({
           type: POP,
-          url: new URL(window.location, this.origin),
+          url: new URL(window.location, this.href),
           event,
           cacheNr: this.cacheNr
         }))
@@ -145,7 +145,16 @@ TODO: doc
 ```js
       const [hash$, page$] = merge(push$, pop$, reload$)
         .pipe(
-          startWith({ url: new URL(window.location, this.origin) }),
+          startWith({ url: new URL(this.initialHref) }),
+          tap(({ url }) => {
+```
+
+HACK: make hy-push-state mimic window.location?
+
+
+```js
+            this._url = url;
+          }),
           pairwise(),
           share(),
           partition(this.isHashChange)
@@ -188,7 +197,7 @@ TODO: doc
         unsubscribeWhen(pauser$),
         map(event => ({
           type: HINT,
-          url: new URL(event.currentTarget.href, this.origin),
+          url: new URL(event.currentTarget.href, this.href),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr
@@ -215,7 +224,7 @@ Don't abort a request if the user "jiggles" over a link
             method: "GET",
             responseType: "text",
             url: context.url,
-            crossDomain: this.origin !== window.location.origin
+            crossDomain: isExternal(this)
           }).pipe(
             map(({ response }) => Object.assign(context, { response })),
             catchError(error => this.recoverIfResponse(context, error))
@@ -363,6 +372,16 @@ The function to be called for every added node:
             link.addEventListener("mouseenter", hintNext, { passive: true });
             link.addEventListener("touchstart", hintNext, { passive: true });
             link.addEventListener("focus", hintNext, { passive: true });
+```
+
+When fetching resources from an external domain, rewrite the link's href,
+so that shift-click, etc works as expected.
+
+
+```js
+            if (isExternal(this)) {
+              link.href = new URL(link.getAttribute("href"), this.href).href;
+            }
           }
         };
 
@@ -474,16 +493,6 @@ Note that we can't reliably generate hints this way, so we don't.
           }
         });
       }
-```
-
-Place initial values on the property observables.
-
-
-```js
-      /*
-      this.linkSelector$.next(this.linkSelector);
-      this.scrollRestoration$.next(this.scrollRestoration);
-      */
     }
   };
 ```

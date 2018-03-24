@@ -62,16 +62,16 @@ Returns an identifier to mark frames on the history stack.
         !metaKey &&
         !ctrlKey &&
         this.shouldLoadAnchor(anchor, this.hrefRegex) &&
-        !isExternal(url, new URL(this.origin))
+        !isExternal(url, this)
       );
     }
 
     isHintEvent({ url, anchor }) {
-      if (!this.shouldLoadAnchor(anchor, this.hrefRegex)) return false;
-      else {
-        const location = new URL(this.origin);
-        return !isExternal(url, location) && !isHash(url, location);
-      }
+      return (
+        this.shouldLoadAnchor(anchor, this.hrefRegex) &&
+        !isExternal(url, this) &&
+        !isHash(url, this)
+      );
     }
 ```
 

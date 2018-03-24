@@ -21,13 +21,9 @@ This file contains helper funtions related to managing the History API.
 
 
 ```js
+import { isExternal } from "../common";
+
 import { PUSH, INIT } from "./constants";
-```
-
-import { histId } from './methods';
-
-
-```js
 import { scrollMixin } from "./scrolling";
 
 export const historyMixin = C =>
@@ -40,10 +36,7 @@ add a new entry on the history stack, assuming the href is differnt.
 
 ```js
     updateHistoryState({ type, replace, url: { href, hash } }) {
-      if (
-        (type === PUSH || type === INIT) &&
-        this.origin === window.location.origin
-      ) {
+      if ((type === PUSH || type === INIT) && !isExternal(this)) {
         const id = this.histId();
         const method =
           replace || href === window.location.href
@@ -59,7 +52,7 @@ add a new entry on the history stack, assuming the href is differnt.
     updateHistoryStateHash({ type, url }) {
       const { hash, href } = url;
 
-      if (type === PUSH && this.origin === window.location.origin) {
+      if (type === PUSH && !isExternal(this)) {
         const id = this.histId();
         const currState = Object.assign(window.history.state, {
           [id]: Object.assign(window.history.state[id], { hash: true })
@@ -81,7 +74,7 @@ add a new entry on the history stack, assuming the href is differnt.
     updateHistoryTitle({ type, title }) {
       document.title = title;
 
-      if (type === PUSH && this.origin === window.location.origin) {
+      if (type === PUSH && !isExternal(this)) {
         window.history.replaceState(
           window.history.state,
           title,
@@ -91,7 +84,7 @@ add a new entry on the history stack, assuming the href is differnt.
     }
 
     saveScrollHistoryState() {
-      if (this.origin !== window.location.origin) return;
+      if (isExternal(this)) return;
 
       const state = this.saveScrollPosition(window.history.state || {});
       window.history.replaceState(state, document.title, window.location);

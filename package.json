@@ -55,18 +55,39 @@
     "jquery": "^3.3.1"
   },
   "directories": {
-    "lib": "./lib",
-    "doc": "./doc",
-    "example": "./example"
+    "doc": "doc",
+    "example": "example"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/qwtel/hy-push-state.git"
+    "url": "git+https://github.com/qwtel/hy-push-state.git"
   },
   "bugs": {
     "url": "https://github.com/qwtel/hy-push-state/issues"
   },
   "homepage": "https://qwtel.com/hy-push-state/",
+  "keywords": [
+    "page-transitions",
+    "ajax",
+    "pjax",
+    "smoothstate",
+    "hydejack",
+    "vanilla",
+    "jquery",
+    "animations",
+    "rxjs",
+    "vanilla-js",
+    "custom-element",
+    "jquery-plugin",
+    "history-api",
+    "web-components",
+    "webcomponent",
+    "history-management",
+    "prefetch",
+    "page-loader",
+    "prefetcher",
+    "reactive"
+  ],
   "babel": {
     "presets": [
       "env"

@@ -18,8 +18,9 @@
 // This file contains helper funtions related to managing the History API.
 
 // ## Imports
+import { isExternal } from "../common";
+
 import { PUSH, INIT } from "./constants";
-// import { histId } from './methods';
 import { scrollMixin } from "./scrolling";
 
 export const historyMixin = C =>
@@ -27,10 +28,7 @@ export const historyMixin = C =>
     // ## Update History state
     // add a new entry on the history stack, assuming the href is differnt.
     updateHistoryState({ type, replace, url: { href, hash } }) {
-      if (
-        (type === PUSH || type === INIT) &&
-        this.origin === window.location.origin
-      ) {
+      if ((type === PUSH || type === INIT) && !isExternal(this)) {
         const id = this.histId();
         const method =
           replace || href === window.location.href
@@ -46,7 +44,7 @@ export const historyMixin = C =>
     updateHistoryStateHash({ type, url }) {
       const { hash, href } = url;
 
-      if (type === PUSH && this.origin === window.location.origin) {
+      if (type === PUSH && !isExternal(this)) {
         const id = this.histId();
         const currState = Object.assign(window.history.state, {
           [id]: Object.assign(window.history.state[id], { hash: true })
@@ -68,7 +66,7 @@ export const historyMixin = C =>
     updateHistoryTitle({ type, title }) {
       document.title = title;
 
-      if (type === PUSH && this.origin === window.location.origin) {
+      if (type === PUSH && !isExternal(this)) {
         window.history.replaceState(
           window.history.state,
           title,
@@ -78,7 +76,7 @@ export const historyMixin = C =>
     }
 
     saveScrollHistoryState() {
-      if (this.origin !== window.location.origin) return;
+      if (isExternal(this)) return;
 
       const state = this.saveScrollPosition(window.history.state || {});
       window.history.replaceState(state, document.title, window.location);

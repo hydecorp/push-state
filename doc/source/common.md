@@ -44,15 +44,13 @@ Consider a URL external if either the protocol, hostname or port is different.
 
 
 ```js
-export function isExternal({ protocol, host }) {
-  return protocol !== window.location.protocol || host !== window.location.host;
+export function isExternal({ protocol, host }, location = window.location) {
+  return protocol !== location.protocol || host !== location.host;
 }
 
-export function isHash({ hash, origin, pathname }) {
+export function isHash({ hash, origin, pathname }, location = window.location) {
   return (
-    hash !== "" &&
-    origin === window.location.origin &&
-    pathname === window.location.pathname
+    hash !== "" && origin === location.origin && pathname === location.pathname
   );
 }
 

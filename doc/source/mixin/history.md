@@ -40,7 +40,10 @@ add a new entry on the history stack, assuming the href is differnt.
 
 ```js
     updateHistoryState({ type, replace, url: { href, hash } }) {
-      if (type === PUSH || type === INIT) {
+      if (
+        (type === PUSH || type === INIT) &&
+        this.origin === window.location.origin
+      ) {
         const id = this.histId();
         const method =
           replace || href === window.location.href
@@ -56,7 +59,7 @@ add a new entry on the history stack, assuming the href is differnt.
     updateHistoryStateHash({ type, url }) {
       const { hash, href } = url;
 
-      if (type === PUSH) {
+      if (type === PUSH && this.origin === window.location.origin) {
         const id = this.histId();
         const currState = Object.assign(window.history.state, {
           [id]: Object.assign(window.history.state[id], { hash: true })
@@ -75,7 +78,21 @@ add a new entry on the history stack, assuming the href is differnt.
       this.scrollHashIntoView(hash);
     }
 
+    updateHistoryTitle({ type, title }) {
+      document.title = title;
+
+      if (type === PUSH && this.origin === window.location.origin) {
+        window.history.replaceState(
+          window.history.state,
+          title,
+          window.location
+        );
+      }
+    }
+
     saveScrollHistoryState() {
+      if (this.origin !== window.location.origin) return;
+
       const state = this.saveScrollPosition(window.history.state || {});
       window.history.replaceState(state, document.title, window.location);
     }

@@ -122,7 +122,8 @@ See [Options](../../options.md) for usage information.
         scrollRestoration: bool,
         duration: number,
         hrefRegex: regex,
-        scriptSelector: string
+        scriptSelector: string,
+        origin: string
       };
     }
 
@@ -133,7 +134,8 @@ See [Options](../../options.md) for usage information.
         scrollRestoration: false,
         duration: 0,
         hrefRegex: null,
-        scriptSelector: null
+        scriptSelector: null,
+        origin: window.location.origin
       };
     }
 ```

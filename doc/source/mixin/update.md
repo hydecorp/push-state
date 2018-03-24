@@ -118,18 +118,8 @@ TODO: doc
 ```js
     updateDOM(context) {
       try {
-        const { title, replaceEls, type } = context;
-
-        document.title = title;
-
-        if (type === PUSH) {
-          window.history.replaceState(
-            window.history.state,
-            title,
-            window.location
-          );
-        }
-
+        const { replaceEls } = context;
+        this.updateHistoryTitle(context);
         this.replaceContent(replaceEls);
       } catch (error) {
         throw Object.assign(context, { error });

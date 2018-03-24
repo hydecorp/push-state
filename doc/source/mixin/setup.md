@@ -45,7 +45,7 @@ import { switchMap } from "rxjs/_esm5/operators/switchMap";
 import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { matchesAncestors } from "../common";
+import { matches, matchesAncestors } from "../common";
 import { URL } from "../url";
 
 import { HINT, PUSH, POP } from "./constants";
@@ -106,7 +106,7 @@ TODO: doc
         filter(this.isPushEvent.bind(this)),
         map(event => ({
           type: PUSH,
-          url: new URL(event.currentTarget.href),
+          url: new URL(event.currentTarget.href, this.origin),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr
@@ -130,7 +130,7 @@ modifying the browser history, e.g. clicking the back button, etc.
         ),
         map(event => ({
           type: POP,
-          url: new URL(window.location),
+          url: new URL(window.location, this.origin),
           event,
           cacheNr: this.cacheNr
         }))
@@ -145,7 +145,7 @@ TODO: doc
 ```js
       const [hash$, page$] = merge(push$, pop$, reload$)
         .pipe(
-          startWith({ url: new URL(window.location) }),
+          startWith({ url: new URL(window.location, this.origin) }),
           pairwise(),
           share(),
           partition(this.isHashChange)
@@ -189,7 +189,7 @@ TODO: doc
         filter(this.isHintEvent.bind(this)),
         map(event => ({
           type: HINT,
-          url: new URL(event.currentTarget.href),
+          url: new URL(event.currentTarget.href, this.origin),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr
@@ -214,7 +214,8 @@ Don't abort a request if the user "jiggles" over a link
           ajax({
             method: "GET",
             responseType: "text",
-            url: context.url
+            url: context.url,
+            crossDomain: this.origin !== window.location.origin
           }).pipe(
             map(({ response }) => Object.assign(context, { response })),
             catchError(error => this.recoverIfResponse(context, error))
@@ -367,9 +368,13 @@ The function to be called for every added node:
 
         const addListeners = addedNode => {
           if (addedNode instanceof Element) {
-            Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(
-              addLink
-            );
+            if (matches.call(addedNode, this.linkSelector)) {
+              addLink(addedNode);
+            } else {
+              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(
+                addLink
+              );
+            }
           }
         };
 ```
@@ -391,9 +396,13 @@ but since we can't be sure, we remove the event listeners anyway.
 
         const removeListeners = removedNode => {
           if (removedNode instanceof Element) {
-            Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(
-              removeLink
-            );
+            if (matches.call(removedNode, this.linkSelector)) {
+              removeLink(removedNode);
+            } else {
+              Array.from(
+                removedNode.querySelectorAll(this.linkSelector)
+              ).forEach(removeLink);
+            }
           }
         };
 ```

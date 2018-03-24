@@ -13,11 +13,11 @@ The example below will render on [webcomponents.org](https://www.webcomponents.o
 ```
 -->
 ```html
-<hy-push-state origin="https://qwtel.com">
+<hy-push-state initial-href="https://qwtel.com/hy-push-state/example/simple/">
   <p>
-    <a href="https://qwtel.com/hy-push-state/example/simple/1.html">Page 1</a>
-    <a href="https://qwtel.com/hy-push-state/example/simple/2.html">Page 2</a>
-    <a href="https://qwtel.com/hy-push-state/example/simple/3.html">Page 3</a>
+    <a href="./1.html">Page 1</a>
+    <a href="./2.html">Page 2</a>
+    <a href="./3.html">Page 3</a>
   </p>
   <p>Super simple example.</p>
 </hy-push-state>

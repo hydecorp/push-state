@@ -117,3 +117,24 @@ jQuery attribute
 
 HTML attribute
 : `origin`
+
+***
+
+## `scriptSelector`
+Some sites have embedded `script` tags that expect the site to be loaded with a fresh page load, e.g. they expect certain elements to be in the DOM, or even call `document.write`
+(which has a completely different effect when called after the initial document parse).
+
+This can easily break the page when loading it dynamically.
+hy-push-state includes various "hacks" to work around this, but there is no guarantee that these will fix a broken site. You can enabled this feature by providing a CSS selector that targets scripts, e.g. `script`.
+
+Type
+: `String` (CSS Selector)
+
+Default
+: `null`
+
+jQuery attribute
+: `data-script-selector`
+
+HTML attribute
+: `script-selector`

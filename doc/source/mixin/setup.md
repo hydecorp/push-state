@@ -103,7 +103,6 @@ TODO: doc
 ```js
       const push$ = pushSubject.pipe(
         takeUntil(this.subjects.disconnect),
-        filter(this.isPushEvent.bind(this)),
         map(event => ({
           type: PUSH,
           url: new URL(event.currentTarget.href, this.origin),
@@ -111,6 +110,7 @@ TODO: doc
           event,
           cacheNr: this.cacheNr
         })),
+        filter(this.isPushEvent.bind(this)),
         tap(({ event }) => {
           event.preventDefault();
           this.saveScrollHistoryState();
@@ -186,14 +186,14 @@ TODO: doc
       const hint$ = hintSubject.pipe(
         takeUntil(this.subjects.disconnect),
         unsubscribeWhen(pauser$),
-        filter(this.isHintEvent.bind(this)),
         map(event => ({
           type: HINT,
           url: new URL(event.currentTarget.href, this.origin),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr
-        }))
+        })),
+        filter(this.isHintEvent.bind(this))
       );
 ```
 

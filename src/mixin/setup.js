@@ -38,7 +38,7 @@ import { switchMap } from "rxjs/_esm5/operators/switchMap";
 import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { matchesAncestors } from "../common";
+import { matches, matchesAncestors } from "../common";
 import { URL } from "../url";
 
 import { HINT, PUSH, POP } from "./constants";
@@ -259,9 +259,13 @@ export const setupObservablesMixin = C =>
 
         const addListeners = addedNode => {
           if (addedNode instanceof Element) {
-            Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(
-              addLink
-            );
+            if (matches.call(addedNode, this.linkSelector)) {
+              addLink(addedNode);
+            } else {
+              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(
+                addLink
+              );
+            }
           }
         };
 
@@ -279,9 +283,13 @@ export const setupObservablesMixin = C =>
 
         const removeListeners = removedNode => {
           if (removedNode instanceof Element) {
-            Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(
-              removeLink
-            );
+            if (matches.call(removedNode, this.linkSelector)) {
+              removeLink(removedNode);
+            } else {
+              Array.from(
+                removedNode.querySelectorAll(this.linkSelector)
+              ).forEach(removeLink);
+            }
           }
         };
 

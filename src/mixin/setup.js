@@ -82,7 +82,7 @@ export const setupObservablesMixin = C =>
         filter(this.isPushEvent.bind(this)),
         map(event => ({
           type: PUSH,
-          url: new URL(event.currentTarget.href),
+          url: new URL(event.currentTarget.href, this.origin),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr
@@ -102,7 +102,7 @@ export const setupObservablesMixin = C =>
         ),
         map(event => ({
           type: POP,
-          url: new URL(window.location),
+          url: new URL(window.location, this.origin),
           event,
           cacheNr: this.cacheNr
         }))
@@ -113,7 +113,7 @@ export const setupObservablesMixin = C =>
       // TODO: doc
       const [hash$, page$] = merge(push$, pop$, reload$)
         .pipe(
-          startWith({ url: new URL(window.location) }),
+          startWith({ url: new URL(window.location, this.origin) }),
           pairwise(),
           share(),
           partition(this.isHashChange)
@@ -139,7 +139,7 @@ export const setupObservablesMixin = C =>
         filter(this.isHintEvent.bind(this)),
         map(event => ({
           type: HINT,
-          url: new URL(event.currentTarget.href),
+          url: new URL(event.currentTarget.href, this.origin),
           anchor: event.currentTarget,
           event,
           cacheNr: this.cacheNr

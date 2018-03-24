@@ -184,12 +184,18 @@ export const pushStateMixin = C =>
     assign(url) {
       this.reload$.next({
         type: PUSH,
-        url: new URL(url, window.location),
+        url: new URL(url, this.origin),
         cacheNr: ++this.cacheNr // eslint-disable-line no-plusplus
       });
     }
 
     reload() {
+      // FIXME: Reload currently doesn't work with external origins.
+      // Need to keep track of the current page to reload the correct url.
+      // Possibly combine this with History API support for external origins
+      // through search paramters, e.g. /curr/page.html?hy-push-state-url=https://external.com/page.html
+      if (this.origin !== window.location.origin) return;
+
       this.reload$.next({
         type: PUSH,
         url: new URL(window.location.href),
@@ -201,7 +207,7 @@ export const pushStateMixin = C =>
     replace(url) {
       this.reload$.next({
         type: PUSH,
-        url: new URL(url, window.location),
+        url: new URL(url, this.origin),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
         replace: true
       });

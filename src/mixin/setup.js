@@ -155,7 +155,8 @@ export const setupObservablesMixin = C =>
           ajax({
             method: "GET",
             responseType: "text",
-            url: context.url
+            url: context.url,
+            crossDomain: this.origin !== window.location.origin
           }).pipe(
             map(({ response }) => Object.assign(context, { response })),
             catchError(error => this.recoverIfResponse(context, error))

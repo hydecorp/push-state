@@ -45,15 +45,15 @@ export const helperMixin = C =>
         !metaKey &&
         !ctrlKey &&
         this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-        !isExternal(currentTarget)
+        !isExternal(currentTarget, new URL(this.origin))
       );
     }
 
     isHintEvent({ currentTarget }) {
       return (
         this.shouldLoadAnchor(currentTarget, this.hrefRegex) &&
-        !isExternal(currentTarget) &&
-        !isHash(currentTarget)
+        !isExternal(currentTarget, new URL(this.origin)) &&
+        !isHash(currentTarget, new URL(this.origin))
       );
     }
 

@@ -80,23 +80,6 @@ HTML attribute
 
 ***
 
-## `scrollRestoration`
-TODO
-
-Type
-: `Boolean`
-
-Default
-: `false`
-
-jQuery attribute
-: `data-scroll-restoration`
-
-HTML attribute
-: `scroll-restoration`
-
-***
-
 ## `duration`
 The duration of a page transition. Use this to ensure that animations have sufficient time to finish
 before the current content gets replaced with new content.
@@ -115,3 +98,22 @@ jQuery attribute
 
 HTML attribute
 : `duration`
+
+***
+
+## `origin`
+If you intend to fetch content form a domain that is different from the current location, you can provide a origin string.
+This string must be a valid `window.location.origin` value, e.g. `https://webcomponents.org`, or `http://localhost:8081`.
+Note that this will not push frames to the history stack, i.e. the back button will only work when `origin` is the same as the location of the current window.
+
+Type
+: `String` (URL/origin)
+
+Default
+: `window.location.origin`
+
+jQuery attribute
+: `data-origin`
+
+HTML attribute
+: `origin`

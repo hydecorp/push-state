@@ -94,7 +94,8 @@ export const pushStateMixin = C =>
         scrollRestoration: bool,
         duration: number,
         hrefRegex: regex,
-        scriptSelector: string
+        scriptSelector: string,
+        origin: string
       };
     }
 
@@ -105,7 +106,8 @@ export const pushStateMixin = C =>
         scrollRestoration: false,
         duration: 0,
         hrefRegex: null,
-        scriptSelector: null
+        scriptSelector: null,
+        origin: window.location.origin
       };
     }
 

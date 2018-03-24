@@ -1,7 +1,7 @@
 {
   "name": "hy-push-state",
   "version": "1.0.0-pre.8",
-  "description": "Turn web sites into web apps",
+  "description": "Turn static web sites into dynamic web apps",
   "main": "src/index.js",
   "scripts": {
     "clean": "rm -rf dist lib doc/source",

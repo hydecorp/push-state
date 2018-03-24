@@ -13,7 +13,7 @@ that should be replaced by the HTML elements of the same `id` from another page.
 If no ids are provided, hy-push-state will attempt to replace the entire content of the component ,
 provided the component itself has an id.
 If the component doesn't have an id,
-hy-push-state will attempt to find the equivalent component in the new document based on it's tag name,
+hy-push-state will attempt to find the equivalent component in the new document based on its tag name,
 but it is highly recommended that you don't rely on this feature.
 
 Type

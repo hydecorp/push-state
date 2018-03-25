@@ -77,20 +77,20 @@ Note that this will result in possibly hundreds of separate requests.
 ## Size
 The size of the minified bundle hovers around 90kb, or ~20kb gzipped.
 
-| File | Size |
-|:-----|-----:|
-| `dist/jquery/index.js` | 340K |
-| `dist/jquery/index.min.js` |  89K |
-| `dist/mixin/index.js` | 329K |
-| `dist/mixin/index.min.js` |  85K |
-| `dist/vanilla/index.js` | 332K |
-| `dist/vanilla/index.min.js` |  86K |
-| `dist/webcomponent/html-import.js` | 342K |
-| `dist/webcomponent/html-import.min.js` |  90K |
-| `dist/webcomponent/index.js` | 342K |
-| `dist/webcomponent/index.min.js` |  90K |
-| `dist/webcomponent/module.js` | 343K |
-| `dist/webcomponent/module.min.js` |  90K |
+| Size | File |
+|-----:|:-----|
+| 343K | `dist/jquery/index.dev.js` |
+|  91K | `dist/jquery/index.js` |
+| 332K | `dist/mixin/index.dev.js` |
+|  88K | `dist/mixin/index.js` |
+| 334K | `dist/vanilla/index.dev.js` |
+|  88K | `dist/vanilla/index.js` |
+| 344K | `dist/webcomponent/html-import.dev.js` |
+|  93K | `dist/webcomponent/html-import.js` |
+| 345K | `dist/webcomponent/index.dev.js` |
+|  93K | `dist/webcomponent/index.js` |
+| 346K | `dist/webcomponent/module.dev.js` |
+|  93K | `dist/webcomponent/module.js` |
 
 
 ## Gold Standard

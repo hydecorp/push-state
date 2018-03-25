@@ -3,25 +3,25 @@
   <head>
     <meta charset="utf-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
-    <title>WebComponent Example | hy-push-state</title>
+    <title>External Example | hy-push-state</title>
 
     <script src="https://unpkg.com/@webcomponents/webcomponentsjs@1.1.0"></script>
     <!-- <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html"> -->
-    <link rel="import" href="../../dist/webcomponent/hy-push-state.html">
+    <link rel="import" href="../../dist/webcomponent/hy-push-state.dev.html">
   </head>
   <body>
     <aside class="wrapper">
       <p>Current implementation: <span>WebComponent</span></p>
     </aside>
     <div class="wrapper">
-      <hy-push-state id="pushStateEl" initial-href="https://qwtel.com/" scroll-restoration>
+      <hy-push-state id="pushStateEl" initial-href="http://localhost:9091/" scroll-restoration>
         <main>
           <h1>External Example</h1>
           <ul>
-            <li><a href="https://qwtel.com/hy-push-state/example/mixin/">Mixin Example</a></li>
-            <li><a href="https://qwtel.com/hy-push-state/example/vanilla/">Vanilla JS Example</a></li>
-            <li><a href="https://qwtel.com/hy-push-state/example/jquery/">jQuery Example</a></li>
-            <li><a href="https://qwtel.com/hy-push-state/example/webcomponent/">WebComponent Example</a></li>
+            <li><a href="http://localhost:9091/example/mixin/">Mixin Example</a></li>
+            <li><a href="http://localhost:9091/example/vanilla/">Vanilla JS Example</a></li>
+            <li><a href="http://localhost:9091/example/jquery/">jQuery Example</a></li>
+            <li><a href="http://localhost:9091/example/webcomponent/">WebComponent Example</a></li>
           </ul>
         </main>
       </hy-push-state>

@@ -26,7 +26,7 @@ This is the version that is going to have native support across all major browse
 ~~~html
 <script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/module.js"></script>
 
-<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
 ~~~
 
 #### HTML Import
@@ -35,7 +35,7 @@ Some browsers have decided against implementing HTML Imports, but they are easil
 ~~~html
 <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
 
-<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
 ~~~
 
 #### Unbundled ES6 Module (experimental)
@@ -46,13 +46,13 @@ Note that this will result in possibly hundreds of separate requests.
 ~~~html
 <script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
 
-<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
 ~~~
 
 ### jQuery
 
 ~~~html
-<div id="pushStateEl" data-link-selector="a[href]"><!--content--></div>
+<div id="pushStateEl" data-link-selector="a[href]"><!-- ... --></div>
 
 <script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
 <script src="https://unpkg.com/hy-push-state/dist/jquery"></script>
@@ -63,7 +63,7 @@ Note that this will result in possibly hundreds of separate requests.
 
 ### Vanilla
 ~~~html
-<div id="pushStateEl"><!--content--></div>
+<div id="pushStateEl"><!-- ... --></div>
 
 <script src="https://unpkg.com/hy-push-state/dist/vanilla"></script>
 <script>

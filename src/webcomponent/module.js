@@ -24,15 +24,10 @@ const define = () => {
 };
 
 // Make sure the polyfills are ready (if they are being used).
-if (
-  "customElements" in window ||
-  (window.WebComponents && window.WebComponents.ready)
-) {
+if ("customElements" in window || (window.WebComponents && window.WebComponents.ready)) {
   define();
 } else if (window.WebComponents) {
   window.addEventListener("WebComponentsReady", define);
 } else if (process.env.DEBUG) {
-  console.warn(
-    "Couldn't register component. Did you forget to include a WebComponents polyfill?"
-  );
+  console.warn("Couldn't register component. Did you forget to include a WebComponents polyfill?");
 }

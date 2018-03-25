@@ -33,10 +33,7 @@ export const eventMixin = C =>
       // This allows for event-based code execution, rather than timing-based, which prevents hiccups
       // and glitches when, for example, painting takes longer than expected.
       const waitUntil = promise => {
-        if (
-          process.env.DEBUG &&
-          !(promise instanceof Promise || promise instanceof Observable)
-        ) {
+        if (process.env.DEBUG && !(promise instanceof Promise || promise instanceof Observable)) {
           console.warn("waitUntil expects a Promise as first argument.");
         }
         this.animPromise = promise;

@@ -51,18 +51,12 @@ import { updateMixin } from "./update";
 import { eventMixin } from "./events";
 
 export const setupObservablesMixin = C =>
-  class extends eventMixin(
-    updateMixin(fetchMixin(historyMixin(helperMixin(C))))
-  ) {
+  class extends eventMixin(updateMixin(fetchMixin(historyMixin(helperMixin(C))))) {
     // A compare function for contexts, used in combination with `distinctUntilChanged`.
     // We use `cacheNr` as it is a convenient (hacky) way of circumventing
     // `distinctUntilChanged` when retrying requests.
     compareContext(p, q) {
-      return (
-        p.url.href === q.url.href &&
-        p.error === q.error &&
-        p.cacheNr === q.cacheNr
-      );
+      return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
     }
 
     // ### Setup observable
@@ -97,9 +91,7 @@ export const setupObservablesMixin = C =>
       // modifying the browser history, e.g. clicking the back button, etc.
       const pop$ = fromEvent(window, "popstate").pipe(
         takeUntil(this.subjects.disconnect),
-        filter(
-          () => window.history.state && window.history.state[this.histId()]
-        ),
+        filter(() => window.history.state && window.history.state[this.histId()]),
         map(event => ({
           type: POP,
           url: new URL(window.location, this.href),
@@ -183,9 +175,7 @@ export const setupObservablesMixin = C =>
       );
 
       // TODO: doc
-      const [fetchOk$, fetchError$] = this.fetch$.pipe(
-        partition(({ error }) => !error)
-      );
+      const [fetchOk$, fetchError$] = this.fetch$.pipe(partition(({ error }) => !error));
 
       // TODO: doc
       const main$ = fetchOk$.pipe(
@@ -219,10 +209,7 @@ export const setupObservablesMixin = C =>
       page$
         .pipe(
           switchMap(context =>
-            defer(() => this.animPromise).pipe(
-              takeUntil(this.fetch$),
-              mapTo(context)
-            )
+            defer(() => this.animPromise).pipe(takeUntil(this.fetch$), mapTo(context))
           )
         )
         .subscribe(this.onProgress.bind(this));
@@ -272,9 +259,7 @@ export const setupObservablesMixin = C =>
             if (matches.call(addedNode, this.linkSelector)) {
               addLink(addedNode);
             } else {
-              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(
-                addLink
-              );
+              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(addLink);
             }
           }
         };
@@ -296,9 +281,7 @@ export const setupObservablesMixin = C =>
             if (matches.call(removedNode, this.linkSelector)) {
               removeLink(removedNode);
             } else {
-              Array.from(
-                removedNode.querySelectorAll(this.linkSelector)
-              ).forEach(removeLink);
+              Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(removeLink);
             }
           }
         };

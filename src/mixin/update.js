@@ -33,9 +33,7 @@ export const updateMixin = C =>
       } else if (this.el.id) {
         return [fragment.getElementById(this.el.id)];
       } else {
-        const index = Array.from(
-          document.getElementsByTagName(this.el.tagName)
-        ).indexOf(this.el);
+        const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
         return [fragment.querySelectorAll(this.el.tagName)[index]];
       }
     }
@@ -53,20 +51,16 @@ export const updateMixin = C =>
         throw Object.assign(context, { replaceElMissing: true });
       }
 
-      const scripts = this.scriptSelector
-        ? this.tempRemoveScriptTags(replaceEls)
-        : [];
+      const scripts = this.scriptSelector ? this.tempRemoveScriptTags(replaceEls) : [];
 
       return Object.assign(context, { title, replaceEls, scripts });
     }
 
     // Replaces the old elments with the new one, one-by-one.
     replaceContentByIds(elements) {
-      this.replaceIds
-        .map(id => document.getElementById(id))
-        .forEach((oldElement, i) => {
-          oldElement.parentNode.replaceChild(elements[i], oldElement);
-        });
+      this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
+        oldElement.parentNode.replaceChild(elements[i], oldElement);
+      });
     }
 
     // When no `relaceIds` are set, replace the entire content of the component (slow).

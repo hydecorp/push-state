@@ -33,13 +33,11 @@ export const scriptMixin = C =>
       const scripts = [];
 
       replaceEls.forEach(docfrag =>
-        Array.from(docfrag.querySelectorAll(this.scriptSelector)).forEach(
-          script => {
-            const pair = [script, script.previousSibling];
-            script.parentNode.removeChild(script);
-            scripts.push(pair);
-          }
-        )
+        Array.from(docfrag.querySelectorAll(this.scriptSelector)).forEach(script => {
+          const pair = [script, script.previousSibling];
+          script.parentNode.removeChild(script);
+          scripts.push(pair);
+        })
       );
 
       return scripts;

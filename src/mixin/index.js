@@ -73,10 +73,6 @@ DocumentFragment.prototype.getElementById =
     return this.querySelector(`#${id}`);
   };
 
-// Prevent errors when loading component via native ES6 module support.
-window.process = window.process || {};
-window.process.env = window.process.env || {};
-
 // ## Push state mixin
 export const pushStateMixin = C =>
   class extends setupObservablesMixin(rxjsMixin(componentMixin(C))) {

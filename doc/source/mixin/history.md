@@ -38,10 +38,7 @@ add a new entry on the history stack, assuming the href is differnt.
     updateHistoryState({ type, replace, url: { href, hash } }) {
       if ((type === PUSH || type === INIT) && !isExternal(this)) {
         const id = this.histId();
-        const method =
-          replace || href === window.location.href
-            ? "replaceState"
-            : "pushState";
+        const method = replace || href === window.location.href ? "replaceState" : "pushState";
         const state = Object.assign(window.history.state || {}, {
           [id]: { hash: !!hash }
         });
@@ -60,11 +57,7 @@ add a new entry on the history stack, assuming the href is differnt.
         const nextState = {
           [id]: { hash: true }
         };
-        window.history.replaceState(
-          currState,
-          document.title,
-          window.location.href
-        );
+        window.history.replaceState(currState, document.title, window.location.href);
         window.history.pushState(nextState, document.title, href);
       }
 
@@ -75,11 +68,7 @@ add a new entry on the history stack, assuming the href is differnt.
       document.title = title;
 
       if (type === PUSH && !isExternal(this)) {
-        window.history.replaceState(
-          window.history.state,
-          title,
-          window.location
-        );
+        window.history.replaceState(window.history.state, title, window.location);
       }
     }
 

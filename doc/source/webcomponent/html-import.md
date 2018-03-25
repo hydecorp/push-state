@@ -17,10 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import {
-  customElementMixin,
-  CustomElement
-} from "hy-component/src/custom-element";
+import { customElementMixin, CustomElement } from "hy-component/src/custom-element";
 
 import { pushStateMixin } from "../mixin";
 
@@ -43,17 +40,12 @@ Make sure the polyfills are ready (if they are being used).
 
 
 ```js
-if (
-  "customElements" in window ||
-  (window.WebComponents && window.WebComponents.ready)
-) {
+if ("customElements" in window || (window.WebComponents && window.WebComponents.ready)) {
   define();
 } else if (window.WebComponents) {
   window.addEventListener("WebComponentsReady", define);
 } else if (process.env.DEBUG) {
-  console.warn(
-    "Couldn't register component. Did you forget to include a WebComponents polyfill?"
-  );
+  console.warn("Couldn't register component. Did you forget to include a WebComponents polyfill?");
 }
 ```
 

@@ -54,10 +54,7 @@ and glitches when, for example, painting takes longer than expected.
 
 ```js
       const waitUntil = promise => {
-        if (
-          process.env.DEBUG &&
-          !(promise instanceof Promise || promise instanceof Observable)
-        ) {
+        if (process.env.DEBUG && !(promise instanceof Promise || promise instanceof Observable)) {
           console.warn("waitUntil expects a Promise as first argument.");
         }
         this.animPromise = promise;

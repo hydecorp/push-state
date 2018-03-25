@@ -41,8 +41,7 @@ If no hash is provided, scroll to the top instead.
       if (hash) {
         const el = document.getElementById(hash.substr(1));
         if (el) el.scrollIntoView();
-        else if (process.env.DEBUG)
-          console.warn(`Can't find element with id ${hash}`);
+        else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
       } else window.scroll(window.pageXOffset, 0);
     }
 ```

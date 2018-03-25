@@ -35,11 +35,7 @@ which helps with making multiple versions of the component (Vanilla JS, WebCompo
 
 
 ```js
-import {
-  componentMixin,
-  COMPONENT_FEATURE_TESTS,
-  Set
-} from "hy-component/src/component";
+import { componentMixin, COMPONENT_FEATURE_TESTS, Set } from "hy-component/src/component";
 import { rxjsMixin } from "hy-component/src/rxjs";
 import { array, bool, number, regex, string } from "hy-component/src/types";
 
@@ -53,6 +49,7 @@ but sufficient for this compoennt.
 
 ```js
 import { URL } from "../url";
+import { isExternal } from "../common";
 
 import { INIT, HINT, PUSH, POP } from "./constants";
 import { setupObservablesMixin } from "./setup";
@@ -234,9 +231,7 @@ Setting up scroll restoration
         this.subjects.scrollRestoration
           .pipe(takeUntil(this.subjects.disconnect))
           .subscribe(scrollRestoration => {
-            window.history.scrollRestoration = scrollRestoration
-              ? "manual"
-              : orig;
+            window.history.scrollRestoration = scrollRestoration ? "manual" : orig;
           });
       }
 ```
@@ -267,8 +262,11 @@ Setting the initial `history.state`.
 
 
 ```js
-      const url = new URL(window.location);
+      const url = new URL(this.initialHref);
       this.updateHistoryState({ type: INIT, replace: true, url });
+
+      const replaceEls = this.getReplaceElements(document);
+      if (isExternal(this)) this.rewriteURLs(replaceEls);
 ```
 
 After all this is done, we can fire the one-time `init` event...
@@ -288,7 +286,7 @@ since this `load` event wasn't caused by a user interaction.
       this.onLoad({
         type: INIT,
         title: this.getTitle(document),
-        replaceEls: this.getReplaceElements(document),
+        replaceEls,
         url,
         cacheNr: this.cacheNr
       });

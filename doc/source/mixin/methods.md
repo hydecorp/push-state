@@ -50,11 +50,7 @@ Returns an identifier to mark frames on the history stack.
 
 ```js
     shouldLoadAnchor(anchor, hrefRegex) {
-      return (
-        anchor &&
-        anchor.target === "" &&
-        (!hrefRegex || anchor.href.search(hrefRegex) !== -1)
-      );
+      return anchor && anchor.target === "" && (!hrefRegex || anchor.href.search(hrefRegex) !== -1);
     }
 
     isPushEvent({ url, anchor, event: { metaKey, ctrlKey } }) {
@@ -81,14 +77,8 @@ and the `hash` isn't empty.
 
 
 ```js
-    isHashChange([
-      { url: { pathname: prevPathname } },
-      { url: { pathname, hash }, type }
-    ]) {
-      return (
-        pathname === prevPathname &&
-        (type === POP || (type === PUSH && hash !== ""))
-      );
+    isHashChange([{ url: { pathname: prevPathname } }, { url: { pathname, hash }, type }]) {
+      return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ""));
     }
   };
 ```

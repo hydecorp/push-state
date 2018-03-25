@@ -35,9 +35,7 @@ export const WEBCOMPONENT_FEATURE_TESTS = new Set([
 
 export { Set };
 
-export class HyPushStateElement extends customElementMixin(
-  pushStateMixin(CustomElement)
-) {
+export class HyPushStateElement extends customElementMixin(pushStateMixin(CustomElement)) {
   static get observedAttributes() {
     return this.getObservedAttributes();
   }

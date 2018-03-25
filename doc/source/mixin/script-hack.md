@@ -49,13 +49,11 @@ This function removes all script tags (as query'ed by `scriptSelector`) from the
       const scripts = [];
 
       replaceEls.forEach(docfrag =>
-        Array.from(docfrag.querySelectorAll(this.scriptSelector)).forEach(
-          script => {
-            const pair = [script, script.previousSibling];
-            script.parentNode.removeChild(script);
-            scripts.push(pair);
-          }
-        )
+        Array.from(docfrag.querySelectorAll(this.scriptSelector)).forEach(script => {
+          const pair = [script, script.previousSibling];
+          script.parentNode.removeChild(script);
+          scripts.push(pair);
+        })
       );
 
       return scripts;

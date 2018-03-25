@@ -58,9 +58,7 @@ import { updateMixin } from "./update";
 import { eventMixin } from "./events";
 
 export const setupObservablesMixin = C =>
-  class extends eventMixin(
-    updateMixin(fetchMixin(historyMixin(helperMixin(C))))
-  ) {
+  class extends eventMixin(updateMixin(fetchMixin(historyMixin(helperMixin(C))))) {
 ```
 
 A compare function for contexts, used in combination with `distinctUntilChanged`.
@@ -70,11 +68,7 @@ We use `cacheNr` as it is a convenient (hacky) way of circumventing
 
 ```js
     compareContext(p, q) {
-      return (
-        p.url.href === q.url.href &&
-        p.error === q.error &&
-        p.cacheNr === q.cacheNr
-      );
+      return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
     }
 ```
 
@@ -125,9 +119,7 @@ modifying the browser history, e.g. clicking the back button, etc.
 ```js
       const pop$ = fromEvent(window, "popstate").pipe(
         takeUntil(this.subjects.disconnect),
-        filter(
-          () => window.history.state && window.history.state[this.histId()]
-        ),
+        filter(() => window.history.state && window.history.state[this.histId()]),
         map(event => ({
           type: POP,
           url: new URL(window.location, this.href),
@@ -260,9 +252,7 @@ TODO: doc
 
 
 ```js
-      const [fetchOk$, fetchError$] = this.fetch$.pipe(
-        partition(({ error }) => !error)
-      );
+      const [fetchOk$, fetchError$] = this.fetch$.pipe(partition(({ error }) => !error));
 ```
 
 TODO: doc
@@ -316,10 +306,7 @@ Fire `progress` event when fetching takes longer than expected.
       page$
         .pipe(
           switchMap(context =>
-            defer(() => this.animPromise).pipe(
-              takeUntil(this.fetch$),
-              mapTo(context)
-            )
+            defer(() => this.animPromise).pipe(takeUntil(this.fetch$), mapTo(context))
           )
         )
         .subscribe(this.onProgress.bind(this));
@@ -376,12 +363,12 @@ The function to be called for every added node:
 
 When fetching resources from an external domain, rewrite the link's href,
 so that shift-click, etc works as expected.
+if (isExternal(this)) {
+  link.href = new URL(link.getAttribute("href"), this.href).href;
+}
 
 
 ```js
-            if (isExternal(this)) {
-              link.href = new URL(link.getAttribute("href"), this.href).href;
-            }
           }
         };
 
@@ -390,9 +377,7 @@ so that shift-click, etc works as expected.
             if (matches.call(addedNode, this.linkSelector)) {
               addLink(addedNode);
             } else {
-              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(
-                addLink
-              );
+              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(addLink);
             }
           }
         };
@@ -418,9 +403,7 @@ but since we can't be sure, we remove the event listeners anyway.
             if (matches.call(removedNode, this.linkSelector)) {
               removeLink(removedNode);
             } else {
-              Array.from(
-                removedNode.querySelectorAll(this.linkSelector)
-              ).forEach(removeLink);
+              Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(removeLink);
             }
           }
         };

@@ -105,7 +105,7 @@ This is the version that is going to have native support across all major browse
 ~~~html
 <script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/module.js"></script>
 
-<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
 ~~~
 
 ##### HTML Import
@@ -114,7 +114,7 @@ Some browsers have decided against implementing HTML Imports, but they are easil
 ~~~html
 <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
 
-<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
 ~~~
 
 ##### Unbundled ES6 Module (experimental)
@@ -125,13 +125,13 @@ Note that this will result in possibly hundreds of separate requests.
 ~~~html
 <script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
 
-<hy-push-state link-selector="a[href]"><!--content--></hy-push-state>
+<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
 ~~~
 
 #### jQuery
 
 ~~~html
-<div id="pushStateEl" data-link-selector="a[href]"><!--content--></div>
+<div id="pushStateEl" data-link-selector="a[href]"><!-- ... --></div>
 
 <script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
 <script src="https://unpkg.com/hy-push-state/dist/jquery"></script>
@@ -142,7 +142,7 @@ Note that this will result in possibly hundreds of separate requests.
 
 #### Vanilla
 ~~~html
-<div id="pushStateEl"><!--content--></div>
+<div id="pushStateEl"><!-- ... --></div>
 
 <script src="https://unpkg.com/hy-push-state/dist/vanilla"></script>
 <script>
@@ -156,20 +156,20 @@ Note that this will result in possibly hundreds of separate requests.
 ### Size
 The size of the minified bundle hovers around 90kb, or ~20kb gzipped.
 
-| File | Size |
-|:-----|-----:|
-| `dist/jquery/index.js` | 340K |
-| `dist/jquery/index.min.js` |  89K |
-| `dist/mixin/index.js` | 329K |
-| `dist/mixin/index.min.js` |  85K |
-| `dist/vanilla/index.js` | 332K |
-| `dist/vanilla/index.min.js` |  86K |
-| `dist/webcomponent/html-import.js` | 342K |
-| `dist/webcomponent/html-import.min.js` |  90K |
-| `dist/webcomponent/index.js` | 342K |
-| `dist/webcomponent/index.min.js` |  90K |
-| `dist/webcomponent/module.js` | 343K |
-| `dist/webcomponent/module.min.js` |  90K |
+| Size | File |
+|-----:|:-----|
+| 343K | `dist/jquery/index.dev.js` |
+|  91K | `dist/jquery/index.js` |
+| 332K | `dist/mixin/index.dev.js` |
+|  88K | `dist/mixin/index.js` |
+| 334K | `dist/vanilla/index.dev.js` |
+|  88K | `dist/vanilla/index.js` |
+| 344K | `dist/webcomponent/html-import.dev.js` |
+|  93K | `dist/webcomponent/html-import.js` |
+| 345K | `dist/webcomponent/index.dev.js` |
+|  93K | `dist/webcomponent/index.js` |
+| 346K | `dist/webcomponent/module.dev.js` |
+|  93K | `dist/webcomponent/module.js` |
 
 
 ### Gold Standard

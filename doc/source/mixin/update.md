@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { fragmentFromString } from "../common";
+import { fragmentFromString, isExternal } from "../common";
 
 import { PUSH } from "./constants";
 import { scriptMixin } from "./script-hack";
@@ -45,9 +45,7 @@ Extracts the elements to be replaced
       } else if (this.el.id) {
         return [fragment.getElementById(this.el.id)];
       } else {
-        const index = Array.from(
-          document.getElementsByTagName(this.el.tagName)
-        ).indexOf(this.el);
+        const index = Array.from(document.getElementsByTagName(this.el.tagName)).indexOf(this.el);
         return [fragment.querySelectorAll(this.el.tagName)[index]];
       }
     }
@@ -69,9 +67,7 @@ that can be inserted into the DOM.
         throw Object.assign(context, { replaceElMissing: true });
       }
 
-      const scripts = this.scriptSelector
-        ? this.tempRemoveScriptTags(replaceEls)
-        : [];
+      const scripts = this.scriptSelector ? this.tempRemoveScriptTags(replaceEls) : [];
 
       return Object.assign(context, { title, replaceEls, scripts });
     }
@@ -82,11 +78,9 @@ Replaces the old elments with the new one, one-by-one.
 
 ```js
     replaceContentByIds(elements) {
-      this.replaceIds
-        .map(id => document.getElementById(id))
-        .forEach((oldElement, i) => {
-          oldElement.parentNode.replaceChild(elements[i], oldElement);
-        });
+      this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
+        oldElement.parentNode.replaceChild(elements[i], oldElement);
+      });
     }
 ```
 
@@ -120,10 +114,97 @@ TODO: doc
       try {
         const { replaceEls } = context;
         this.updateHistoryTitle(context);
+        if (isExternal(this)) this.rewriteURLs(replaceEls);
         this.replaceContent(replaceEls);
       } catch (error) {
         throw Object.assign(context, { error });
       }
+    }
+```
+
+When fetching documents from an external source,
+relative URLs will be resolved relative to the current `window.location`.
+We can rewrite URL to absolute urls
+
+
+```js
+    rewriteURLs(replaceEls) {
+      replaceEls.forEach(el => {
+        /* console.time(); */
+        el.querySelectorAll("[href]").forEach(this.rewriteURL("href"));
+        el.querySelectorAll("[src]").forEach(this.rewriteURL("src"));
+        el.querySelectorAll("img[srcset]").forEach(this.rewriteURLSrcSet("srcset"));
+        el.querySelectorAll("blockquote[cite]").forEach(this.rewriteURL("cite"));
+        el.querySelectorAll("del[cite]").forEach(this.rewriteURL("cite"));
+        el.querySelectorAll("ins[cite]").forEach(this.rewriteURL("cite"));
+        el.querySelectorAll("q[cite]").forEach(this.rewriteURL("cite"));
+        el.querySelectorAll("img[longdesc]").forEach(this.rewriteURL("longdesc"));
+        el.querySelectorAll("frame[longdesc]").forEach(this.rewriteURL("longdesc"));
+        el.querySelectorAll("iframe[longdesc]").forEach(this.rewriteURL("longdesc"));
+        el.querySelectorAll("img[usemap]").forEach(this.rewriteURL("usemap"));
+        el.querySelectorAll("input[usemap]").forEach(this.rewriteURL("usemap"));
+        el.querySelectorAll("object[usemap]").forEach(this.rewriteURL("usemap"));
+        el.querySelectorAll("form[action]").forEach(this.rewriteURL("action"));
+        el.querySelectorAll("button[formaction]").forEach(this.rewriteURL("formaction"));
+        el.querySelectorAll("input[formaction]").forEach(this.rewriteURL("formaction"));
+        el.querySelectorAll("video[poster]").forEach(this.rewriteURL("poster"));
+        el.querySelectorAll("object[data]").forEach(this.rewriteURL("data"));
+        el.querySelectorAll("object[codebase]").forEach(this.rewriteURL("codebase"));
+        el.querySelectorAll("object[archive]").forEach(this.rewriteURLList("archive"));
+        /* console.timeEnd(); */
+        /* el.querySelectorAll("command[icon]").forEach(this.rewriteURL("icon")); */ // obsolte
+      });
+    }
+
+    rewriteURL(attr) {
+      return el => {
+        try {
+          el.setAttribute(attr, new URL(el.getAttribute(attr), this.href).href);
+        } catch (e) {
+          if (process.env.DEBUG)
+            console.warn(`Couldn't rewrite URL in attribute ${attr} on element`, el);
+        }
+      };
+    }
+
+    rewriteURLSrcSet(attr) {
+      return el => {
+        try {
+          el.setAttribute(
+            attr,
+            el
+              .getAttribute(attr)
+              .split(/\s*,\s*/)
+              .map(str => {
+                const pair = str.split(/\s+/);
+                pair[0] = new URL(pair[0], this.href).href;
+                return pair.join(" ");
+              })
+              .join(", ")
+          );
+        } catch (e) {
+          if (process.env.DEBUG)
+            console.warn(`Couldn't rewrite URLs in attribute ${attr} on element`, el);
+        }
+      };
+    }
+
+    rewriteURLList(attr) {
+      return el => {
+        try {
+          el.setAttribute(
+            attr,
+            el
+              .getAttribute(attr)
+              .split(/[\s,]+/)
+              .map(str => new URL(str, this.href).href)
+              .join(", ")
+          );
+        } catch (e) {
+          if (process.env.DEBUG)
+            console.warn(`Couldn't rewrite URLs in attribute ${attr} on element`, el);
+        }
+      };
     }
   };
 ```

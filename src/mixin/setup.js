@@ -248,9 +248,9 @@ export const setupObservablesMixin = C =>
 
             // When fetching resources from an external domain, rewrite the link's href,
             // so that shift-click, etc works as expected.
-            if (isExternal(this)) {
-              link.href = new URL(link.getAttribute("href"), this.href).href;
-            }
+            // if (isExternal(this)) {
+            //   link.href = new URL(link.getAttribute("href"), this.href).href;
+            // }
           }
         };
 

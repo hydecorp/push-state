@@ -42,6 +42,7 @@ import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 // Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
 // but sufficient for this compoennt.
 import { URL } from "../url";
+import { isExternal } from "../common";
 
 import { INIT, HINT, PUSH, POP } from "./constants";
 import { setupObservablesMixin } from "./setup";
@@ -193,8 +194,11 @@ export const pushStateMixin = C =>
       super.connectComponent();
 
       // Setting the initial `history.state`.
-      const url = new URL(window.location);
+      const url = new URL(this.initialHref);
       this.updateHistoryState({ type: INIT, replace: true, url });
+
+      const replaceEls = this.getReplaceElements(document);
+      if (isExternal(this)) this.rewriteURLs(replaceEls);
 
       // After all this is done, we can fire the one-time `init` event...
       this.fireEvent("init");
@@ -206,7 +210,7 @@ export const pushStateMixin = C =>
       this.onLoad({
         type: INIT,
         title: this.getTitle(document),
-        replaceEls: this.getReplaceElements(document),
+        replaceEls,
         url,
         cacheNr: this.cacheNr
       });

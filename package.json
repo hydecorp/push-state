@@ -1,6 +1,6 @@
 {
   "name": "hy-push-state",
-  "version": "1.0.0-pre.13",
+  "version": "1.0.0-pre.14",
   "description": "Turn static web sites into dynamic web apps",
   "main": "src/index.js",
   "scripts": {
@@ -50,7 +50,7 @@
     "yargs": "^11.1.0"
   },
   "dependencies": {
-    "hy-component": "^1.0.0-pre.12",
+    "hy-component": "^1.0.0-pre.15",
     "rxjs": "^5.5.7"
   },
   "optionalDependencies": {

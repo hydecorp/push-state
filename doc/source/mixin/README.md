@@ -89,14 +89,6 @@ DocumentFragment.prototype.getElementById =
   };
 ```
 
-Prevent errors when loading component via native ES6 module support.
-
-
-```js
-window.process = window.process || {};
-window.process.env = window.process.env || {};
-```
-
 ## Push state mixin
 
 

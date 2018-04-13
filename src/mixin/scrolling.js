@@ -63,8 +63,8 @@ export const scrollMixin = C =>
       return Object.assign(state, {
         [id]: Object.assign(state[id] || {}, {
           scrollTop: getScrollTop(),
-          scrollHeight: getScrollHeight()
-        })
+          scrollHeight: getScrollHeight(),
+        }),
       });
     }
   };

@@ -60,7 +60,7 @@ export const MIXIN_FEATURE_TESTS = new Set([
   "history",
   "promises",
   "queryselector",
-  "requestanimationframe"
+  "requestanimationframe",
 ]);
 
 export { Set };
@@ -92,7 +92,7 @@ export const pushStateMixin = C =>
         duration: number,
         hrefRegex: regex,
         scriptSelector: string,
-        initialHref: string
+        initialHref: string,
       };
     }
 
@@ -104,7 +104,7 @@ export const pushStateMixin = C =>
         duration: 0,
         hrefRegex: null,
         scriptSelector: null,
-        initialHref: window.location.href
+        initialHref: window.location.href,
       };
     }
 
@@ -223,7 +223,7 @@ export const pushStateMixin = C =>
       this.reload$.next({
         type: PUSH,
         url: new URL(url, this.href),
-        cacheNr: ++this.cacheNr // eslint-disable-line no-plusplus
+        cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
       });
     }
 
@@ -232,7 +232,7 @@ export const pushStateMixin = C =>
         type: PUSH,
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
         url: new URL(this.href),
-        replace: true
+        replace: true,
       });
     }
 
@@ -241,7 +241,7 @@ export const pushStateMixin = C =>
         type: PUSH,
         url: new URL(url, this.href),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
-        replace: true
+        replace: true,
       });
     }
   };

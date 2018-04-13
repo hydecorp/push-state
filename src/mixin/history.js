@@ -32,7 +32,7 @@ export const historyMixin = C =>
         const id = this.histId();
         const method = replace || href === window.location.href ? "replaceState" : "pushState";
         const state = Object.assign(window.history.state || {}, {
-          [id]: { hash: !!hash }
+          [id]: { hash: !!hash },
         });
         window.history[method](state, document.title, href);
       }
@@ -44,10 +44,10 @@ export const historyMixin = C =>
       if (type === PUSH && !isExternal(this)) {
         const id = this.histId();
         const currState = Object.assign(window.history.state, {
-          [id]: Object.assign(window.history.state[id], { hash: true })
+          [id]: Object.assign(window.history.state[id], { hash: true }),
         });
         const nextState = {
-          [id]: { hash: true }
+          [id]: { hash: true },
         };
         window.history.replaceState(currState, document.title, window.location.href);
         window.history.pushState(nextState, document.title, href);

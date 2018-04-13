@@ -78,7 +78,7 @@ export const setupObservablesMixin = C =>
           url: new URL(event.currentTarget.href, this.href),
           anchor: event.currentTarget,
           event,
-          cacheNr: this.cacheNr
+          cacheNr: this.cacheNr,
         })),
         filter(this.isPushEvent.bind(this)),
         tap(({ event }) => {
@@ -96,7 +96,7 @@ export const setupObservablesMixin = C =>
           type: POP,
           url: new URL(window.location, this.href),
           event,
-          cacheNr: this.cacheNr
+          cacheNr: this.cacheNr,
         }))
       );
 
@@ -137,7 +137,7 @@ export const setupObservablesMixin = C =>
           url: new URL(event.currentTarget.href, this.href),
           anchor: event.currentTarget,
           event,
-          cacheNr: this.cacheNr
+          cacheNr: this.cacheNr,
         })),
         filter(this.isHintEvent.bind(this))
       );
@@ -152,7 +152,7 @@ export const setupObservablesMixin = C =>
             method: "GET",
             responseType: "text",
             url: context.url,
-            crossDomain: isExternal(this)
+            crossDomain: isExternal(this),
           }).pipe(
             map(({ response }) => Object.assign(context, { response })),
             catchError(error => this.recoverIfResponse(context, error))
@@ -296,7 +296,7 @@ export const setupObservablesMixin = C =>
           );
           this.mutationObserver.observe(this.el, {
             childList: true,
-            subtree: true
+            subtree: true,
           });
         })
           // For every mutation, we remove the event listeners of elements that go out of the component
@@ -328,5 +328,7 @@ export const setupObservablesMixin = C =>
           }
         });
       }
+
+      this.nextValues();
     }
   };

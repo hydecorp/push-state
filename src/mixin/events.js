@@ -40,7 +40,7 @@ export const eventMixin = C =>
       };
 
       this.fireEvent("start", {
-        detail: Object.assign(context, { waitUntil })
+        detail: Object.assign(context, { waitUntil }),
       });
     }
 

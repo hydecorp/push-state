@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from "rxjs/_esm5/Observable";
 import { Subject } from "rxjs/_esm5/Subject";
 
 // Importing the subset of RxJS functions that we are going to use.
@@ -38,7 +37,7 @@ import { switchMap } from "rxjs/_esm5/operators/switchMap";
 import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { isExternal, matches, matchesAncestors } from "../common";
+import { isExternal } from "../common";
 import { URL } from "../url";
 
 import { HINT, PUSH, POP } from "./constants";
@@ -49,9 +48,12 @@ import { historyMixin } from "./history";
 import { fetchMixin } from "./fetching";
 import { updateMixin } from "./update";
 import { eventMixin } from "./events";
+import { eventListenersMixin } from "./event-listeners";
 
 export const setupObservablesMixin = C =>
-  class extends eventMixin(updateMixin(fetchMixin(historyMixin(helperMixin(C))))) {
+  class extends eventListenersMixin(
+    eventMixin(updateMixin(fetchMixin(historyMixin(helperMixin(C)))))
+  ) {
     // A compare function for contexts, used in combination with `distinctUntilChanged`.
     // We use `cacheNr` as it is a convenient (hacky) way of circumventing
     // `distinctUntilChanged` when retrying requests.
@@ -67,11 +69,11 @@ export const setupObservablesMixin = C =>
       // For now, we take for granted that we have a stream of all `PUSH` events (loading a new page by
       // clicking on a link) and `HINT` events (probable click on a link) which are `pushSubject` and
       // `hintSubject` respectively.
-      const pushSubject = new Subject();
-      const hintSubject = new Subject();
+      this.pushSubject = new Subject();
+      this.hintSubject = new Subject();
 
       // TODO: doc
-      const push$ = pushSubject.pipe(
+      const push$ = this.pushSubject.pipe(
         takeUntil(this.subjects.disconnect),
         map(event => ({
           type: PUSH,
@@ -106,10 +108,8 @@ export const setupObservablesMixin = C =>
       const [hash$, page$] = merge(push$, pop$, reload$)
         .pipe(
           startWith({ url: new URL(this.initialHref) }),
-          tap(({ url }) => {
-            // HACK: make hy-push-state mimic window.location?
-            this._url = url;
-          }),
+          // HACK: make hy-push-state mimic window.location?
+          tap(({ url }) => (this._url = url)),
           pairwise(),
           share(),
           partition(this.isHashChange)
@@ -129,7 +129,7 @@ export const setupObservablesMixin = C =>
         .pipe(startWith(false), share());
 
       // TODO: doc
-      const hint$ = hintSubject.pipe(
+      const hint$ = this.hintSubject.pipe(
         takeUntil(this.subjects.disconnect),
         unsubscribeWhen(pauser$),
         map(event => ({
@@ -214,121 +214,7 @@ export const setupObservablesMixin = C =>
         )
         .subscribe(this.onProgress.bind(this));
 
-      // #### Keeping track of links
-      // We use a `MutationObserver` to keep track of all the links inside the component,
-      // and put events on the `pushSubject` and `hintSubject` observables,
-      // but first we need to check if `MutationObserver` is available.
-      if ("MutationObserver" in window && "WeakSet" in window) {
-        // A `Set` of `Element`s.
-        // We use this to keep track of which links already have their event listeners registered.
-        const links = new WeakSet();
-
-        // Binding `next` functions to their `Subject`s,
-        // so that we can pass them as callbacks directly. This is just for convenience.
-        const pushNext = pushSubject.next.bind(pushSubject);
-        const hintNext = hintSubject.next.bind(hintSubject);
-
-        // We don't use `Observable.fromEvent` here to avoid creating too many observables.
-        // Registering an unknown number of event listeners is somewhat debatable,
-        // but we certainly don't want to make it wrose.
-        // (The number could be brought down by using an `IntersectionObserver` in the future.
-        // Also note that typically there will be an animation playing while this is happening,
-        // so the effects are not easily noticed).
-        //
-        // In any case, `MutationObserver` and `Set` help us keep track of which links are children
-        // of this component, so that we can reliably add and remove the event listeners.
-        // The function to be called for every added node:
-        const addLink = link => {
-          if (!links.has(link)) {
-            links.add(link);
-            link.addEventListener("click", pushNext);
-            link.addEventListener("mouseenter", hintNext, { passive: true });
-            link.addEventListener("touchstart", hintNext, { passive: true });
-            link.addEventListener("focus", hintNext, { passive: true });
-
-            // When fetching resources from an external domain, rewrite the link's href,
-            // so that shift-click, etc works as expected.
-            // if (isExternal(this)) {
-            //   link.href = new URL(link.getAttribute("href"), this.href).href;
-            // }
-          }
-        };
-
-        const addListeners = addedNode => {
-          if (addedNode instanceof Element) {
-            if (matches.call(addedNode, this.linkSelector)) {
-              addLink(addedNode);
-            } else {
-              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(addLink);
-            }
-          }
-        };
-
-        // Next, The function to be called for every removed node.
-        // Usually the elments will be removed from the document altogher
-        // when they are removed from this component,
-        // but since we can't be sure, we remove the event listeners anyway.
-        const removeLink = link => {
-          links.delete(link);
-          link.removeEventListener("click", pushNext);
-          link.removeEventListener("mouseenter", hintNext, { passive: true });
-          link.removeEventListener("touchstart", hintNext, { passive: true });
-          link.removeEventListener("focus", hintNext, { passive: true });
-        };
-
-        const removeListeners = removedNode => {
-          if (removedNode instanceof Element) {
-            if (matches.call(removedNode, this.linkSelector)) {
-              removeLink(removedNode);
-            } else {
-              Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(removeLink);
-            }
-          }
-        };
-
-        // An observable wrapper around the mutation observer.
-        // We're only interested in nodes entering and leaving the entire subtree of this component,
-        // but not attribute changes.
-        Observable.create(obs => {
-          const next = obs.next.bind(obs);
-          this.mutationObserver = new MutationObserver(mutations =>
-            Array.from(mutations).forEach(next)
-          );
-          this.mutationObserver.observe(this.el, {
-            childList: true,
-            subtree: true,
-          });
-        })
-          // For every mutation, we remove the event listeners of elements that go out of the component
-          // (if any), and add event listeners to all elements that make it into the compnent (if any).
-          .subscribe(({ addedNodes, removedNodes }) => {
-            Array.from(removedNodes).forEach(removeListeners.bind(this));
-            Array.from(addedNodes).forEach(addListeners.bind(this));
-          });
-
-        // TODO
-        this.subjects.linkSelector.subscribe(() => {
-          // TODO
-          Array.from(links).forEach(removeLink);
-
-          // The mutation observer does not pick up the links that are already on the page,
-          // so we add them manually here, once.
-          addListeners.call(this, this.el);
-        });
-
-        // If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
-        // on the entire component, and check if a click occurred on one of our links.
-        // Note that we can't reliably generate hints this way, so we don't.
-      } else {
-        this.el.addEventListener("click", event => {
-          const anchor = matchesAncestors.call(event.target, this.linkSelector);
-          if (anchor && anchor.href) {
-            event.currentTarget = anchor; // eslint-disable-line no-param-reassign
-            pushSubject.next(event);
-          }
-        });
-      }
-
-      this.nextValues();
+      // TODO: doc
+      this.setupEventListeners();
     }
   };

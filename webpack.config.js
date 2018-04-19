@@ -4,7 +4,7 @@ const { resolve } = require("path");
 const {
   BannerPlugin,
   EnvironmentPlugin,
-  optimize: { UglifyJsPlugin, ModuleConcatenationPlugin }
+  optimize: { UglifyJsPlugin, ModuleConcatenationPlugin },
 } = require("webpack");
 
 const merge = require("webpack-merge");
@@ -28,13 +28,13 @@ function envConfig() {
         plugins: [
           new BannerPlugin({ banner }),
           new EnvironmentPlugin({ DEBUG: false }),
-          new UglifyJsPlugin({ sourceMap: true })
-        ]
+          new UglifyJsPlugin({ sourceMap: true }),
+        ],
       };
 
     default:
       return {
-        plugins: [new EnvironmentPlugin({ DEBUG: true })]
+        plugins: [new EnvironmentPlugin({ DEBUG: true })],
       };
   }
 }
@@ -46,7 +46,7 @@ const baseConfig = merge(
       filename: `index${min}.js`,
       library,
       libraryTarget: "umd",
-      umdNamedDefine: true
+      umdNamedDefine: true,
     },
     module: {
       rules: [
@@ -55,29 +55,29 @@ const baseConfig = merge(
           loader: "babel-loader",
           options: {
             presets: [["env", { modules: false }]],
-            babelrc: false
-          }
+            babelrc: false,
+          },
         },
         {
           test: /\.html$/,
-          use: "raw-loader"
+          use: "raw-loader",
         },
         {
           test: /\.ejs$/,
-          loader: "underscore-template-loader"
-        }
-      ]
+          loader: "underscore-template-loader",
+        },
+      ],
     },
     resolve: {
       modules: [
         resolve("./src"),
         resolve("./node_modules"),
-        process.env.NODE_PATH ? resolve(process.env.NODE_PATH) : []
+        process.env.NODE_PATH ? resolve(process.env.NODE_PATH) : [],
       ].reduce(...flatten),
       extensions: [".json", ".js"],
-      symlinks: true
+      symlinks: true,
     },
-    plugins: [new ModuleConcatenationPlugin()]
+    plugins: [new ModuleConcatenationPlugin()],
   },
   envConfig()
 );
@@ -87,10 +87,10 @@ const cssRawLoaderConfig = {
     rules: [
       {
         test: /\.css$/,
-        loader: "raw-loader"
-      }
-    ]
-  }
+        loader: "raw-loader",
+      },
+    ],
+  },
 };
 
 const config = [
@@ -98,37 +98,37 @@ const config = [
   merge(baseConfig, {
     entry: resolve("./src/mixin/index.js"),
     output: {
-      path: resolve("./dist/mixin")
-    }
+      path: resolve("./dist/mixin"),
+    },
   }),
 
   // Vanilla JS
   merge(baseConfig, {
     entry: resolve("./src/vanilla/index.js"),
     output: {
-      path: resolve("./dist/vanilla")
-    }
+      path: resolve("./dist/vanilla"),
+    },
   }),
 
   // jQuery
   merge(baseConfig, {
     entry: resolve("./src/jquery/index.js"),
     output: {
-      path: resolve("./dist/jquery")
+      path: resolve("./dist/jquery"),
     },
     externals: [
       {
-        jquery: "jQuery"
-      }
-    ]
+        jquery: "jQuery",
+      },
+    ],
   }),
 
   // WebComponent Standalone
   merge(baseConfig, {
     entry: resolve("./src/webcomponent/index.js"),
     output: {
-      path: resolve("./dist/webcomponent")
-    }
+      path: resolve("./dist/webcomponent"),
+    },
   }),
 
   // WebComponent Module
@@ -136,8 +136,8 @@ const config = [
     entry: resolve("./src/webcomponent/module.js"),
     output: {
       path: resolve("./dist/webcomponent"),
-      filename: `module${min}.js`
-    }
+      filename: `module${min}.js`,
+    },
   }),
 
   // WebComponent HTML Import
@@ -145,15 +145,15 @@ const config = [
     entry: resolve("./src/webcomponent/html-import.js"),
     output: {
       path: resolve("./dist/webcomponent"),
-      filename: `html-import${min}.js`
+      filename: `html-import${min}.js`,
     },
     plugins: [
       new HtmlWebpackPlugin({
         template: resolve("./src/webcomponent/index.ejs"),
-        filename: `${filename}${min}.html`
-      })
-    ]
-  })
+        filename: `${filename}${min}.html`,
+      }),
+    ],
+  }),
 ];
 
 module.exports = config;

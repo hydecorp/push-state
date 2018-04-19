@@ -22,7 +22,7 @@ import 'core-js/fn/array/from';
 import {
   JQueryComponent,
   defineJQueryComponent,
-  Set
+  Set,
 } from "hy-component/src/define-jquery-component";
 
 import { pushStateMixin, MIXIN_FEATURE_TESTS } from "../mixin";

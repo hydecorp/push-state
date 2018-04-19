@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { Observable } from "rxjs/_esm5/Observable";
 import { Subject } from "rxjs/_esm5/Subject";
 ```
 
@@ -45,7 +44,7 @@ import { switchMap } from "rxjs/_esm5/operators/switchMap";
 import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { isExternal, matches, matchesAncestors } from "../common";
+import { isExternal } from "../common";
 import { URL } from "../url";
 
 import { HINT, PUSH, POP } from "./constants";
@@ -56,9 +55,12 @@ import { historyMixin } from "./history";
 import { fetchMixin } from "./fetching";
 import { updateMixin } from "./update";
 import { eventMixin } from "./events";
+import { eventListenersMixin } from "./event-listeners";
 
 export const setupObservablesMixin = C =>
-  class extends eventMixin(updateMixin(fetchMixin(historyMixin(helperMixin(C))))) {
+  class extends eventListenersMixin(
+    eventMixin(updateMixin(fetchMixin(historyMixin(helperMixin(C)))))
+  ) {
 ```
 
 A compare function for contexts, used in combination with `distinctUntilChanged`.
@@ -87,22 +89,22 @@ clicking on a link) and `HINT` events (probable click on a link) which are `push
 
 
 ```js
-      const pushSubject = new Subject();
-      const hintSubject = new Subject();
+      this.pushSubject = new Subject();
+      this.hintSubject = new Subject();
 ```
 
 TODO: doc
 
 
 ```js
-      const push$ = pushSubject.pipe(
+      const push$ = this.pushSubject.pipe(
         takeUntil(this.subjects.disconnect),
         map(event => ({
           type: PUSH,
           url: new URL(event.currentTarget.href, this.href),
           anchor: event.currentTarget,
           event,
-          cacheNr: this.cacheNr
+          cacheNr: this.cacheNr,
         })),
         filter(this.isPushEvent.bind(this)),
         tap(({ event }) => {
@@ -124,7 +126,7 @@ modifying the browser history, e.g. clicking the back button, etc.
           type: POP,
           url: new URL(window.location, this.href),
           event,
-          cacheNr: this.cacheNr
+          cacheNr: this.cacheNr,
         }))
       );
 
@@ -138,15 +140,13 @@ TODO: doc
       const [hash$, page$] = merge(push$, pop$, reload$)
         .pipe(
           startWith({ url: new URL(this.initialHref) }),
-          tap(({ url }) => {
 ```
 
 HACK: make hy-push-state mimic window.location?
 
 
 ```js
-            this._url = url;
-          }),
+          tap(({ url }) => (this._url = url)),
           pairwise(),
           share(),
           partition(this.isHashChange)
@@ -184,7 +184,7 @@ TODO: doc
 
 
 ```js
-      const hint$ = hintSubject.pipe(
+      const hint$ = this.hintSubject.pipe(
         takeUntil(this.subjects.disconnect),
         unsubscribeWhen(pauser$),
         map(event => ({
@@ -192,7 +192,7 @@ TODO: doc
           url: new URL(event.currentTarget.href, this.href),
           anchor: event.currentTarget,
           event,
-          cacheNr: this.cacheNr
+          cacheNr: this.cacheNr,
         })),
         filter(this.isHintEvent.bind(this))
       );
@@ -216,7 +216,7 @@ Don't abort a request if the user "jiggles" over a link
             method: "GET",
             responseType: "text",
             url: context.url,
-            crossDomain: isExternal(this)
+            crossDomain: isExternal(this),
           }).pipe(
             map(({ response }) => Object.assign(context, { response })),
             catchError(error => this.recoverIfResponse(context, error))
@@ -312,170 +312,11 @@ Fire `progress` event when fetching takes longer than expected.
         .subscribe(this.onProgress.bind(this));
 ```
 
-#### Keeping track of links
-We use a `MutationObserver` to keep track of all the links inside the component,
-and put events on the `pushSubject` and `hintSubject` observables,
-but first we need to check if `MutationObserver` is available.
+TODO: doc
 
 
 ```js
-      if ("MutationObserver" in window && "WeakSet" in window) {
-```
-
-A `Set` of `Element`s.
-We use this to keep track of which links already have their event listeners registered.
-
-
-```js
-        const links = new WeakSet();
-```
-
-Binding `next` functions to their `Subject`s,
-so that we can pass them as callbacks directly. This is just for convenience.
-
-
-```js
-        const pushNext = pushSubject.next.bind(pushSubject);
-        const hintNext = hintSubject.next.bind(hintSubject);
-```
-
-We don't use `Observable.fromEvent` here to avoid creating too many observables.
-Registering an unknown number of event listeners is somewhat debatable,
-but we certainly don't want to make it wrose.
-(The number could be brought down by using an `IntersectionObserver` in the future.
-Also note that typically there will be an animation playing while this is happening,
-so the effects are not easily noticed).
-
-In any case, `MutationObserver` and `Set` help us keep track of which links are children
-of this component, so that we can reliably add and remove the event listeners.
-The function to be called for every added node:
-
-
-```js
-        const addLink = link => {
-          if (!links.has(link)) {
-            links.add(link);
-            link.addEventListener("click", pushNext);
-            link.addEventListener("mouseenter", hintNext, { passive: true });
-            link.addEventListener("touchstart", hintNext, { passive: true });
-            link.addEventListener("focus", hintNext, { passive: true });
-```
-
-When fetching resources from an external domain, rewrite the link's href,
-so that shift-click, etc works as expected.
-if (isExternal(this)) {
-  link.href = new URL(link.getAttribute("href"), this.href).href;
-}
-
-
-```js
-          }
-        };
-
-        const addListeners = addedNode => {
-          if (addedNode instanceof Element) {
-            if (matches.call(addedNode, this.linkSelector)) {
-              addLink(addedNode);
-            } else {
-              Array.from(addedNode.querySelectorAll(this.linkSelector)).forEach(addLink);
-            }
-          }
-        };
-```
-
-Next, The function to be called for every removed node.
-Usually the elments will be removed from the document altogher
-when they are removed from this component,
-but since we can't be sure, we remove the event listeners anyway.
-
-
-```js
-        const removeLink = link => {
-          links.delete(link);
-          link.removeEventListener("click", pushNext);
-          link.removeEventListener("mouseenter", hintNext, { passive: true });
-          link.removeEventListener("touchstart", hintNext, { passive: true });
-          link.removeEventListener("focus", hintNext, { passive: true });
-        };
-
-        const removeListeners = removedNode => {
-          if (removedNode instanceof Element) {
-            if (matches.call(removedNode, this.linkSelector)) {
-              removeLink(removedNode);
-            } else {
-              Array.from(removedNode.querySelectorAll(this.linkSelector)).forEach(removeLink);
-            }
-          }
-        };
-```
-
-An observable wrapper around the mutation observer.
-We're only interested in nodes entering and leaving the entire subtree of this component,
-but not attribute changes.
-
-
-```js
-        Observable.create(obs => {
-          const next = obs.next.bind(obs);
-          this.mutationObserver = new MutationObserver(mutations =>
-            Array.from(mutations).forEach(next)
-          );
-          this.mutationObserver.observe(this.el, {
-            childList: true,
-            subtree: true
-          });
-        })
-```
-
-For every mutation, we remove the event listeners of elements that go out of the component
-(if any), and add event listeners to all elements that make it into the compnent (if any).
-
-
-```js
-          .subscribe(({ addedNodes, removedNodes }) => {
-            Array.from(removedNodes).forEach(removeListeners.bind(this));
-            Array.from(addedNodes).forEach(addListeners.bind(this));
-          });
-```
-
-TODO
-
-
-```js
-        this.subjects.linkSelector.subscribe(() => {
-```
-
-TODO
-
-
-```js
-          Array.from(links).forEach(removeLink);
-```
-
-The mutation observer does not pick up the links that are already on the page,
-so we add them manually here, once.
-
-
-```js
-          addListeners.call(this, this.el);
-        });
-```
-
-If we don't have `MutationObserver` and `Set`, we just register a `click` event listener
-on the entire component, and check if a click occurred on one of our links.
-Note that we can't reliably generate hints this way, so we don't.
-
-
-```js
-      } else {
-        this.el.addEventListener("click", event => {
-          const anchor = matchesAncestors.call(event.target, this.linkSelector);
-          if (anchor && anchor.href) {
-            event.currentTarget = anchor; // eslint-disable-line no-param-reassign
-            pushSubject.next(event);
-          }
-        });
-      }
+      this.setupEventListeners();
     }
   };
 ```

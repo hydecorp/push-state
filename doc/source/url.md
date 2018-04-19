@@ -116,7 +116,7 @@ if (!URL || !URL.prototype || !("href" in URL.prototype)) {
     },
     set hash(value) {
       this._anchorElement.hash = value;
-    }
+    },
   };
 
   var oldURL = window.URL || window.webkitURL || window.mozURL;

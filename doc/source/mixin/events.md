@@ -61,7 +61,7 @@ and glitches when, for example, painting takes longer than expected.
       };
 
       this.fireEvent("start", {
-        detail: Object.assign(context, { waitUntil })
+        detail: Object.assign(context, { waitUntil }),
       });
     }
 ```

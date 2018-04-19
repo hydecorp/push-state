@@ -71,7 +71,7 @@ export const MIXIN_FEATURE_TESTS = new Set([
   "history",
   "promises",
   "queryselector",
-  "requestanimationframe"
+  "requestanimationframe",
 ]);
 
 export { Set };
@@ -120,7 +120,7 @@ See [Options](../../options.md) for usage information.
         duration: number,
         hrefRegex: regex,
         scriptSelector: string,
-        initialHref: string
+        initialHref: string,
       };
     }
 
@@ -132,7 +132,7 @@ See [Options](../../options.md) for usage information.
         duration: 0,
         hrefRegex: null,
         scriptSelector: null,
-        initialHref: window.location.href
+        initialHref: window.location.href,
       };
     }
 ```
@@ -208,64 +208,70 @@ Overriding the setup function.
 
 ```js
     connectComponent() {
-      if (process.env.DEBUG && !this.replaceIds && !this.el.id) {
-        console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
-      }
+      requestIdleCallback(() => {
+        if (process.env.DEBUG && !this.replaceIds && !this.el.id)
+          console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
 ```
 
 Setting up scroll restoration
 
 
 ```js
-      if ("scrollRestoration" in window.history) {
-        const orig = window.history.scrollRestoration;
+        if ("scrollRestoration" in window.history) {
+          const orig = window.history.scrollRestoration;
 
-        this.subjects.scrollRestoration
-          .pipe(takeUntil(this.subjects.disconnect))
-          .subscribe(scrollRestoration => {
-            window.history.scrollRestoration = scrollRestoration ? "manual" : orig;
-          });
-      }
+          this.subjects.scrollRestoration
+            .pipe(takeUntil(this.subjects.disconnect))
+            .subscribe(scrollRestoration => {
+              window.history.scrollRestoration = scrollRestoration ? "manual" : orig;
+            });
+        }
 ```
 
 If restore the last scroll position, if any.
 
 
 ```js
-      this.restoreScrollPostion();
+        this.restoreScrollPostion();
 ```
 
 Remember the current scroll position (for F5/reloads).
 
 
 ```js
-      window.addEventListener("beforeunload", this.saveScrollHistoryState);
+        window.addEventListener("beforeunload", this.saveScrollHistoryState);
 ```
 
 Calling the [setup observables function](./setup.md) function.
 
 
 ```js
-      this.setupObservables();
-      super.connectComponent();
+        this.setupObservables();
+```
+
+TODO: meh...
+
+
+```js
+        super.connectComponent();
 ```
 
 Setting the initial `history.state`.
 
 
 ```js
-      const url = new URL(this.initialHref);
-      this.updateHistoryState({ type: INIT, replace: true, url });
+        const url = new URL(this.initialHref);
+        this.updateHistoryState({ type: INIT, replace: true, url });
 
-      const replaceEls = this.getReplaceElements(document);
-      if (isExternal(this)) this.rewriteURLs(replaceEls);
+        const replaceEls = this.getReplaceElements(document);
+        if (isExternal(this)) this.rewriteURLs(replaceEls);
 ```
 
 After all this is done, we can fire the one-time `init` event...
 
 
 ```js
-      this.fireEvent("init");
+        this.fireEvent("init");
 ```
 
 ...and our custom `load` event, which gets fired on every page change.
@@ -275,12 +281,13 @@ since this `load` event wasn't caused by a user interaction.
 
 
 ```js
-      this.onLoad({
-        type: INIT,
-        title: this.getTitle(document),
-        replaceEls,
-        url,
-        cacheNr: this.cacheNr
+        this.onLoad({
+          type: INIT,
+          title: this.getTitle(document),
+          replaceEls,
+          url,
+          cacheNr: this.cacheNr,
+        });
       });
     }
 
@@ -299,7 +306,7 @@ Public methods of this component. See [Methods](../../methods.md) for more.
       this.reload$.next({
         type: PUSH,
         url: new URL(url, this.href),
-        cacheNr: ++this.cacheNr // eslint-disable-line no-plusplus
+        cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
       });
     }
 
@@ -308,7 +315,7 @@ Public methods of this component. See [Methods](../../methods.md) for more.
         type: PUSH,
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
         url: new URL(this.href),
-        replace: true
+        replace: true,
       });
     }
 
@@ -317,7 +324,7 @@ Public methods of this component. See [Methods](../../methods.md) for more.
         type: PUSH,
         url: new URL(url, this.href),
         cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
-        replace: true
+        replace: true,
       });
     }
   };

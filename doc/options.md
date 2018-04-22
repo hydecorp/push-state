@@ -22,11 +22,11 @@ Type
 Default
 : `[]`
 
-jQuery attribute
-: `data-replace-ids` (e.g.: `data-replace-ids="some-id,another-id"`)
-
 HTML attribute
 : `replace-ids` (e.g.: `replace-ids="some-id,another-id"`)
+
+jQuery attribute
+: `data-replace-ids` (e.g.: `data-replace-ids="some-id,another-id"`)
 
 **Example**: Assume we have a web component `very-special` that has some state of its own,
 so we don't want to replace it on a page transition.
@@ -72,11 +72,11 @@ Type
 Default
 : `'a[href]:not(.no-push-state)'`
 
-jQuery attribute
-: `data-link-selector`
-
 HTML attribute
 : `link-selector`
+
+jQuery attribute
+: `data-link-selector`
 
 ***
 
@@ -93,11 +93,11 @@ Type
 Default
 : `0`
 
-jQuery attribute
-: `data-duration`
-
 HTML attribute
 : `duration`
+
+jQuery attribute
+: `data-duration`
 
 ***
 
@@ -112,11 +112,11 @@ Type
 Default
 : `window.location.origin`
 
-jQuery attribute
-: `data-origin`
-
 HTML attribute
 : `origin`
+
+jQuery attribute
+: `data-origin`
 
 *** -->
 
@@ -133,8 +133,8 @@ Type
 Default
 : `null`
 
-jQuery attribute
-: `data-script-selector`
-
 HTML attribute
 : `script-selector`
+
+jQuery attribute
+: `data-script-selector`

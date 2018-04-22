@@ -4,98 +4,35 @@
 * [Methods](methods.md)
 * [Events](events.md)
 
-## Usage
-**hy-push-state** can be used in a variety of ways:
-* As [Web Component](#web-component), both as *ES6 Module* and *HTML Import*
-* As [jQuery](#jquery)
-* As [Vanilla](#vanilla) JavaScript class
-* (Advanced) Possibly as part of your own component hierarchy as [ES6 Mixin][esmixins].
-* (Advanced) As part of your bundled frontend code.
+## Page Prefetching
+**hy-push-state** starts a HTTP request as soon as the user "hints" that he/she is about to open a new page by hovering, focusing, or touching (`touchstart`-ing) a link. If the guess is correct, the request has a 100ms or more head-start, further increasing the perceived speed of your site in addition to the already fast webapp-style page replacing.
 
-[esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
+Unlike other implementations of this feature, the current prefetch request will be canceled if the user hints at a different link, ensuring that there will be no more than one prefetch request in flight at a time. This avoids clogging up the network with requests that are going to be discarded upon arrival, which is essential when on slow 3G connections.
 
-### Web Component
-The Web Component is the preferred way of using **hy-push-state**, but requires Web Component [support] in the browser or a [polyfill].
+For example, hovering the links in the sidebar on [the current page](https://qwtel.com/hy-push-state/doc/page-prefetching/) will produce a timeline like the one below:
 
-[support]: https://caniuse.com/#feat=template,custom-elementsv1,shadowdomv1,es6-module,imports
-[polyfill]: https://github.com/webcomponents/webcomponentsjs
+![Google developer console screenshot of prefetching requests](../assets/img/prefetching.png){:.lead}
 
-#### Bundled ES6 Module
-This is the version that is going to have native support across all major browsers the soonest.
+## Advanced Animations
+**hy-push-state** allows building advanced page transition animations, like the ones used in [Hydejack](https://qwtel.com/hydejack/variations/) and state-of-the-art web apps. These can be promise-based instead of time-based to account for smaller delays caused by other code, GC interruptions, or slower devices in general
 
-~~~html
-<script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/module.js"></script>
+The code for a simple fade-out animation using the [Web Animations API][waapi] may look like:
 
-<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
-~~~
+```js
+pushStateEl.addEventListener('hy-push-state-start', ({ detail }) =>
+  detail.waitUntil(new Promise(res =>
+    document
+      .getElementById('my-content')
+      .animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 })
+      .addEventListener('finish', res)
+  ))
+);
+```
 
-#### HTML Import
-Some browsers have decided against implementing HTML Imports, but they are easily polyfilled.
-
-~~~html
-<link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
-
-<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
-~~~
-
-#### Unbundled ES6 Module (experimental)
-The [unpkg CDN](https://unpkg.com/) can rewrite all bare import paths with valid unpkg URLs by passing the `?module` query parameter.
-This allows importing **hy-push-state**'s source directly.
-Note that this will result in possibly hundreds of separate requests.
-
-~~~html
-<script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
-
-<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
-~~~
-
-### jQuery
-
-~~~html
-<div id="pushStateEl" data-link-selector="a[href]"><!-- ... --></div>
-
-<script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
-<script src="https://unpkg.com/hy-push-state/dist/jquery"></script>
-<script>
-  $('#pushStateEl').pushstate()
-</script>
-~~~
-
-### Vanilla
-~~~html
-<div id="pushStateEl"><!-- ... --></div>
-
-<script src="https://unpkg.com/hy-push-state/dist/vanilla"></script>
-<script>
-  var HyPushState = window.hyPushState.HyPushState;
-  var pushState = new HyPushState(window.pushStateEl, {
-    linkSelector: 'a[href]',
-  });
-</script>
-~~~
-
-## Size
-The size of the minified bundle hovers around 90kb, or ~20kb gzipped.
-
-| Size | File |
-|-----:|:-----|
-| 343K | `dist/jquery/index.dev.js` |
-|  91K | `dist/jquery/index.js` |
-| 332K | `dist/mixin/index.dev.js` |
-|  88K | `dist/mixin/index.js` |
-| 334K | `dist/vanilla/index.dev.js` |
-|  88K | `dist/vanilla/index.js` |
-| 344K | `dist/webcomponent/html-import.dev.js` |
-|  93K | `dist/webcomponent/html-import.js` |
-| 345K | `dist/webcomponent/index.dev.js` |
-|  93K | `dist/webcomponent/index.js` |
-| 346K | `dist/webcomponent/module.dev.js` |
-|  93K | `dist/webcomponent/module.js` |
-
+[waapi]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API/Using_the_Web_Animations_API
 
 ## Gold Standard
-This component follows the Web Components [Gold Standard](gold-standard.md){:.flip-title}.
-
+This component follows the Web Components [Gold Standard](gold-standard.md).
 
 ## Source
 The source code is written in a *literal programming* style, and should be reasonably approachable.
@@ -108,6 +45,7 @@ which is used to create the framework-specific versions of the component.
   * [`index.js`](source/jquery/README.md)
 * `mixin`
   * [`constants.js`](source/mixin/constants.md)
+  * [`event-listeners.js`](source/mixin/event-listeners.md)
   * [`events.js`](source/mixin/events.md)
   * [`fetching.js`](source/mixin/fetching.md)
   * [`history.js`](source/mixin/history.md)
@@ -127,5 +65,25 @@ which is used to create the framework-specific versions of the component.
 * [`common.js`](source/common.md)
 * [`index.js`](source/README.md)
 * [`url.js`](source/url.md)
+
+## Size
+The size of the minified bundle is around 90kb, or ~20kb gzipped.
+The majority of it comes from RxJS. When already using RxJS in your project, or using more than one component of the Hydejack component family, consider using a [frontend bundler](../usage/README.md#bundlers).
+
+| Size | File |
+|-----:|:-----|
+|  95K | `dist/jquery/index.js` |
+|  20K | `dist/jquery/index.js.gz` |
+|  91K | `dist/mixin/index.js` |
+|  19K | `dist/mixin/index.js.gz` |
+|  92K | `dist/vanilla/index.js` |
+|  19K | `dist/vanilla/index.js.gz` |
+|  97K | `dist/webcomponent/html-import.js` |
+|  20K | `dist/webcomponent/html-import.js.gz` |
+|  97K | `dist/webcomponent/index.js` |
+|  20K | `dist/webcomponent/index.js.gz` |
+|  97K | `dist/webcomponent/module.js` |
+|  20K | `dist/webcomponent/module.js.gz` |
+
 
 [rxjs]: https://github.com/ReactiveX/rxjs

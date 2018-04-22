@@ -233,8 +233,8 @@ export const pushStateMixin = C =>
     reload() {
       this.reload$.next({
         type: PUSH,
-        cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
         url: new URL(this.href),
+        cacheNr: ++this.cacheNr, // eslint-disable-line no-plusplus
         replace: true,
       });
     }

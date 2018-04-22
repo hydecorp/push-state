@@ -2,19 +2,16 @@
 
 [![npm version](https://badge.fury.io/js/hy-push-state.svg)](https://badge.fury.io/js/hy-push-state)
 
-**hy-push-state** is a web component that lets you turn web pages into web apps.
-The component dynamically loads new content (formerly known as "ajax") and inserts it into the current page,
-without causing Flash of White, Flash of Unstyled Content, etc.
+**hy-push-state** is a web component that lets you turn web pages into web apps. The component dynamically loads new content (formerly known as "ajax") and inserts it into the current page, without causing Flash of White, Flash of Unstyled Content, etc.
 
 > Turn static web sites into dynamic web apps.
 {:.lead}
 
-**hy-push-state** is similar to [pjax] and [smoothState], but offers a more advanced pre-fetching logic and
-gives more control over timings to enable custom page transition animations.
+**hy-push-state** is similar to [pjax] and [smoothState], but offers a [more advanced pre-fetching logic](#page-prefetching) and gives you more control over its internals to enable [advanced page transition animations](#advanced-animations).
 
-**hy-push-state** is used by hundreds of sites as part of the [Hydejack]{:.external} Jekyll theme.
+**hy-push-state** is already used by hundreds of sites as part of the [Hydejack]{:.external} Jekyll theme.
 
-**NOTE**: The current version is a pre-release. The public API may still change in important ways.
+**NOTE**: The current version is still a pre-release. The public API may still change in important ways.
 {:.message}
 
 [pjax]: https://github.com/defunkt/jquery-pjax
@@ -25,7 +22,7 @@ gives more control over timings to enable custom page transition animations.
 <!--more-->
 
 ## Examples
-The example below will render on [webcomponents.org](https://www.webcomponents.org/element/qwtel/hy-push-state):
+The example below will render on [webcomponents.org](example/https://www.webcomponents.org/element/qwtel/hy-push-state):
 
 <!--
 ```
@@ -51,13 +48,19 @@ The example below will render on [webcomponents.org](https://www.webcomponents.o
 
 When viewing this document on GitHub, npm, or elsewhere, you can check out the standalone examples:
 
-* [WebComponent Example](https://qwtel.com/hy-push-state/example/webcomponent/){:.external}
-* [jQuery Example](https://qwtel.com/hy-push-state/example/jquery/){:.external}
-* [Vanilla JS Example](https://qwtel.com/hy-push-state/example/vanilla/){:.external}
-* [Mixin Example](https://qwtel.com/hy-push-state/example/mixin/){:.external}
+* [WebComponent Example](example/https://qwtel.com/hy-push-state/example/webcomponent/){:.external}
+* [jQuery Example](example/https://qwtel.com/hy-push-state/example/jquery/){:.external}
+* [Vanilla JS Example](example/https://qwtel.com/hy-push-state/example/vanilla/){:.external}
+* [Mixin Example](example/https://qwtel.com/hy-push-state/example/mixin/){:.external}
 
 
 ## License
+**hy-push-state** is Open Source but not free.
+
+You may use the component in accordance with the [GPL-3.0 license](licenses/GPL-3.0.md),
+but this means you must be willing to release your code under a GPLv3-compatible license in turn.
+
+For cases were this is not acceptable the following commercial licenses available:
 
 |              | Personal           | Startup            | Enterprise         |
 |:-------------|:------------------:|:------------------:|:------------------:|
@@ -67,14 +70,91 @@ When viewing this document on GitHub, npm, or elsewhere, you can check out the s
 | | [**Buy**][bp]{:.gumroad-button} | [**Buy**][bs]{:.gumroad-button} | [**Buy**][be]{:.gumroad-button} |
 {:.stretch-table}
 
-Unless you've obtained one of the licenses above, **hy-push-state** must be used in accordance with the [GPL-3.0](LICENSE.md) license.
 
 [pl]: licenses/personal.md
 [sl]: licenses/startup.md
 [el]: licenses/enterprise.md
-[bp]: https://gumroad.com/l/hy-push-state-personal
-[bs]: https://gumroad.com/l/hy-push-state-startup
-[be]: https://gumroad.com/l/hy-push-state-enterprise
+[bp]: licenses/https://gumroad.com/l/hy-push-state-personal
+[bs]: licenses/https://gumroad.com/l/hy-push-state-startup
+[be]: licenses/https://gumroad.com/l/hy-push-state-enterprise
+
+
+## Usage
+
+**hy-push-state** can be used in a variety of ways:
+* As [Web Component](usage/#web-component), both as *ES6 Module* and *HTML Import*
+* As [jQuery](usage/#jquery) plugin
+* As [Vanilla](usage/#vanilla) JavaScript class
+* As part of [bundled frontend code](usage/#bundlers).
+* (Advanced) Possibly as part of your own component hierarchy as [ES6 Mixin][esmixins].
+
+[esmixins]: usage/http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
+
+### Web Component
+The Web Component is the preferred way of using **hy-push-state**, but requires [support] in the browser or a [polyfill]. There are multiple ways of including it on your page:
+
+#### Bundled ES6 Module
+This is the version that is going to have native support across all major browsers the soonest.
+
+~~~html
+<script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/module"></script>
+
+<hy-push-state replace-ids="main,aside" scroll-restoration>
+  <main id="main"><!-- ... --></main>
+  <aside id="aside"><!-- ... --></aside>
+</hy-push-state>
+~~~
+
+#### HTML Import
+Some browsers have decided against implementing HTML Imports, but they are easily polyfilled.
+
+~~~html
+<link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
+
+<hy-push-state replace-ids="main,aside" scroll-restoration>
+  <main id="main"><!-- ... --></main>
+  <aside id="aside"><!-- ... --></aside>
+</hy-push-state>
+~~~
+
+#### Unbundled ES6 Module (experimental)
+When loading the component form the [unpkg] CDN, you can import the source directly by appending the `?module` query parameter.
+
+~~~html
+<script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
+
+<hy-push-state replace-ids="main,aside" scroll-restoration>
+  <main id="main"><!-- ... --></main>
+  <aside id="aside"><!-- ... --></aside>
+</hy-push-state>
+~~~
+
+Note that this approach will result in hundreds of separate HTTP requests (one for each module) and is intended for testing and prototypes only. Importing unbundled ES6 modules is much slower than bundled distributions and will remain so for the foreseeable future.
+
+One advantage of this approach is that shared dependencies will not be included twice when using more than one component from the Hydejack component family. However, setting up webpack is a better solution in these cases:
+
+#### Bundlers
+You can use **hy-push-state** with a frontend bundler like webpack or rollup.
+Just install the component with npm or yarn and import the source in your code:
+
+```js
+import 'hy-push-state/src/webcomponent/module';
+```
+
+If you want to have control over when the custom element gets `define`d, you can also import the `HTMLElement` like so:
+
+```js
+import { HyPushStateElement } from 'hy-push-state/src/webcomponent';
+// ...
+customElements.define('hy-push-state', HyPushStateElement);
+```
+
+Note that all of **hy-push-state**'s dependencies are valid ES6 modules, so that they can be inlined with webpack's [`ModuleConcatenationPlugin`][mcp] plugin.
+
+[support]: usage/https://caniuse.com/#feat=template,custom-elementsv1,shadowdomv1,es6-module,imports
+[polyfill]: usage/https://github.com/webcomponents/webcomponentsjs
+[unpkg]: usage/https://unpkg.com/
+[mcp]: usage/https://webpack.js.org/plugins/module-concatenation-plugin/
 
 
 ## Documentation
@@ -83,98 +163,35 @@ Unless you've obtained one of the licenses above, **hy-push-state** must be used
 * [Methods](doc/methods.md)
 * [Events](doc/events.md)
 
-### Usage
-**hy-push-state** can be used in a variety of ways:
-* As [Web Component](#web-component), both as *ES6 Module* and *HTML Import*
-* As [jQuery](#jquery)
-* As [Vanilla](#vanilla) JavaScript class
-* (Advanced) Possibly as part of your own component hierarchy as [ES6 Mixin][esmixins].
-* (Advanced) As part of your bundled frontend code.
+### Page Prefetching
+**hy-push-state** starts a HTTP request as soon as the user "hints" that he/she is about to open a new page by hovering, focusing, or touching (`touchstart`-ing) a link. If the guess is correct, the request has a 100ms or more head-start, further increasing the perceived speed of your site in addition to the already fast webapp-style page replacing.
 
-[esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
+Unlike other implementations of this feature, the current prefetch request will be canceled if the user hints at a different link, ensuring that there will be no more than one prefetch request in flight at a time. This avoids clogging up the network with requests that are going to be discarded upon arrival, which is essential when on slow 3G connections.
 
-#### Web Component
-The Web Component is the preferred way of using **hy-push-state**, but requires Web Component [support] in the browser or a [polyfill].
+For example, hovering the links in the sidebar on [the current page](doc/https://qwtel.com/hy-push-state/doc/page-prefetching/) will produce a timeline like the one below:
 
-[support]: https://caniuse.com/#feat=template,custom-elementsv1,shadowdomv1,es6-module,imports
-[polyfill]: https://github.com/webcomponents/webcomponentsjs
+![Google developer console screenshot of prefetching requests](assets/img/prefetching.png){:.lead}
 
-##### Bundled ES6 Module
-This is the version that is going to have native support across all major browsers the soonest.
+### Advanced Animations
+**hy-push-state** allows building advanced page transition animations, like the ones used in [Hydejack](doc/https://qwtel.com/hydejack/variations/) and state-of-the-art web apps. These can be promise-based instead of time-based to account for smaller delays caused by other code, GC interruptions, or slower devices in general
 
-~~~html
-<script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/module.js"></script>
+The code for a simple fade-out animation using the [Web Animations API][waapi] may look like:
 
-<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
-~~~
+```js
+pushStateEl.addEventListener('hy-push-state-start', ({ detail }) =>
+  detail.waitUntil(new Promise(res =>
+    document
+      .getElementById('my-content')
+      .animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 })
+      .addEventListener('finish', res)
+  ))
+);
+```
 
-##### HTML Import
-Some browsers have decided against implementing HTML Imports, but they are easily polyfilled.
-
-~~~html
-<link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
-
-<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
-~~~
-
-##### Unbundled ES6 Module (experimental)
-The [unpkg CDN](https://unpkg.com/) can rewrite all bare import paths with valid unpkg URLs by passing the `?module` query parameter.
-This allows importing **hy-push-state**'s source directly.
-Note that this will result in possibly hundreds of separate requests.
-
-~~~html
-<script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
-
-<hy-push-state link-selector="a[href]"><!-- ... --></hy-push-state>
-~~~
-
-#### jQuery
-
-~~~html
-<div id="pushStateEl" data-link-selector="a[href]"><!-- ... --></div>
-
-<script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
-<script src="https://unpkg.com/hy-push-state/dist/jquery"></script>
-<script>
-  $('#pushStateEl').pushstate()
-</script>
-~~~
-
-#### Vanilla
-~~~html
-<div id="pushStateEl"><!-- ... --></div>
-
-<script src="https://unpkg.com/hy-push-state/dist/vanilla"></script>
-<script>
-  var HyPushState = window.hyPushState.HyPushState;
-  var pushState = new HyPushState(window.pushStateEl, {
-    linkSelector: 'a[href]',
-  });
-</script>
-~~~
-
-### Size
-The size of the minified bundle hovers around 90kb, or ~20kb gzipped.
-
-| Size | File |
-|-----:|:-----|
-| 343K | `dist/jquery/index.dev.js` |
-|  91K | `dist/jquery/index.js` |
-| 332K | `dist/mixin/index.dev.js` |
-|  88K | `dist/mixin/index.js` |
-| 334K | `dist/vanilla/index.dev.js` |
-|  88K | `dist/vanilla/index.js` |
-| 344K | `dist/webcomponent/html-import.dev.js` |
-|  93K | `dist/webcomponent/html-import.js` |
-| 345K | `dist/webcomponent/index.dev.js` |
-|  93K | `dist/webcomponent/index.js` |
-| 346K | `dist/webcomponent/module.dev.js` |
-|  93K | `dist/webcomponent/module.js` |
-
+[waapi]: doc/https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API/Using_the_Web_Animations_API
 
 ### Gold Standard
 This component follows the Web Components [Gold Standard](doc/gold-standard.md){:.flip-title}.
-
 
 ### Source
 The source code is written in a *literal programming* style, and should be reasonably approachable.
@@ -187,6 +204,7 @@ which is used to create the framework-specific versions of the component.
   * [`index.js`](doc/source/jquery/README.md)
 * `mixin`
   * [`constants.js`](doc/source/mixin/constants.md)
+  * [`event-listeners.js`](doc/source/mixin/event-listeners.md)
   * [`events.js`](doc/source/mixin/events.md)
   * [`fetching.js`](doc/source/mixin/fetching.md)
   * [`history.js`](doc/source/mixin/history.md)
@@ -207,4 +225,24 @@ which is used to create the framework-specific versions of the component.
 * [`index.js`](doc/source/README.md)
 * [`url.js`](doc/source/url.md)
 
-[rxjs]: https://github.com/ReactiveX/rxjs
+### Size
+The size of the minified bundle is around 90kb, or ~20kb gzipped.
+The majority of it comes from RxJS. When already using RxJS in your project, or using more than one component of the Hydejack component family, consider using a [frontend bundler](usage/README.md#bundlers).
+
+| Size | File |
+|-----:|:-----|
+|  95K | `dist/jquery/index.js` |
+|  20K | `dist/jquery/index.js.gz` |
+|  91K | `dist/mixin/index.js` |
+|  19K | `dist/mixin/index.js.gz` |
+|  92K | `dist/vanilla/index.js` |
+|  19K | `dist/vanilla/index.js.gz` |
+|  97K | `dist/webcomponent/html-import.js` |
+|  20K | `dist/webcomponent/html-import.js.gz` |
+|  97K | `dist/webcomponent/index.js` |
+|  20K | `dist/webcomponent/index.js.gz` |
+|  97K | `dist/webcomponent/module.js` |
+|  20K | `dist/webcomponent/module.js.gz` |
+
+
+[rxjs]: doc/https://github.com/ReactiveX/rxjs

@@ -9,7 +9,7 @@
 
 Unlike other implementations of this feature, the current prefetch request will be canceled if the user hints at a different link, ensuring that there will be no more than one prefetch request in flight at a time. This avoids clogging up the network with requests that are going to be discarded upon arrival, which is essential when on slow 3G connections.
 
-For example, hovering the links in the sidebar on [the current page](https://qwtel.com/hy-push-state/doc/page-prefetching/) will produce a timeline like the one below:
+For example, hovering links in the sidebar on [qwtel.com](https://qwtel.com/hy-push-state/) will produce a timeline like the one below:
 
 ![Google developer console screenshot of prefetching requests](../assets/img/prefetching.png){:.lead}
 
@@ -28,6 +28,8 @@ pushStateEl.addEventListener('hy-push-state-start', ({ detail }) =>
   ))
 );
 ```
+
+Time-based animations are possible as well and are configured with the [`duration` option](options.md#duration).
 
 [waapi]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API/Using_the_Web_Animations_API
 

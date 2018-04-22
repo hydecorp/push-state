@@ -22,7 +22,7 @@
 <!--more-->
 
 ## Examples
-The example below will render on [webcomponents.org](example/https://www.webcomponents.org/element/qwtel/hy-push-state):
+The example below will render on [webcomponents.org](https://www.webcomponents.org/element/qwtel/hy-push-state):
 
 <!--
 ```
@@ -48,10 +48,10 @@ The example below will render on [webcomponents.org](example/https://www.webcomp
 
 When viewing this document on GitHub, npm, or elsewhere, you can check out the standalone examples:
 
-* [WebComponent Example](example/https://qwtel.com/hy-push-state/example/webcomponent/){:.external}
-* [jQuery Example](example/https://qwtel.com/hy-push-state/example/jquery/){:.external}
-* [Vanilla JS Example](example/https://qwtel.com/hy-push-state/example/vanilla/){:.external}
-* [Mixin Example](example/https://qwtel.com/hy-push-state/example/mixin/){:.external}
+* [WebComponent Example](https://qwtel.com/hy-push-state/example/webcomponent/){:.external}
+* [jQuery Example](https://qwtel.com/hy-push-state/example/jquery/){:.external}
+* [Vanilla JS Example](https://qwtel.com/hy-push-state/example/vanilla/){:.external}
+* [Mixin Example](https://qwtel.com/hy-push-state/example/mixin/){:.external}
 
 
 ## License
@@ -74,9 +74,9 @@ For cases were this is not acceptable the following commercial licenses availabl
 [pl]: licenses/personal.md
 [sl]: licenses/startup.md
 [el]: licenses/enterprise.md
-[bp]: licenses/https://gumroad.com/l/hy-push-state-personal
-[bs]: licenses/https://gumroad.com/l/hy-push-state-startup
-[be]: licenses/https://gumroad.com/l/hy-push-state-enterprise
+[bp]: https://gumroad.com/l/hy-push-state-personal
+[bs]: https://gumroad.com/l/hy-push-state-startup
+[be]: https://gumroad.com/l/hy-push-state-enterprise
 
 
 ## Usage
@@ -88,7 +88,7 @@ For cases were this is not acceptable the following commercial licenses availabl
 * As part of [bundled frontend code](usage/#bundlers).
 * (Advanced) Possibly as part of your own component hierarchy as [ES6 Mixin][esmixins].
 
-[esmixins]: usage/http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
+[esmixins]: http://justinfagnani.com/2015/12/21/real-mixins-with-javascript-classes/
 
 ### Web Component
 The Web Component is the preferred way of using **hy-push-state**, but requires [support] in the browser or a [polyfill]. There are multiple ways of including it on your page:
@@ -151,10 +151,10 @@ customElements.define('hy-push-state', HyPushStateElement);
 
 Note that all of **hy-push-state**'s dependencies are valid ES6 modules, so that they can be inlined with webpack's [`ModuleConcatenationPlugin`][mcp] plugin.
 
-[support]: usage/https://caniuse.com/#feat=template,custom-elementsv1,shadowdomv1,es6-module,imports
-[polyfill]: usage/https://github.com/webcomponents/webcomponentsjs
-[unpkg]: usage/https://unpkg.com/
-[mcp]: usage/https://webpack.js.org/plugins/module-concatenation-plugin/
+[support]: https://caniuse.com/#feat=template,custom-elementsv1,shadowdomv1,es6-module,imports
+[polyfill]: https://github.com/webcomponents/webcomponentsjs
+[unpkg]: https://unpkg.com/
+[mcp]: https://webpack.js.org/plugins/module-concatenation-plugin/
 
 
 ## Documentation
@@ -168,12 +168,12 @@ Note that all of **hy-push-state**'s dependencies are valid ES6 modules, so that
 
 Unlike other implementations of this feature, the current prefetch request will be canceled if the user hints at a different link, ensuring that there will be no more than one prefetch request in flight at a time. This avoids clogging up the network with requests that are going to be discarded upon arrival, which is essential when on slow 3G connections.
 
-For example, hovering the links in the sidebar on [the current page](doc/https://qwtel.com/hy-push-state/doc/page-prefetching/) will produce a timeline like the one below:
+For example, hovering links in the sidebar on [qwtel.com](https://qwtel.com/hy-push-state/) will produce a timeline like the one below:
 
 ![Google developer console screenshot of prefetching requests](assets/img/prefetching.png){:.lead}
 
 ### Advanced Animations
-**hy-push-state** allows building advanced page transition animations, like the ones used in [Hydejack](doc/https://qwtel.com/hydejack/variations/) and state-of-the-art web apps. These can be promise-based instead of time-based to account for smaller delays caused by other code, GC interruptions, or slower devices in general
+**hy-push-state** allows building advanced page transition animations, like the ones used in [Hydejack](https://qwtel.com/hydejack/variations/) and state-of-the-art web apps. These can be promise-based instead of time-based to account for smaller delays caused by other code, GC interruptions, or slower devices in general
 
 The code for a simple fade-out animation using the [Web Animations API][waapi] may look like:
 
@@ -188,10 +188,12 @@ pushStateEl.addEventListener('hy-push-state-start', ({ detail }) =>
 );
 ```
 
-[waapi]: doc/https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API/Using_the_Web_Animations_API
+Time-based animations are possible as well and are configured with the [`duration` option](doc/options.md#duration).
+
+[waapi]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API/Using_the_Web_Animations_API
 
 ### Gold Standard
-This component follows the Web Components [Gold Standard](doc/gold-standard.md){:.flip-title}.
+This component follows the Web Components [Gold Standard](doc/gold-standard.md).
 
 ### Source
 The source code is written in a *literal programming* style, and should be reasonably approachable.
@@ -245,4 +247,4 @@ The majority of it comes from RxJS. When already using RxJS in your project, or 
 |  20K | `dist/webcomponent/module.js.gz` |
 
 
-[rxjs]: doc/https://github.com/ReactiveX/rxjs
+[rxjs]: https://github.com/ReactiveX/rxjs

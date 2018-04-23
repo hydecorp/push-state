@@ -57,7 +57,15 @@ export const helperMixin = C =>
     // Determines if a pair of context's constitutes a hash change (vs. a page chagne)
     // We take as a hash change when the pathname of the URLs is the same,
     // and the `hash` isn't empty.
-    isHashChange([{ url: { pathname: prevPathname } }, { url: { pathname, hash }, type }]) {
+    isHashChange([
+      {
+        url: { pathname: prevPathname },
+      },
+      {
+        url: { pathname, hash },
+        type,
+      },
+    ]) {
       return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ""));
     }
   };

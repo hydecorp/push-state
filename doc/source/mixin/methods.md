@@ -77,7 +77,15 @@ and the `hash` isn't empty.
 
 
 ```js
-    isHashChange([{ url: { pathname: prevPathname } }, { url: { pathname, hash }, type }]) {
+    isHashChange([
+      {
+        url: { pathname: prevPathname },
+      },
+      {
+        url: { pathname, hash },
+        type,
+      },
+    ]) {
       return pathname === prevPathname && (type === POP || (type === PUSH && hash !== ""));
     }
   };

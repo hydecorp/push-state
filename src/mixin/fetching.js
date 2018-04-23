@@ -46,7 +46,13 @@ export const fetchMixin = C =>
     // The way the pipeline is set up,
     // it is either the `latestPrefetch` value (when the request is already completed),
     // or the next value on the prefetch observable (when still in progress).
-    getFetch$({ url: { href } }, latestPrefetch, prefetch$) {
+    getFetch$(
+      {
+        url: { href },
+      },
+      latestPrefetch,
+      prefetch$
+    ) {
       return href === latestPrefetch.url.href && latestPrefetch.error == null
         ? of(latestPrefetch)
         : prefetch$.pipe(take(1));

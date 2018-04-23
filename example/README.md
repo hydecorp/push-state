@@ -1,5 +1,8 @@
 # Examples
-The example below will render on [webcomponents.org](https://www.webcomponents.org/element/qwtel/hy-push-state):
+When viewing this page on [webcomponents.org][wcorg], the example below will render as an interactive demo. Otherwise, find the standalone examples below.
+
+[wcorg]: https://www.webcomponents.org/element/qwtel/hy-push-state
+
 
 <!--
 ```

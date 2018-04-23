@@ -38,7 +38,11 @@ export const scrollMixin = C =>
       const id = this.histId(); // TODO
       const state = (window.history.state && window.history.state[id]) || {};
 
-      if (state.scrollTop != null) {
+      // If the user has already moved the scroll position, we don't want to force the old position
+      const userHasScrolled = getScrollTop() != 0;
+      if (state.scrollTop != null && !userHasScrolled) {
+        // TODO: we set the min-height to ensure that we can scroll to the position that will
+        // eventually be occupied by the same content as before.
         document.body.style.minHeight = state.scrollHeight;
         window.scroll(window.pageXOffset, state.scrollTop);
         /* document.body.style.minHeight = ''; */

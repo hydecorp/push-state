@@ -9,15 +9,15 @@
     <style>aside.wrapper { color: #fff; background: #f17641; }</style>
 
     <script src="https://unpkg.com/@webcomponents/webcomponentsjs@1.2.0"></script>
-    <!-- <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html"> -->
-    <link rel="import" href="../../dist/webcomponent/hy-push-state.dev.html">
+    <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
+    <!-- <link rel="import" href="../../dist/webcomponent/hy-push-state.dev.html"> -->
   </head>
   <body>
     <aside class="wrapper">
       <p>Current implementation: <span>WebComponent</span></p>
     </aside>
     <div class="wrapper">
-      <hy-push-state id="pushStateEl" link-selector="a[href^='..']" scroll-restoration>
+      <hy-push-state id="pushStateEl" link-selector="a[href^='..']">
         <main>
           <h1>WebComponent Example</h1>
           <ul>

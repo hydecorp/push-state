@@ -24,7 +24,7 @@ import { PUSH, POP } from "./constants";
 export const scrollMixin = C =>
   class extends C {
     // TODO: doc
-    assignScrollPosition(state = {}) {
+    assignScrollPosition(state) {
       const id = this.histId();
       return Object.assign(state, {
         [id]: Object.assign(state[id] || {}, {
@@ -38,7 +38,8 @@ export const scrollMixin = C =>
     manageScrollPostion({ type, url: { hash } }) {
       switch (type) {
         case PUSH:
-          this.scrollHashIntoView(hash);
+          // FIXME: make configurable
+          this.scrollHashIntoView(hash, { behavior: "smooth", block: "start", inline: "nearest" });
           break;
         case POP: {
           this.restoreScrollPostion();
@@ -55,12 +56,14 @@ export const scrollMixin = C =>
 
     // Given a hash, find the element of the same id on the page, and scroll it into view.
     // If no hash is provided, scroll to the top instead.
-    scrollHashIntoView(hash) {
+    scrollHashIntoView(hash, options) {
       if (hash) {
         const el = document.getElementById(hash.substr(1));
-        if (el) el.scrollIntoView();
+        if (el) el.scrollIntoView(options);
         else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
-      } else window.scroll(window.pageXOffset, 0);
+      } else {
+        window.scroll(window.pageXOffset, 0);
+      }
     }
 
     // Takes the current history state, and restores the scroll position.

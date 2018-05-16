@@ -67,7 +67,7 @@ export const historyMixin = C =>
     saveScrollPosition() {
       if (isExternal(this)) return;
 
-      const state = this.assignScrollPosition(window.history.state);
+      const state = this.assignScrollPosition(window.history.state || {});
       window.history.replaceState(state, document.title, window.location);
     }
   };

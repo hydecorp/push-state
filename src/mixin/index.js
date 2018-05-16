@@ -152,7 +152,7 @@ export const pushStateMixin = C =>
     setupComponent(el, props) {
       super.setupComponent(el, props);
 
-      this.saveScrollHistoryState = this.saveScrollHistoryState.bind(this);
+      this.saveScrollPosition = this.saveScrollPosition.bind(this);
 
       this.reload$ = new Subject();
     }
@@ -179,11 +179,11 @@ export const pushStateMixin = C =>
             });
         }
 
-        // If restore the last scroll position, if any.
-        this.restoreScrollPostion();
+        // Restore the last scroll position, if any.
+        this.restoreScrollPostionOnReload();
 
         // Remember the current scroll position (for F5/reloads).
-        window.addEventListener("beforeunload", this.saveScrollHistoryState);
+        window.addEventListener("beforeunload", this.saveScrollPosition);
 
         // Calling the [setup observables function](./setup.md) function.
         this.setupObservables();
@@ -217,7 +217,7 @@ export const pushStateMixin = C =>
 
     disconnectComponent() {
       super.disconnectComponent();
-      window.removeEventListener("beforeunload", this.saveScrollHistoryState);
+      window.removeEventListener("beforeunload", this.saveScrollPosition);
     }
 
     // ### Methods

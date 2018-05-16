@@ -16,7 +16,6 @@
 
 import { fragmentFromString, isExternal } from "../common";
 
-import { PUSH } from "./constants";
 import { scriptMixin } from "./script-hack";
 
 export const updateMixin = C =>
@@ -58,9 +57,9 @@ export const updateMixin = C =>
 
     // Replaces the old elments with the new one, one-by-one.
     replaceContentByIds(elements) {
-      this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
-        oldElement.parentNode.replaceChild(elements[i], oldElement);
-      });
+      this.replaceIds
+        .map(id => document.getElementById(id))
+        .forEach((oldElement, i) => oldElement.parentNode.replaceChild(elements[i], oldElement));
     }
 
     // When no `relaceIds` are set, replace the entire content of the component (slow).

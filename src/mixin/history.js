@@ -20,54 +20,54 @@
 // ## Imports
 import { isExternal } from "../common";
 
-import { PUSH, INIT } from "./constants";
+import { PUSH, POP, INIT } from "./constants";
 import { scrollMixin } from "./scrolling";
 
 export const historyMixin = C =>
   class extends scrollMixin(C) {
     // ## Update History state
     // add a new entry on the history stack, assuming the href is differnt.
-    updateHistoryState({ type, replace, url: { href, hash } }) {
-      if ((type === PUSH || type === INIT) && !isExternal(this)) {
-        const id = this.histId();
-        const method = replace || href === window.location.href ? "replaceState" : "pushState";
-        const state = Object.assign(window.history.state || {}, {
-          [id]: { hash: !!hash },
-        });
-        window.history[method](state, document.title, href);
+    updateHistoryState({ type, replace, url: { href } }) {
+      if (isExternal(this)) return;
+
+      switch (type) {
+        case INIT:
+        case PUSH: {
+          const id = this.histId();
+          const method = replace || href === window.location.href ? "replaceState" : "pushState";
+          const state = Object.assign(window.history.state || {}, { [id]: {} });
+          window.history[method](state, document.title, href);
+        }
+        case POP:
+          break;
+        default: {
+          if (process.env.DEBUG) console.warn(`Type '${type}' not reconginzed?`);
+          break;
+        }
       }
     }
 
+    // FIXME: use one updatehistory state function for both?
     updateHistoryStateHash({ type, url }) {
-      const { hash, href } = url;
+      if (isExternal(this)) return; // TODO: abort or not?
 
-      if (type === PUSH && !isExternal(this)) {
+      if (type === PUSH) {
         const id = this.histId();
-        const currState = Object.assign(window.history.state, {
-          [id]: Object.assign(window.history.state[id], { hash: true }),
-        });
-        const nextState = {
-          [id]: { hash: true },
-        };
-        window.history.replaceState(currState, document.title, window.location.href);
-        window.history.pushState(nextState, document.title, href);
+        window.history.pushState({ [id]: {} }, document.title, url);
       }
-
-      this.scrollHashIntoView(hash);
     }
 
     updateHistoryTitle({ type, title }) {
       document.title = title;
 
-      if (type === PUSH && !isExternal(this)) {
+      if (!isExternal(this) && type === PUSH)
         window.history.replaceState(window.history.state, title, window.location);
-      }
     }
 
-    saveScrollHistoryState() {
+    saveScrollPosition() {
       if (isExternal(this)) return;
 
-      const state = this.saveScrollPosition(window.history.state || {});
+      const state = this.assignScrollPosition(window.history.state);
       window.history.replaceState(state, document.title, window.location);
     }
   };

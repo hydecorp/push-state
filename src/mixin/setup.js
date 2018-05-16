@@ -85,7 +85,7 @@ export const setupObservablesMixin = C =>
         filter(this.isPushEvent.bind(this)),
         tap(({ event }) => {
           event.preventDefault();
-          this.saveScrollHistoryState();
+          this.saveScrollPosition();
         })
       );
 
@@ -198,9 +198,14 @@ export const setupObservablesMixin = C =>
       );
 
       // #### Subscriptions
-      // Subscribe to main and hash observables.
+      // Subscribe to main observables.
       main$.subscribe(this.onLoad.bind(this));
-      hash$.subscribe(this.updateHistoryStateHash.bind(this));
+
+      // Subscribe to hash observables.
+      hash$.subscribe(context => {
+        this.updateHistoryStateHash(context);
+        this.manageScrollPostion(context);
+      });
 
       // Subscribe to the fetch error branch.
       fetchError$.subscribe(this.onNetworkError.bind(this));

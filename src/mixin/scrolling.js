@@ -41,7 +41,7 @@ export const scrollMixin = C =>
           this.scrollHashIntoView(hash);
           break;
         case POP: {
-          if (this.scrollRestoration) this.restoreScrollPostion();
+          this.restoreScrollPostion();
           break;
         }
         case INIT:
@@ -79,6 +79,6 @@ export const scrollMixin = C =>
     // Only restore position on page reload when the user hasn't started scorlling yet.
     restoreScrollPostionOnReload() {
       const userHasScrolled = getScrollTop() != 0;
-      if (!userHasScrolled && this.scrollRestoration) this.restoreScrollPostion();
+      if (!userHasScrolled) this.restoreScrollPostion();
     }
   };

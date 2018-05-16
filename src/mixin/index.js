@@ -88,7 +88,6 @@ export const pushStateMixin = C =>
       return {
         replaceIds: array,
         linkSelector: string,
-        scrollRestoration: bool,
         duration: number,
         hrefRegex: regex,
         scriptSelector: string,
@@ -100,7 +99,6 @@ export const pushStateMixin = C =>
       return {
         replaceIds: [],
         linkSelector: "a[href]:not(.no-push-state)",
-        scrollRestoration: false,
         duration: 0,
         hrefRegex: null,
         scriptSelector: null,
@@ -169,15 +167,7 @@ export const pushStateMixin = C =>
           console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
 
         // Setting up scroll restoration
-        if ("scrollRestoration" in window.history) {
-          const orig = window.history.scrollRestoration;
-
-          this.subjects.scrollRestoration
-            .pipe(takeUntil(this.subjects.disconnect))
-            .subscribe(scrollRestoration => {
-              window.history.scrollRestoration = scrollRestoration ? "manual" : orig;
-            });
-        }
+        if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 
         // Restore the last scroll position, if any.
         this.restoreScrollPostionOnReload();

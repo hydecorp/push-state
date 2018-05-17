@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { fragmentFromString, isExternal } from "../common";
 
-import { PUSH } from "./constants";
 import { scriptMixin } from "./script-hack";
 
 export const updateMixin = C =>
@@ -78,9 +77,9 @@ Replaces the old elments with the new one, one-by-one.
 
 ```js
     replaceContentByIds(elements) {
-      this.replaceIds.map(id => document.getElementById(id)).forEach((oldElement, i) => {
-        oldElement.parentNode.replaceChild(elements[i], oldElement);
-      });
+      this.replaceIds
+        .map(id => document.getElementById(id))
+        .forEach((oldElement, i) => oldElement.parentNode.replaceChild(elements[i], oldElement));
     }
 ```
 

@@ -32,48 +32,18 @@ export const scrollMixin = C =>
   class extends C {
 ```
 
-Given a hash, find the element of the same id on the page, and scroll it into view.
-If no hash is provided, scroll to the top instead.
+TODO: doc
 
 
 ```js
-    scrollHashIntoView(hash) {
-      if (hash) {
-        const el = document.getElementById(hash.substr(1));
-        if (el) el.scrollIntoView();
-        else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
-      } else window.scroll(window.pageXOffset, 0);
-    }
-```
-
-Takes the current history state, and restores the scroll position.
-
-
-```js
-    restoreScrollPostion() {
-      const id = this.histId(); // TODO
-      const state = (window.history.state && window.history.state[id]) || {};
-```
-
-If the user has already moved the scroll position, we don't want to force the old position
-
-
-```js
-      const userHasScrolled = getScrollTop() != 0;
-      if (state.scrollTop != null && !userHasScrolled) {
-```
-
-TODO: we set the min-height to ensure that we can scroll to the position that will
-eventually be occupied by the same content as before.
-
-
-```js
-        document.body.style.minHeight = state.scrollHeight;
-        window.scroll(window.pageXOffset, state.scrollTop);
-        /* document.body.style.minHeight = ''; */
-      } else if (state.hash) {
-        this.scrollHashIntoView(window.location.hash);
-      }
+    assignScrollPosition(state) {
+      const id = this.histId();
+      return Object.assign(state, {
+        [id]: Object.assign(state[id] || {}, {
+          scrollTop: getScrollTop(),
+          scrollHeight: getScrollHeight(),
+        }),
+      });
     }
 ```
 
@@ -82,23 +52,75 @@ TODO
 
 ```js
     manageScrollPostion({ type, url: { hash } }) {
-      if (type === PUSH) {
-        this.scrollHashIntoView(hash);
-      }
+      switch (type) {
+        case PUSH:
+```
 
-      if (type === POP && this.scrollRestoration) {
-        this.restoreScrollPostion();
+FIXME: make configurable
+
+
+```js
+          this.scrollHashIntoView(hash, { behavior: "smooth", block: "start", inline: "nearest" });
+          break;
+        case POP: {
+          this.restoreScrollPostion();
+          break;
+        }
+        case INIT:
+          break;
+        default: {
+          if (process.env.DEBUG) console.warn(`Type '${type}' not reconginzed.`);
+          break;
+        }
       }
     }
+```
 
-    saveScrollPosition(state) {
+Given a hash, find the element of the same id on the page, and scroll it into view.
+If no hash is provided, scroll to the top instead.
+
+
+```js
+    scrollHashIntoView(hash, options) {
+      if (hash) {
+        const el = document.getElementById(hash.substr(1));
+        if (el) el.scrollIntoView(options);
+        else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
+      } else {
+        window.scroll(window.pageXOffset, 0);
+      }
+    }
+```
+
+Takes the current history state, and restores the scroll position.
+
+
+```js
+    restoreScrollPostion() {
       const id = this.histId();
-      return Object.assign(state, {
-        [id]: Object.assign(state[id] || {}, {
-          scrollTop: getScrollTop(),
-          scrollHeight: getScrollHeight(),
-        }),
-      });
+      const { scrollTop, scrollHeight } = (window.history.state && window.history.state[id]) || {};
+
+      if (scrollTop != null) {
+```
+
+FIXME: Setting `min-height` to ensure that we can scroll back to the previous position?
+FIXME: Use `attributeStyleMap`?
+
+
+```js
+        /* document.body.style.minHeight = `${scrollHeight}px`; */
+        window.scroll(window.pageXOffset, scrollTop);
+      }
+    }
+```
+
+Only restore position on page reload when the user hasn't started scorlling yet.
+
+
+```js
+    restoreScrollPostionOnReload() {
+      const userHasScrolled = getScrollTop() != 0;
+      if (!userHasScrolled) this.restoreScrollPostion();
     }
   };
 ```

@@ -116,7 +116,6 @@ See [Options](../../options.md) for usage information.
       return {
         replaceIds: array,
         linkSelector: string,
-        scrollRestoration: bool,
         duration: number,
         hrefRegex: regex,
         scriptSelector: string,
@@ -128,7 +127,6 @@ See [Options](../../options.md) for usage information.
       return {
         replaceIds: [],
         linkSelector: "a[href]:not(.no-push-state)",
-        scrollRestoration: false,
         duration: 0,
         hrefRegex: null,
         scriptSelector: null,
@@ -188,7 +186,7 @@ Currently they are read-only.
     setupComponent(el, props) {
       super.setupComponent(el, props);
 
-      this.saveScrollHistoryState = this.saveScrollHistoryState.bind(this);
+      this.saveScrollPosition = this.saveScrollPosition.bind(this);
 
       this.reload$ = new Subject();
     }
@@ -217,29 +215,21 @@ Setting up scroll restoration
 
 
 ```js
-        if ("scrollRestoration" in window.history) {
-          const orig = window.history.scrollRestoration;
-
-          this.subjects.scrollRestoration
-            .pipe(takeUntil(this.subjects.disconnect))
-            .subscribe(scrollRestoration => {
-              window.history.scrollRestoration = scrollRestoration ? "manual" : orig;
-            });
-        }
+        if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 ```
 
-If restore the last scroll position, if any.
+Restore the last scroll position, if any.
 
 
 ```js
-        this.restoreScrollPostion();
+        this.restoreScrollPostionOnReload();
 ```
 
 Remember the current scroll position (for F5/reloads).
 
 
 ```js
-        window.addEventListener("beforeunload", this.saveScrollHistoryState);
+        window.addEventListener("beforeunload", this.saveScrollPosition);
 ```
 
 Calling the [setup observables function](./setup.md) function.
@@ -293,7 +283,7 @@ since this `load` event wasn't caused by a user interaction.
 
     disconnectComponent() {
       super.disconnectComponent();
-      window.removeEventListener("beforeunload", this.saveScrollHistoryState);
+      window.removeEventListener("beforeunload", this.saveScrollPosition);
     }
 ```
 

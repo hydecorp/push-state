@@ -21,8 +21,6 @@ import { defer } from "rxjs/_esm5/observable/defer";
 import { fromEvent } from "rxjs/_esm5/observable/fromEvent";
 import { merge } from "rxjs/_esm5/observable/merge";
 
-import { ajax } from "rxjs/_esm5/observable/dom/ajax";
-
 import { catchError } from "rxjs/_esm5/operators/catchError";
 import { tap } from "rxjs/_esm5/operators/tap";
 import { distinctUntilChanged } from "rxjs/_esm5/operators/distinctUntilChanged";
@@ -37,7 +35,6 @@ import { switchMap } from "rxjs/_esm5/operators/switchMap";
 import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { isExternal } from "../common";
 import { URL } from "../url";
 
 import { HINT, PUSH, POP } from "./constants";
@@ -147,17 +144,7 @@ export const setupObservablesMixin = C =>
       const prefetch$ = merge(hint$, page$).pipe(
         // Don't abort a request if the user "jiggles" over a link
         distinctUntilChanged(this.compareContext.bind(this)),
-        switchMap(context =>
-          ajax({
-            method: "GET",
-            responseType: "text",
-            url: context.url,
-            crossDomain: isExternal(this),
-          }).pipe(
-            map(({ response }) => Object.assign(context, { response })),
-            catchError(error => this.recoverIfResponse(context, error))
-          )
-        ),
+        switchMap(this.makeRequest.bind(this)),
         // Start with some value so `withLatestFrom` below doesn't "block"
         startWith({ url: {} }),
         share()

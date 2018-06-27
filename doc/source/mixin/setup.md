@@ -28,8 +28,6 @@ import { defer } from "rxjs/_esm5/observable/defer";
 import { fromEvent } from "rxjs/_esm5/observable/fromEvent";
 import { merge } from "rxjs/_esm5/observable/merge";
 
-import { ajax } from "rxjs/_esm5/observable/dom/ajax";
-
 import { catchError } from "rxjs/_esm5/operators/catchError";
 import { tap } from "rxjs/_esm5/operators/tap";
 import { distinctUntilChanged } from "rxjs/_esm5/operators/distinctUntilChanged";
@@ -44,7 +42,6 @@ import { switchMap } from "rxjs/_esm5/operators/switchMap";
 import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
 import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
 
-import { isExternal } from "../common";
 import { URL } from "../url";
 
 import { HINT, PUSH, POP } from "./constants";
@@ -151,7 +148,12 @@ HACK: make hy-push-state mimic window.location?
           share(),
           partition(this.isHashChange)
         )
-        .map(obs$ => obs$.pipe(map(([, x]) => x), share()));
+        .map(obs$ =>
+          obs$.pipe(
+            map(([, x]) => x),
+            share()
+          )
+        );
 ```
 
 We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
@@ -177,7 +179,10 @@ Start with `false`, i.e. we want the prefetch pipelien to be active
 
 
 ```js
-        .pipe(startWith(false), share());
+        .pipe(
+          startWith(false),
+          share()
+        );
 ```
 
 TODO: doc
@@ -211,17 +216,7 @@ Don't abort a request if the user "jiggles" over a link
 
 ```js
         distinctUntilChanged(this.compareContext.bind(this)),
-        switchMap(context =>
-          ajax({
-            method: "GET",
-            responseType: "text",
-            url: context.url,
-            crossDomain: isExternal(this),
-          }).pipe(
-            map(({ response }) => Object.assign(context, { response })),
-            catchError(error => this.recoverIfResponse(context, error))
-          )
-        ),
+        switchMap(this.makeRequest.bind(this)),
 ```
 
 Start with some value so `withLatestFrom` below doesn't "block"
@@ -315,7 +310,10 @@ Fire `progress` event when fetching takes longer than expected.
       page$
         .pipe(
           switchMap(context =>
-            defer(() => this.animPromise).pipe(takeUntil(this.fetch$), mapTo(context))
+            defer(() => this.animPromise).pipe(
+              takeUntil(this.fetch$),
+              mapTo(context)
+            )
           )
         )
         .subscribe(this.onProgress.bind(this));

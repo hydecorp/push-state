@@ -111,7 +111,12 @@ export const setupObservablesMixin = C =>
           share(),
           partition(this.isHashChange)
         )
-        .map(obs$ => obs$.pipe(map(([, x]) => x), share()));
+        .map(obs$ =>
+          obs$.pipe(
+            map(([, x]) => x),
+            share()
+          )
+        );
 
       // We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
       // while a _certain_ page load is going on.
@@ -123,7 +128,10 @@ export const setupObservablesMixin = C =>
         merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false)))
       )
         // Start with `false`, i.e. we want the prefetch pipelien to be active
-        .pipe(startWith(false), share());
+        .pipe(
+          startWith(false),
+          share()
+        );
 
       // TODO: doc
       const hint$ = this.hintSubject.pipe(
@@ -201,7 +209,10 @@ export const setupObservablesMixin = C =>
       page$
         .pipe(
           switchMap(context =>
-            defer(() => this.animPromise).pipe(takeUntil(this.fetch$), mapTo(context))
+            defer(() => this.animPromise).pipe(
+              takeUntil(this.fetch$),
+              mapTo(context)
+            )
           )
         )
         .subscribe(this.onProgress.bind(this));

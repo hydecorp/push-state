@@ -23,15 +23,37 @@ This file contains helper functions related to fetching new content.
 ```js
 import { of } from "rxjs/_esm5/observable/of";
 
+import { ajax } from "rxjs/_esm5/observable/dom/ajax";
+
+import { catchError } from "rxjs/_esm5/operators/catchError";
 import { map } from "rxjs/_esm5/operators/map";
 import { take } from "rxjs/_esm5/operators/take";
 import { zip } from "rxjs/_esm5/operators/zip";
+
+import { isExternal } from "../common";
 
 export const fetchMixin = C =>
   class extends C {
 ```
 
 ## Fetching
+
+
+```js
+    makeRequest(context) {
+      return ajax({
+        method: "GET",
+        responseType: "text",
+        url: context.url,
+        crossDomain: isExternal(this),
+        headers: { Accept: "text/html" },
+      }).pipe(
+        map(({ response }) => Object.assign(context, { response })),
+        catchError(error => this.recoverIfResponse(context, error))
+      );
+    }
+```
+
 The `ajax` method will throw when it encoutners an a 400+ status code,
 however these are still valid responses from the server that can be shown using this component.
 This assumes error pages have the same HTML strcuture as the other pages though.
@@ -43,10 +65,11 @@ This assumes error pages have the same HTML strcuture as the other pages though.
 ```
 
 If we have a response, recover and continue with the pipeline.
+HACK: Letting ~~servers~~ service workers respond with 598 to force a network error on the component.
 
 
 ```js
-      if (xhr && xhr.response && status > 400) {
+      if (xhr && xhr.response && status > 400 && status < 598) {
         return of(Object.assign(context, { response: xhr.response }));
       }
 ```

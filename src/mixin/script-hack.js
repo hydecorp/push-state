@@ -14,15 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from "rxjs/_esm5/Observable";
+import { Observable, from, of } from "rxjs/_esm5";
 
-// Importing the subset of RxJS functions that we are going to use.
-import { from } from "rxjs/_esm5/observable/from";
-import { of } from "rxjs/_esm5/observable/of";
-
-import { catchError } from "rxjs/_esm5/operators/catchError";
-import { tap } from "rxjs/_esm5/operators/tap";
-import { concatMap } from "rxjs/_esm5/operators/concatMap";
+import { catchError, concatMap, tap } from "rxjs/_esm5/operators";
 
 // ### Experimental script feature
 // TODO

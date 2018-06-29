@@ -14,26 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Subject } from "rxjs/_esm5/Subject";
+import { Subject, defer, fromEvent, merge } from "rxjs/_esm5";
 
-// Importing the subset of RxJS functions that we are going to use.
-import { defer } from "rxjs/_esm5/observable/defer";
-import { fromEvent } from "rxjs/_esm5/observable/fromEvent";
-import { merge } from "rxjs/_esm5/observable/merge";
-
-import { catchError } from "rxjs/_esm5/operators/catchError";
-import { tap } from "rxjs/_esm5/operators/tap";
-import { distinctUntilChanged } from "rxjs/_esm5/operators/distinctUntilChanged";
-import { filter } from "rxjs/_esm5/operators/filter";
-import { map } from "rxjs/_esm5/operators/map";
-import { mapTo } from "rxjs/_esm5/operators/mapTo";
-import { partition } from "rxjs/_esm5/operators/partition";
-import { pairwise } from "rxjs/_esm5/operators/pairwise";
-import { share } from "rxjs/_esm5/operators/share";
-import { startWith } from "rxjs/_esm5/operators/startWith";
-import { switchMap } from "rxjs/_esm5/operators/switchMap";
-import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
-import { withLatestFrom } from "rxjs/_esm5/operators/withLatestFrom";
+import {
+  catchError,
+  tap,
+  distinctUntilChanged,
+  filter,
+  map,
+  mapTo,
+  partition,
+  pairwise,
+  share,
+  startWith,
+  switchMap,
+  takeUntil,
+  withLatestFrom,
+} from "rxjs/_esm5/operators";
 
 import { URL } from "../url";
 

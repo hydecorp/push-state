@@ -18,14 +18,9 @@
 // This file contains helper functions related to fetching new content.
 
 // ## Imports
-import { of } from "rxjs/_esm5/observable/of";
-
-import { ajax } from "rxjs/_esm5/observable/dom/ajax";
-
-import { catchError } from "rxjs/_esm5/operators/catchError";
-import { map } from "rxjs/_esm5/operators/map";
-import { take } from "rxjs/_esm5/operators/take";
-import { zip } from "rxjs/_esm5/operators/zip";
+import { of } from "rxjs/_esm5";
+import { ajax } from "rxjs/_esm5/ajax";
+import { catchError, map, take, zip } from "rxjs/_esm5/operators";
 
 import { isExternal } from "../common";
 

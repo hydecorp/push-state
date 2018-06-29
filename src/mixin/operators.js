@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { never } from "rxjs/_esm5/observable/never";
+import { never } from "rxjs/_esm5";
 
-import { switchMap } from "rxjs/_esm5/operators/switchMap";
+import { switchMap } from "rxjs/_esm5/operators";
 
 // ### Observable extensions
 // #### Unsubscribe when

@@ -42,7 +42,7 @@
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^2.30.1",
     "onchange": "^3.3.0",
-    "prettier": "^1.13.6",
+    "prettier": "^1.13.7",
     "raw-loader": "^0.5.1",
     "underscore-template-loader": "^1.0.0",
     "webpack": "3.12.0",
@@ -50,8 +50,8 @@
     "yargs": "^11.1.0"
   },
   "dependencies": {
-    "hy-component": "^1.0.0-pre.19",
-    "rxjs": "^5.5.11"
+    "hy-component": "^1.0.0-pre.20",
+    "rxjs": "^6.2.1"
   },
   "optionalDependencies": {
     "jquery": "^3.3.1"

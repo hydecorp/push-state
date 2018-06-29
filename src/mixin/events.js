@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from "rxjs/_esm5/Observable";
-import { timer } from "rxjs/_esm5/observable/timer";
+import { Observable, timer } from "rxjs/_esm5";
 
 // ### Event functions
 // These functions are called at various points along the observable pipeline to fire events,

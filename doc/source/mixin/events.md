@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { Observable } from "rxjs/_esm5/Observable";
-import { timer } from "rxjs/_esm5/observable/timer";
+import { Observable, timer } from "rxjs/_esm5";
 ```
 
 ### Event functions

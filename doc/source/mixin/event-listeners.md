@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { Observable } from "rxjs/_esm5/Observable";
+import { Observable } from "rxjs/_esm5";
 
 import { matches, matchesAncestors } from "../common";
 

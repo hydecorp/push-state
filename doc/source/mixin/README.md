@@ -39,8 +39,8 @@ import { componentMixin, COMPONENT_FEATURE_TESTS, Set } from "hy-component/src/c
 import { rxjsMixin } from "hy-component/src/rxjs";
 import { array, bool, number, regex, string } from "hy-component/src/types";
 
-import { Subject } from "rxjs/_esm5/Subject";
-import { takeUntil } from "rxjs/_esm5/operators/takeUntil";
+import { Subject } from "rxjs/_esm5";
+import { takeUntil } from "rxjs/_esm5/operators";
 ```
 
 Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,

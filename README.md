@@ -17,7 +17,7 @@
 [pjax]: https://github.com/defunkt/jquery-pjax
 [smoothstate]: https://github.com/miguel-perez/smoothState.js
 [rxjs]: https://github.com/ReactiveX/rxjs
-[hydejack]: https://qwtel.com/hydejack/
+[hydejack]: https://hydejack.com/
 
 <!--more-->
 

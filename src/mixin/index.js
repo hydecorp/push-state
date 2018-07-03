@@ -162,46 +162,44 @@ export const pushStateMixin = C =>
 
     // Overriding the setup function.
     connectComponent() {
-      requestIdleCallback(() => {
-        if (process.env.DEBUG && !this.replaceIds && !this.el.id)
-          console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
+      if (process.env.DEBUG && !this.replaceIds && !this.el.id)
+        console.warn("hy-push-state needs a 'replace-ids' or 'id' attribute.");
 
-        // Setting up scroll restoration
-        if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+      // Setting up scroll restoration
+      if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 
-        // Restore the last scroll position, if any.
-        this.restoreScrollPostionOnReload();
+      // Restore the last scroll position, if any.
+      this.restoreScrollPostionOnReload();
 
-        // Remember the current scroll position (for F5/reloads).
-        window.addEventListener("beforeunload", this.saveScrollPosition);
+      // Remember the current scroll position (for F5/reloads).
+      window.addEventListener("beforeunload", this.saveScrollPosition);
 
-        // Calling the [setup observables function](./setup.md) function.
-        this.setupObservables();
+      // Calling the [setup observables function](./setup.md) function.
+      this.setupObservables();
 
-        // TODO: meh...
-        super.connectComponent();
+      // TODO: meh...
+      super.connectComponent();
 
-        // Setting the initial `history.state`.
-        const url = new URL(this.initialHref);
-        this.updateHistoryState({ type: INIT, replace: true, url });
+      // Setting the initial `history.state`.
+      const url = new URL(this.initialHref);
+      this.updateHistoryState({ type: INIT, replace: true, url });
 
-        const replaceEls = this.getReplaceElements(document);
-        if (isExternal(this)) this.rewriteURLs(replaceEls);
+      const replaceEls = this.getReplaceElements(document);
+      if (isExternal(this)) this.rewriteURLs(replaceEls);
 
-        // After all this is done, we can fire the one-time `init` event...
-        this.fireEvent("init");
+      // After all this is done, we can fire the one-time `init` event...
+      this.fireEvent("init");
 
-        // ...and our custom `load` event, which gets fired on every page change.
-        // We provide similar data as subsequent `load` events,
-        // however we can't provide an `anchor` or `event`,
-        // since this `load` event wasn't caused by a user interaction.
-        this.onLoad({
-          type: INIT,
-          title: this.getTitle(document),
-          replaceEls,
-          url,
-          cacheNr: this.cacheNr,
-        });
+      // ...and our custom `load` event, which gets fired on every page change.
+      // We provide similar data as subsequent `load` events,
+      // however we can't provide an `anchor` or `event`,
+      // since this `load` event wasn't caused by a user interaction.
+      this.onLoad({
+        type: INIT,
+        title: this.getTitle(document),
+        replaceEls,
+        url,
+        cacheNr: this.cacheNr,
       });
     }
 

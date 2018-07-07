@@ -21,9 +21,9 @@ This file contains helper functions related to fetching new content.
 
 
 ```js
-import { of } from "rxjs/_esm5";
+import { of, zip } from "rxjs/_esm5";
 import { ajax } from "rxjs/_esm5/ajax";
-import { catchError, map, take, zip } from "rxjs/_esm5/operators";
+import { catchError, map, take } from "rxjs/_esm5/operators";
 
 import { isExternal } from "../common";
 
@@ -103,9 +103,12 @@ It will not emit until an (optional) page transition animation completes.
 
 ```js
     getResponse(prefetch$, [context, latestPrefetch]) {
-      return this.getFetch$(context, latestPrefetch, prefetch$).pipe(
-        map(fetch => Object.assign(fetch, context)),
-        zip(this.animPromise, x => x)
+      return zip(
+        this.getFetch$(context, latestPrefetch, prefetch$).pipe(
+          map(fetch => Object.assign(fetch, context))
+        ),
+        this.animPromise,
+        x => x
       );
     }
   };

@@ -1,6 +1,6 @@
 {
   "name": "hy-push-state",
-  "version": "1.0.0-pre.20",
+  "version": "1.0.0-pre.21",
   "description": "Turn static web sites into dynamic web apps",
   "main": "src/index.js",
   "scripts": {

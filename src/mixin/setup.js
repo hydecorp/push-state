@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Subject, defer, fromEvent, merge, never } from "rxjs/_esm5";
+import { Subject, defer, fromEvent, merge, NEVER } from "rxjs/_esm5";
 
 import {
   catchError,
@@ -118,7 +118,7 @@ export const setupObservablesMixin = C =>
       // TODO: doc
       const hint$ = this.subjects.prefetch.pipe(
         switchMap(prefetch => {
-          if (!prefetch) return never();
+          if (!prefetch) return NEVER;
 
           // We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
           // while a _certain_ page load is going on.

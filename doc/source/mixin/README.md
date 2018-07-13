@@ -40,7 +40,6 @@ import { rxjsMixin } from "hy-component/src/rxjs";
 import { array, bool, number, regex, string } from "hy-component/src/types";
 
 import { Subject } from "rxjs/_esm5";
-import { takeUntil } from "rxjs/_esm5/operators";
 ```
 
 Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
@@ -120,6 +119,7 @@ See [Options](../../options.md) for usage information.
         hrefRegex: regex,
         scriptSelector: string,
         initialHref: string,
+        prefetch: bool,
       };
     }
 
@@ -131,6 +131,7 @@ See [Options](../../options.md) for usage information.
         hrefRegex: null,
         scriptSelector: null,
         initialHref: window.location.href,
+        prefetch: false,
       };
     }
 ```

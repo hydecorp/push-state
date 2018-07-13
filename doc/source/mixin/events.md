@@ -46,26 +46,26 @@ The behavior is encoded with a promise that resolves after `duration` ms.
       this.animPromise = timer(this.duration);
 ```
 
-The `waitUntil` function lets users of this component override the animation promise.
+The `transitionUntil` function lets users of this component override the animation promise.
 This allows for event-based code execution, rather than timing-based, which prevents hiccups
 and glitches when, for example, painting takes longer than expected.
 
 
 ```js
-      const waitUntil = promise => {
+      const transitionUntil = promise => {
         if (process.env.DEBUG && !(promise instanceof Promise || promise instanceof Observable)) {
-          console.warn("waitUntil expects a Promise as first argument.");
+          console.warn("transitionUntil expects a Promise as first argument.");
         }
         this.animPromise = promise;
       };
 
       this.fireEvent("start", {
-        detail: Object.assign(context, { waitUntil }),
+        detail: Object.assign(context, { transitionUntil }),
       });
     }
 ```
 
-Example usage of `waitUntil`:
+Example usage of `transitionUntil`:
 
 ```js
 hyPushStateEl.addEventListener('hy-push-state-start', ({ detail }) => {
@@ -73,7 +73,7 @@ hyPushStateEl.addEventListener('hy-push-state-start', ({ detail }) => {
     const anim = myContent.animate(...);
     anim.addEventListener('finish', resolve);
   });
-  detail.waitUntil(animPromise);
+  detail.transitionUntil(animPromise);
 });
 ```
 {:style="font-style:italic"}

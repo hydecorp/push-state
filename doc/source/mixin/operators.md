@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { never } from "rxjs/_esm5";
+import { NEVER } from "rxjs/_esm5";
 
 import { switchMap } from "rxjs/_esm5/operators";
 ```
@@ -31,7 +31,7 @@ and re-subscribes when it emits a falsy value.
 ```js
 export const unsubscribeWhen = pauser$ => source => {
   if (process.env.DEBUG && !pauser$) throw Error();
-  return pauser$.pipe(switchMap(paused => (paused ? never() : source)));
+  return pauser$.pipe(switchMap(paused => (paused ? NEVER : source)));
 };
 ```
 

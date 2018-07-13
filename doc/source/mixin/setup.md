@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { Subject, defer, fromEvent, merge } from "rxjs/_esm5";
+import { Subject, defer, fromEvent, merge, NEVER } from "rxjs/_esm5";
 
 import {
   catchError,
@@ -149,6 +149,15 @@ HACK: make hy-push-state mimic window.location?
         );
 ```
 
+TODO: doc
+
+
+```js
+      const hint$ = this.subjects.prefetch.pipe(
+        switchMap(prefetch => {
+          if (!prefetch) return NEVER;
+```
+
 We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
 while a _certain_ page load is going on.
 The `pauser$` observable let's us achieve this.
@@ -156,7 +165,7 @@ Needs to be deferred b/c of "cyclical" dependency.
 
 
 ```js
-      const pauser$ = defer(() =>
+          const pauser$ = defer(() =>
 ```
 
 A page change event means we want to pause prefetching, while
@@ -164,35 +173,32 @@ a response event means we want to resume prefetching.
 
 
 ```js
-        merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false)))
-      )
+            merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false)))
+          )
 ```
 
 Start with `false`, i.e. we want the prefetch pipelien to be active
 
 
 ```js
-        .pipe(
-          startWith(false),
-          share()
-        );
-```
+            .pipe(
+              startWith(false),
+              share()
+            );
 
-TODO: doc
-
-
-```js
-      const hint$ = this.hintSubject.pipe(
-        takeUntil(this.subjects.disconnect),
-        unsubscribeWhen(pauser$),
-        map(event => ({
-          type: HINT,
-          url: new URL(event.currentTarget.href, this.href),
-          anchor: event.currentTarget,
-          event,
-          cacheNr: this.cacheNr,
-        })),
-        filter(this.isHintEvent.bind(this))
+          return this.hintSubject.pipe(
+            takeUntil(this.subjects.disconnect),
+            unsubscribeWhen(pauser$),
+            map(event => ({
+              type: HINT,
+              url: new URL(event.currentTarget.href, this.href),
+              anchor: event.currentTarget,
+              event,
+              cacheNr: this.cacheNr,
+            })),
+            filter(this.isHintEvent.bind(this))
+          );
+        })
       );
 ```
 

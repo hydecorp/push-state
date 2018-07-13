@@ -11,7 +11,9 @@ Unlike other implementations of this feature, the current prefetch request will 
 
 For example, hovering links in the sidebar on [qwtel.com](https://qwtel.com/hy-push-state/) will produce a timeline like the one below:
 
-![Google developer console screenshot of prefetching requests](../assets/img/prefetching.png){:.lead}
+![dev console screenshot](../assets/img/prefetching.png){:.lead}
+Chrome developer console screenshot of prefetching requests.
+{:.figure}
 
 ## Advanced Animations
 **hy-push-state** allows building advanced page transition animations, like the ones used in [Hydejack](https://qwtel.com/hydejack/variations/) and state-of-the-art web apps. These can be promise-based instead of time-based to account for smaller delays caused by other code, GC interruptions, or slower devices in general
@@ -20,7 +22,7 @@ The code for a simple fade-out animation using the [Web Animations API][waapi] m
 
 ```js
 pushStateEl.addEventListener('hy-push-state-start', ({ detail }) =>
-  detail.waitUntil(new Promise(res =>
+  detail.transitionUntil(new Promise(res =>
     document
       .getElementById('my-content')
       .animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 })

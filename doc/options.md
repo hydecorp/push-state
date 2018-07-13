@@ -85,7 +85,7 @@ The duration of a page transition. Use this to ensure that animations have suffi
 before the current content gets replaced with new content.
 
 Note that hy-push-state gives you more fine-grained control over animation durations
-via the [`hy-push-state-start`](events.md#hy-push-state-start) event's `waitUntil` method.
+via the [`hy-push-state-start`](events.md#hy-push-state-start) event's `transitionUntil` method.
 
 Type
 : `Number` (ms)

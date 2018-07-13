@@ -26,7 +26,7 @@ This event is fired at the beginning of every page transition, after the user cl
 or presses the back button, etc...
 
 You can use this to start custom page transition animations.
-The event's `detail` field exposes a `waitUntil` function
+The event's `detail` field exposes a `transitionUntil` function
 that you can use to delay replacing the current content until the animation completes, e.g.:
 
 ```js
@@ -35,11 +35,11 @@ hyPushStateEl.addEventListener('hy-push-state-start', ({ detail }) => {
     const anim = myContent.animate(...);
     anim.addEventListener('finish', resolve);
   });
-  detail.waitUntil(animPromise);
+  detail.transitionUntil(animPromise);
 });
 ```
 
-PRO Tip: `waitUntil` will also accept an [`Observable`](http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html),
+PRO Tip: `transitionUntil` will also accept an [`Observable`](http://reactivex.io/rxjs/class/es6/Observable.js~Observable.html),
 delaying replacing the content until the observable completes.
 {:.message}
 
@@ -81,9 +81,9 @@ jQuery event name
 This event is fired when fetching the new page takes longer than expected.
 You can use this to show a loading spinner.
 
-Specifically, if `waitUntil` has been called during `hy-push-state-start`,
+Specifically, if `transitionUntil` has been called during `hy-push-state-start`,
 the event will fire when the provided promise resolves, but no response from the server is available yet.
-If `waitUntil` hasn't been called, the event will fire after [`duration`](options.md#duration) ms.
+If `transitionUntil` hasn't been called, the event will fire after [`duration`](options.md#duration) ms.
 
 jQuery event name
 : `progress.hy.pushstate`

@@ -120,6 +120,21 @@ jQuery attribute
 
 *** -->
 
+## `prefetch`
+Tell hy-push-state to start loading a page as soon as a user shows intent by hovering, touching, or focusing a link. Will cancel in-flight requests when the user hints at a different link, and will pause while a page transition is in progress.
+
+Type
+: `Bool`
+
+Default
+: `false`
+
+HTML attribute
+: `prefetch`
+
+jQuery attribute
+: `data-prefetch`
+
 ## `scriptSelector`
 Some sites have embedded `script` tags that expect the site to be loaded with a fresh page load, e.g. they expect certain elements to be in the DOM, or even call `document.write`
 (which has a completely different effect when called after the initial document parse).

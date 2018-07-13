@@ -37,7 +37,6 @@ import { rxjsMixin } from "hy-component/src/rxjs";
 import { array, bool, number, regex, string } from "hy-component/src/types";
 
 import { Subject } from "rxjs/_esm5";
-import { takeUntil } from "rxjs/_esm5/operators";
 
 // Partial polyfill of the URL class. Only provides the most basic funtionality of `URL`,
 // but sufficient for this compoennt.
@@ -92,6 +91,7 @@ export const pushStateMixin = C =>
         hrefRegex: regex,
         scriptSelector: string,
         initialHref: string,
+        prefetch: bool,
       };
     }
 
@@ -103,6 +103,7 @@ export const pushStateMixin = C =>
         hrefRegex: null,
         scriptSelector: null,
         initialHref: window.location.href,
+        prefetch: false,
       };
     }
 

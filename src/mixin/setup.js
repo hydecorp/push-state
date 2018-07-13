@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Subject, defer, fromEvent, merge } from "rxjs/_esm5";
+import { Subject, defer, fromEvent, merge, never } from "rxjs/_esm5";
 
 import {
   catchError,
@@ -115,33 +115,39 @@ export const setupObservablesMixin = C =>
           )
         );
 
-      // We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
-      // while a _certain_ page load is going on.
-      // The `pauser$` observable let's us achieve this.
-      // Needs to be deferred b/c of "cyclical" dependency.
-      const pauser$ = defer(() =>
-        // A page change event means we want to pause prefetching, while
-        // a response event means we want to resume prefetching.
-        merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false)))
-      )
-        // Start with `false`, i.e. we want the prefetch pipelien to be active
-        .pipe(
-          startWith(false),
-          share()
-        );
-
       // TODO: doc
-      const hint$ = this.hintSubject.pipe(
-        takeUntil(this.subjects.disconnect),
-        unsubscribeWhen(pauser$),
-        map(event => ({
-          type: HINT,
-          url: new URL(event.currentTarget.href, this.href),
-          anchor: event.currentTarget,
-          event,
-          cacheNr: this.cacheNr,
-        })),
-        filter(this.isHintEvent.bind(this))
+      const hint$ = this.subjects.prefetch.pipe(
+        switchMap(prefetch => {
+          if (!prefetch) return never();
+
+          // We don't want to prefetch (i.e. use bandwidth) for a _possible_ page load,
+          // while a _certain_ page load is going on.
+          // The `pauser$` observable let's us achieve this.
+          // Needs to be deferred b/c of "cyclical" dependency.
+          const pauser$ = defer(() =>
+            // A page change event means we want to pause prefetching, while
+            // a response event means we want to resume prefetching.
+            merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false)))
+          )
+            // Start with `false`, i.e. we want the prefetch pipelien to be active
+            .pipe(
+              startWith(false),
+              share()
+            );
+
+          return this.hintSubject.pipe(
+            takeUntil(this.subjects.disconnect),
+            unsubscribeWhen(pauser$),
+            map(event => ({
+              type: HINT,
+              url: new URL(event.currentTarget.href, this.href),
+              anchor: event.currentTarget,
+              event,
+              cacheNr: this.cacheNr,
+            })),
+            filter(this.isHintEvent.bind(this))
+          );
+        })
       );
 
       // The stream of (pre-)fetch events.

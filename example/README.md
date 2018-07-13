@@ -16,7 +16,7 @@ When viewing this page on [webcomponents.org][wcorg], the example below will ren
 ```
 -->
 ```html
-<hy-push-state initial-href="https://qwtel.com/hy-push-state/example/simple/">
+<hy-push-state initial-href="https://qwtel.com/hy-push-state/example/simple/" prefetch>
   <p>
     <a href="./1.html">Page 1</a>
     <a href="./2.html">Page 2</a>

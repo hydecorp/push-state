@@ -55,7 +55,8 @@
     <script>
       var HyPushState = hyPushState.HyPushState;
       window.pushState = new HyPushState(window.pushStateEl, {
-        linkSelector: 'a[href^=".."]'
+        linkSelector: 'a[href^=".."]',
+        prefetch: true
       });
     </script>
   </body>

@@ -59,7 +59,8 @@
       var PushState = pushStateMixin(MyComponent);
       window.pushState = new PushState();
       window.pushState.setupComponent(window.pushStateEl, {
-        linkSelector: 'a[href^=".."]'
+        linkSelector: 'a[href^=".."]',
+        prefetch: true
       });
       window.pushState.connectComponent();
     </script>

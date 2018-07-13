@@ -18,7 +18,7 @@ This is the version that is going to have native support across all major browse
 ~~~html
 <script type="module" href="https://unpkg.com/hy-push-state/dist/webcomponent/module"></script>
 
-<hy-push-state replace-ids="main,aside" scroll-restoration>
+<hy-push-state replace-ids="main,aside" prefetch>
   <main id="main"><!-- ... --></main>
   <aside id="aside"><!-- ... --></aside>
 </hy-push-state>
@@ -30,7 +30,7 @@ Some browsers have decided against implementing HTML Imports, but they are easil
 ~~~html
 <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html">
 
-<hy-push-state replace-ids="main,aside" scroll-restoration>
+<hy-push-state replace-ids="main,aside" prefetch>
   <main id="main"><!-- ... --></main>
   <aside id="aside"><!-- ... --></aside>
 </hy-push-state>
@@ -42,7 +42,7 @@ When loading the component form the [unpkg] CDN, you can import the source direc
 ~~~html
 <script type="module" src="https://unpkg.com/hy-push-state/src/webcomponent/module?module"></script>
 
-<hy-push-state replace-ids="main,aside" scroll-restoration>
+<hy-push-state replace-ids="main,aside" prefetch>
   <main id="main"><!-- ... --></main>
   <aside id="aside"><!-- ... --></aside>
 </hy-push-state>
@@ -95,7 +95,7 @@ Events are of the form `<name>.hy.pushstate`.
 <script src="https://unpkg.com/hy-push-state/dist/jquery"></script>
 <script>
   $('.hy-push-state').pushstate({
-    scrollRestoration: true
+    prefetch: true
   })
 </script>
 ~~~
@@ -115,7 +115,7 @@ Note that you are responsible for calling the `disconnectComponent` function on 
   var HyPushState = window.hyPushState.HyPushState;
   var pushState = new HyPushState(document.getElementById('push-state-el'), {
     replaceIds: ['main', 'aside'],
-    scrollRestoration: true,
+    prefetch: true,
   });
 </script>
 ~~~

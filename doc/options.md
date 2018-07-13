@@ -101,25 +101,6 @@ jQuery attribute
 
 ***
 
-<!-- ## `origin`
-If you intend to fetch content form a domain that is different from the current location, you can provide a origin string.
-This string must be a valid `window.location.origin` value, e.g. `https://webcomponents.org`, or `http://localhost:8081`.
-Note that this will not push frames to the history stack, i.e. the back button will only work when `origin` is the same as the location of the current window.
-
-Type
-: `String` (URL/origin)
-
-Default
-: `window.location.origin`
-
-HTML attribute
-: `origin`
-
-jQuery attribute
-: `data-origin`
-
-*** -->
-
 ## `prefetch`
 Tell hy-push-state to start loading a page as soon as a user shows intent by hovering, touching, or focusing a link. Will cancel in-flight requests when the user hints at a different link, and will pause while a page transition is in progress.
 

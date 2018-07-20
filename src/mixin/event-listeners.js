@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Observable } from "rxjs/_esm5";
+import { createXObservable } from 'hy-component/src/rxjs';
 
 import { matches, matchesAncestors } from "../common";
 
@@ -96,22 +96,17 @@ export const eventListenersMixin = C =>
         // An observable wrapper around the mutation observer.
         // We're only interested in nodes entering and leaving the entire subtree of this component,
         // but not attribute changes.
-        Observable.create(obs => {
-          const next = obs.next.bind(obs);
-          this.mutationObserver = new MutationObserver(mutations =>
-            Array.from(mutations).forEach(next)
-          );
-          this.mutationObserver.observe(this.el, {
-            childList: true,
-            subtree: true,
-          });
-        })
-          // For every mutation, we remove the event listeners of elements that go out of the component
-          // (if any), and add event listeners to all elements that make it into the compnent (if any).
-          .subscribe(({ addedNodes, removedNodes }) => {
-            Array.from(removedNodes).forEach(removeListeners.bind(this));
-            Array.from(addedNodes).forEach(addListeners.bind(this));
-          });
+        const mutation$ = createXObservable(MutationObserver)(this.el, {}, {
+          childList: true,
+          subtree: true,
+        });
+
+        // For every mutation, we remove the event listeners of elements that go out of the component
+        // (if any), and add event listeners to all elements that make it into the compnent (if any).
+        mutation$.subscribe(({ addedNodes, removedNodes }) => {
+          Array.from(removedNodes).forEach(removeListeners.bind(this));
+          Array.from(addedNodes).forEach(addListeners.bind(this));
+        });
 
         // TODO
         this.subjects.linkSelector.subscribe(() => {

@@ -42,9 +42,9 @@ export const updateMixin = C =>
     responseToContent(context) {
       const { response } = context;
 
-      const fragment = fragmentFromString(response);
-      const title = this.getTitle(fragment);
-      const replaceEls = this.getReplaceElements(fragment);
+      const documentFragment = fragmentFromString(response);
+      const title = this.getTitle(documentFragment);
+      const replaceEls = this.getReplaceElements(documentFragment);
 
       if (replaceEls.some(x => x == null)) {
         throw Object.assign(context, { replaceElMissing: true });
@@ -52,7 +52,7 @@ export const updateMixin = C =>
 
       const scripts = this.scriptSelector ? this.tempRemoveScriptTags(replaceEls) : [];
 
-      return Object.assign(context, { title, replaceEls, scripts });
+      return Object.assign(context, { documentFragment, title, replaceEls, scripts });
     }
 
     // Replaces the old elments with the new one, one-by-one.

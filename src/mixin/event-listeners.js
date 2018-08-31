@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { createXObservable } from 'hy-component/src/rxjs';
+import { createXObservable } from "hy-component/src/rxjs";
 
 import { matches, matchesAncestors } from "../common";
 
@@ -96,10 +96,14 @@ export const eventListenersMixin = C =>
         // An observable wrapper around the mutation observer.
         // We're only interested in nodes entering and leaving the entire subtree of this component,
         // but not attribute changes.
-        const mutation$ = createXObservable(MutationObserver)(this.el, {}, {
-          childList: true,
-          subtree: true,
-        });
+        const mutation$ = createXObservable(MutationObserver)(
+          this.el,
+          {},
+          {
+            childList: true,
+            subtree: true,
+          }
+        );
 
         // For every mutation, we remove the event listeners of elements that go out of the component
         // (if any), and add event listeners to all elements that make it into the compnent (if any).

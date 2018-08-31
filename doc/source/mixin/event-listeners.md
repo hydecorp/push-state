@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```js
 
-import { Observable } from "rxjs/_esm5";
+import { createXObservable } from "hy-component/src/rxjs";
 
 import { matches, matchesAncestors } from "../common";
 
@@ -129,16 +129,14 @@ but not attribute changes.
 
 
 ```js
-        Observable.create(obs => {
-          const next = obs.next.bind(obs);
-          this.mutationObserver = new MutationObserver(mutations =>
-            Array.from(mutations).forEach(next)
-          );
-          this.mutationObserver.observe(this.el, {
+        const mutation$ = createXObservable(MutationObserver)(
+          this.el,
+          {},
+          {
             childList: true,
             subtree: true,
-          });
-        })
+          }
+        );
 ```
 
 For every mutation, we remove the event listeners of elements that go out of the component
@@ -146,10 +144,10 @@ For every mutation, we remove the event listeners of elements that go out of the
 
 
 ```js
-          .subscribe(({ addedNodes, removedNodes }) => {
-            Array.from(removedNodes).forEach(removeListeners.bind(this));
-            Array.from(addedNodes).forEach(addListeners.bind(this));
-          });
+        mutation$.subscribe(({ addedNodes, removedNodes }) => {
+          Array.from(removedNodes).forEach(removeListeners.bind(this));
+          Array.from(addedNodes).forEach(addListeners.bind(this));
+        });
 ```
 
 TODO

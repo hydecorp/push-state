@@ -58,9 +58,9 @@ that can be inserted into the DOM.
     responseToContent(context) {
       const { response } = context;
 
-      const fragment = fragmentFromString(response);
-      const title = this.getTitle(fragment);
-      const replaceEls = this.getReplaceElements(fragment);
+      const documentFragment = fragmentFromString(response);
+      const title = this.getTitle(documentFragment);
+      const replaceEls = this.getReplaceElements(documentFragment);
 
       if (replaceEls.some(x => x == null)) {
         throw Object.assign(context, { replaceElMissing: true });
@@ -68,7 +68,7 @@ that can be inserted into the DOM.
 
       const scripts = this.scriptSelector ? this.tempRemoveScriptTags(replaceEls) : [];
 
-      return Object.assign(context, { title, replaceEls, scripts });
+      return Object.assign(context, { documentFragment, title, replaceEls, scripts });
     }
 ```
 

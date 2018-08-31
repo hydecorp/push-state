@@ -1,13 +1,12 @@
 const { readFileSync } = require("fs");
 const { resolve } = require("path");
 
-const {
-  BannerPlugin,
-  EnvironmentPlugin,
-} = require("webpack");
+const { BannerPlugin, EnvironmentPlugin } = require("webpack");
 
 const merge = require("webpack-merge");
-const { argv: { mode } } = require("yargs");
+const {
+  argv: { mode },
+} = require("yargs");
 const camelcase = require("camelcase");
 
 const HtmlWebpackPlugin = require("html-webpack-plugin");
@@ -24,10 +23,7 @@ function envConfig() {
   switch (mode) {
     case "production":
       return {
-        plugins: [
-          new BannerPlugin({ banner }),
-          new EnvironmentPlugin({ DEBUG: false }),
-        ],
+        plugins: [new BannerPlugin({ banner }), new EnvironmentPlugin({ DEBUG: false })],
       };
 
     default:
@@ -52,7 +48,7 @@ const baseConfig = merge(
           test: /(\.jsx|\.js)$/,
           loader: "babel-loader",
           options: {
-            presets: [["env", { modules: false }]],
+            presets: [["@babel/preset-env", { modules: false }]],
             babelrc: false,
           },
         },

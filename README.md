@@ -7,12 +7,15 @@
 > Turn static web sites into dynamic web apps.
 {:.lead}
 
-**hy-push-state** is similar to [pjax] and [smoothState], but offers a [more advanced pre-fetching logic](#page-prefetching) and gives you more control over its internals to enable [advanced page transition animations](#advanced-animations).
+**hy-push-state** is similar to [pjax] and [smoothState], but offers a [more advanced pre-fetching logic][pref] and gives you more control over its internals to enable [advanced page transition animations][anim].
 
 **hy-push-state** is already used by hundreds of sites as part of the [Hydejack]{:.external} Jekyll theme.
 
 **NOTE**: The current version is still a pre-release. The public API may still change in important ways.
 {:.message}
+
+[pref]: #page-prefetching
+[anim]: #advanced-animations
 
 [pjax]: https://github.com/defunkt/jquery-pjax
 [smoothstate]: https://github.com/miguel-perez/smoothState.js

@@ -83,7 +83,7 @@ If no hash is provided, scroll to the top instead.
 ```js
     scrollHashIntoView(hash, options) {
       if (hash) {
-        const el = document.getElementById(hash.substr(1));
+        const el = document.getElementById(decodeURIComponent(hash.substr(1)));
         if (el) el.scrollIntoView(options);
         else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
       } else {

@@ -50,7 +50,7 @@ exclude:
 include:
   - LICENSE.md
 
-remote_theme: qwtel/hydejack@v8
+remote_theme: qwtel/hydejack
 
 hydejack:
   cookies_banner: true

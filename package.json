@@ -28,33 +28,10 @@
   "author": "Florian Klampfer <mail@qwtel.com> (https://qwtel.com/)",
   "license": "GPL-3.0",
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.3.4",
-    "@babel/preset-env": "^7.3.4",
-    "babel-loader": "^8.0.5",
-    "camelcase": "^5.2.0",
-    "docco": "0.7.0",
-    "file-loader": "^3.0.1",
-    "html-webpack-plugin": "^3.2.0",
-    "onchange": "^5.2.0",
-    "prettier": "^1.16.4",
-    "raw-loader": "^1.0.0",
-    "underscore-template-loader": "^1.0.0",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3",
-    "webpack-merge": "^4.2.1",
-    "yargs": "^13.2.2"
+    "@stencil/core": "^0.18.1"
   },
   "dependencies": {
-    "hy-component": "^1.0.0-pre.27",
     "rxjs": "^6.4.0"
-  },
-  "optionalDependencies": {
-    "jquery": "^3.3.1"
-  },
-  "directories": {
-    "doc": "doc",
-    "example": "example"
   },
   "repository": {
     "type": "git",

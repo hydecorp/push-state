@@ -1,1 +1,0 @@
-module.exports = require('../cjs/es5/hy-push-state.define.js');

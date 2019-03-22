@@ -1,6 +1,6 @@
 {
   "name": "hy-push-state",
-  "version": "1.0.0-stencil",
+  "version": "1.0.0-stencil.0",
   "description": "Turn static web sites into dynamic web apps",
   "module": "dist/esm/index.js",
   "main": "dist/index.js",

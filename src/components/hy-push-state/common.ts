@@ -21,10 +21,15 @@ export interface ClickContext extends Context {
   event: MouseEvent,
 }
 
-export function unsubscribeWhen<T>(pauser$: Observable<boolean>) {
+export function subscribeWhen<T>(p$: Observable<boolean>) {
   return (source: Observable<T>) => {
-    // if (process.env.DEBUG && !pauser$) throw Error();
-    return pauser$.pipe(switchMap(paused => (paused ? NEVER : source)));
+    return p$.pipe(switchMap(p => (p ? source : NEVER)));
+  };
+}
+
+export function unsubscribeWhen<T>(p$: Observable<boolean>) {
+  return (source: Observable<T>) => {
+    return p$.pipe(switchMap(p => (p ? NEVER : source)));
   };
 }
 

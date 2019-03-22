@@ -14,31 +14,40 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Subject, Observable } from "rxjs";
+import { Subject, Observable, fromEvent } from "rxjs";
 
-import { matchesAncestors, createMutationObservable } from "./common";
+import { matchesAncestors, createMutationObservable, subscribeWhen } from "./common";
+import { map, filter, startWith, tap } from "rxjs/operators";
 
 export class EventListenersMixin {
   el: HTMLElement;
+  
   linkSelector: string;
-  linkSelector$: Observable<string>;
 
-  pushSubject: Subject<[MouseEvent, HTMLAnchorElement]>;
-  hintSubject: Subject<[Event, HTMLAnchorElement]>;
+  linkSelector$: Observable<string>;
+  prefetch$: Observable<boolean>;
+
+  pushEvent$: Observable<[MouseEvent, HTMLAnchorElement]>;
+  hintEvent$: Observable<[Event, HTMLAnchorElement]>;
 
   setupEventListeners() {
-    this.el.addEventListener("click", event => {
-      const anchor = matchesAncestors(event.target as Element, this.linkSelector);
-      if (anchor instanceof HTMLAnchorElement) {
-        this.pushSubject.next([event, anchor]);
-      }
-    });
+    this.pushEvent$ = fromEvent(this.el, "click").pipe(
+      map(event => {
+        const anchor = matchesAncestors(event.target as Element, this.linkSelector);
+        if (anchor instanceof HTMLAnchorElement) {
+          return [event, anchor] as [MouseEvent, HTMLAnchorElement];
+        }
+      }),
+      filter(x => !!x),
+    );
 
     // TODO: this.prefech?
     if ("MutationObserver" in window && "Set" in window) {
       const links = new Set();
+      const hintSubject = new Subject<[Event, HTMLAnchorElement]>();
+      this.hintEvent$ = hintSubject;
 
-      const hintNext = (e: Event) => this.hintSubject.next([e, e.currentTarget as HTMLAnchorElement]);
+      const hintNext = (e: Event) => hintSubject.next([e, e.currentTarget as HTMLAnchorElement]);
 
       const addLink = (link: Element) => {
         if (!links.has(link)) {
@@ -82,18 +91,21 @@ export class EventListenersMixin {
         }
       };
 
-      const mutation$ = createMutationObservable(this.el, { childList: true, subtree: true });
-
-      mutation$.subscribe(({ addedNodes, removedNodes }) => {
-        console.log('still rnning')
-        removedNodes.forEach(removeListeners);
-        addedNodes.forEach(addListeners);
-      });
-
       this.linkSelector$.subscribe(() => {
         links.forEach(removeLink);
         addListeners(this.el);
       });
-    }  
+
+      createMutationObservable(this.el, { childList: true, subtree: true })
+        .pipe(
+          startWith({ addedNodes: [this.el], removedNodes: [] }),
+          tap({ complete() { links.forEach(removeLink) }}),
+          subscribeWhen(this.prefetch$),
+        )
+        .subscribe(({ addedNodes, removedNodes }) => {
+          removedNodes.forEach(removeListeners);
+          addedNodes.forEach(addListeners);
+        });
+    }
   }
 };

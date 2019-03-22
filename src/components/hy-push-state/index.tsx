@@ -82,8 +82,8 @@ export class HyPushState implements Location, EventListenersMixin {
 
   // EventListenersMixin
   setupEventListeners: () => void;
-  pushSubject = new Subject<[MouseEvent, HTMLAnchorElement]>();
-  hintSubject = new Subject<[Event, HTMLAnchorElement]>();
+  pushEvent$: Observable<[MouseEvent, HTMLAnchorElement]>;
+  hintEvent$: Observable<[Event, HTMLAnchorElement]>;
 
   reload$ = new Subject<Context>();
 
@@ -129,9 +129,11 @@ export class HyPushState implements Location, EventListenersMixin {
     this.linkSelector$ = new BehaviorSubject(this.linkSelector);
     this.prefetch$ = new BehaviorSubject(this.prefetch);
 
+    this.setupEventListeners();
+
     const deferred: { response$?: Observable<ResponseContext> } = {};
 
-    const push$: Observable<ClickContext> = this.pushSubject.pipe(
+    const push$: Observable<ClickContext> = this.pushEvent$.pipe(
       // takeUntil(this.subjects.disconnect),
       map(([event, anchor]) => ({
         cause: Cause.Push,
@@ -191,7 +193,7 @@ export class HyPushState implements Location, EventListenersMixin {
     const hint$: Observable<Context> = this.prefetch$.pipe(switchMap(prefetch => {
       if (!prefetch) return NEVER;
 
-      return this.hintSubject.pipe(
+      return this.hintEvent$.pipe(
         // tap(x => console.log(x)),
         // takeUntil(this.subjects.disconnect),
         unsubscribeWhen(pauser$),
@@ -257,8 +259,6 @@ export class HyPushState implements Location, EventListenersMixin {
         mapTo(context),
       ),
     )).subscribe(context => this.eventManager.emitProgress(context));
-
-    this.setupEventListeners();
   }
 }
 

@@ -1,7 +1,7 @@
 import { isExternal, fragmentFromString } from "./common";
 
 import { ScriptManager } from "./script";
-import { URLRewriter } from "./url-rewriter";
+import { rewriteURLs } from "./rewrite-urls";
 
 import { ResponseContext } from './fetch';
 import { HyPushState } from ".";
@@ -15,12 +15,10 @@ export interface ReplaceContext extends ResponseContext {
 
 export class UpdateManager {
   private parent: HyPushState;
-  private urlRewriter: URLRewriter;
   private scriptManager: ScriptManager;
 
   constructor(parent: HyPushState) {
     this.parent = parent;
-    this.urlRewriter = new URLRewriter(parent);
     this.scriptManager = new ScriptManager(parent);
   }
 
@@ -95,7 +93,7 @@ export class UpdateManager {
   updateDOM(context: ReplaceContext) {
     try {
       const { replaceEls } = context;
-      if (isExternal(this.parent)) this.urlRewriter.rewriteURLs(replaceEls);
+      if (isExternal(this.parent)) rewriteURLs(replaceEls, this.parent.href);
       this.replaceContent(replaceEls);
     } catch (error) {
       throw { ...context, error };

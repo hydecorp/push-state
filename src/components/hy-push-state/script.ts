@@ -1,5 +1,5 @@
-import { Observable, of, from, PartialObserver } from "rxjs";
-import { tap, concatMap, catchError, finalize } from "rxjs/operators";
+import { of, from } from "rxjs";
+import { concatMap, catchError, finalize, mapTo } from "rxjs/operators";
 
 import { ReplaceContext } from "./update";
 import { HyPushState } from ".";
@@ -13,7 +13,7 @@ export class ScriptManager {
 
   get scriptSelector() { return this.parent.scriptSelector }
 
-  tempRemoveScriptTags(replaceEls: Element[]) {
+  removeScriptTags(replaceEls: Element[]) {
     const scripts: Array<[HTMLScriptElement, Node | null]> = [];
 
     replaceEls.forEach(el => {
@@ -27,7 +27,23 @@ export class ScriptManager {
     return scripts;
   }
 
-  insertScript([script, ref]: [HTMLScriptElement, Node]): Observable<{}> {
+  reinsertScriptTags(context: ReplaceContext) {
+    if (!this.scriptSelector) return Promise.resolve(context);
+
+    const { scripts } = context;
+
+    const originalWrite = document.write;
+
+    return from(scripts).pipe(
+      concatMap(script => this.insertScript(script)),
+      catchError(error => of({ ...context, error })),
+      finalize(() => (document.write = originalWrite)),
+      mapTo(context),
+    )
+      .toPromise();
+  }
+
+  private insertScript([script, ref]: [HTMLScriptElement, Node]): Promise<{}> {
     document.write = (...args) => {
       const temp = document.createElement("div");
       temp.innerHTML = args.join();
@@ -36,30 +52,15 @@ export class ScriptManager {
       });
     };
 
-    return script.src !== ""
-      ? Observable.create((observer: PartialObserver<Event>) => {
-        script.addEventListener("load", e => (observer.next(e), observer.complete()));
-        script.addEventListener("error", e => (observer.error(e)))
+    return new Promise((resolve, reject) => {
+      if (script.src !== "") {
+        script.addEventListener("load", resolve);
+        script.addEventListener("error", reject);
         ref.parentNode.insertBefore(script, ref.nextSibling);
-      })
-      : of({}).pipe(tap(() => {
+      } else {
         ref.parentNode.insertBefore(script, ref.nextSibling);
-      }));
-  }
-
-  reinsertScriptTags(context: ReplaceContext) {
-    if (!this.scriptSelector) return Promise.resolve(context);
-
-    const originalWrite = document.write;
-
-    const { scripts } = context;
-
-    return from(scripts).pipe(
-      concatMap(script => this.insertScript(script)),
-      catchError(error => of({ ...context, error })),
-      finalize(() => (document.write = originalWrite))
-    )
-      .toPromise()
-      .then(() => context);
+        resolve();
+      }
+    });
   }
 }

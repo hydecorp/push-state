@@ -58,7 +58,7 @@ export class UpdateManager {
       // }
 
       const scripts = this.scriptSelector
-        ? this.scriptManager.tempRemoveScriptTags(replaceEls)
+        ? this.scriptManager.removeScriptTags(replaceEls)
         : [];
 
       return { ...context, documentFragment, title, replaceEls, scripts };

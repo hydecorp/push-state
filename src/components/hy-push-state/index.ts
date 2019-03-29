@@ -17,7 +17,7 @@
  * @license 
  * @nocompile
  */
-import { Component, Prop, Element, Watch, Method, Event, EventEmitter } from '@stencil/core';
+import { Component, Prop, Element, Watch, Method, Event, EventEmitter } from 'pencil-runtime';
 
 import { Observable, Subject, BehaviorSubject, merge, NEVER, defer, fromEvent } from "rxjs";
 import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError } from 'rxjs/operators';
@@ -37,13 +37,13 @@ import { ScrollManager } from './scroll';
 export class HyPushState implements Location, EventListenersMixin {
   @Element() el: HTMLElement;
 
-  @Prop({ mutable: true, reflectToAttr: true }) replaceSelector?: string;
-  @Prop({ mutable: true, reflectToAttr: true }) linkSelector: string = "a[href]:not([data-no-push])";
-  @Prop({ mutable: true, reflectToAttr: true }) scriptSelector?: string;
-  @Prop({ mutable: true, reflectToAttr: true }) prefetch: boolean = false;
-  @Prop({ mutable: true, reflectToAttr: true }) duration: number = 0;
+  @Prop({ type: String, mutable: true, reflectToAttr: true }) replaceSelector?: string;
+  @Prop({ type: String, mutable: true, reflectToAttr: true }) linkSelector: string = "a[href]:not([data-no-push])";
+  @Prop({ type: String, mutable: true, reflectToAttr: true }) scriptSelector?: string;
+  @Prop({ type: Boolean, mutable: true, reflectToAttr: true }) prefetch: boolean = false;
+  @Prop({ type: Number, mutable: true, reflectToAttr: true }) duration: number = 0;
 
-  @Prop({ mutable: true }) initialHref: string = window.location.href;
+  @Prop({ type: String, mutable: true }) initialHref: string = window.location.href;
 
   linkSelector$: Subject<string>;
   prefetch$: Subject<boolean>;

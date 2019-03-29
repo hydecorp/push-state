@@ -42,7 +42,7 @@ export namespace Components {
     'onNetworkerror'?: (event: CustomEvent) => void;
     'onProgress'?: (event: CustomEvent) => void;
     'onReady'?: (event: CustomEvent) => void;
-    'onStart'?: (event: CustomEvent) => void;
+    'onStartThing'?: (event: CustomEvent) => void;
     'prefetch'?: boolean;
     'replaceSelector'?: string;
     'scriptSelector'?: string;

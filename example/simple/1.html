@@ -4,9 +4,7 @@
     <meta charset="utf-8">
     <title>Page 1 | hy-push-state</title>
     <script src="https://unpkg.com/@webcomponents/webcomponentsjs"></script>
-    <!-- <link rel="import" href="https://unpkg.com/hy-push-state/dist/webcomponent/hy-push-state.html"> -->
-    <!-- <link rel="import" href="../../dist/webcomponent/hy-push-state.dev.html"> -->
-    <script src='../../dist/hy-push-state.js'></script>
+    <script type="module" src='../../assets/hy-push-state.js'></script>
   </head>
   <body>
     <hy-push-state prefetch>
@@ -18,4 +16,7 @@
       <p>Lorem ipsum</p>
     </hy-push-state>
   </body>
+  <script type="module">
+    document.querySelector('hy-push-state').addEventListener('ready', e => console.log(e));
+  </script>
 </html>

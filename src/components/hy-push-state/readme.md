@@ -27,7 +27,7 @@
 | `networkerror` |             | `CustomEvent<void>` |
 | `progress`     |             | `CustomEvent<void>` |
 | `ready`        |             | `CustomEvent<void>` |
-| `start`        |             | `CustomEvent<void>` |
+| `startThing`   |             | `CustomEvent<void>` |
 
 
 ## Methods

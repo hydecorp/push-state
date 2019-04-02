@@ -43,7 +43,7 @@ export class HyPushState implements Location, EventListenersMixin {
   @Prop({ type: Boolean, mutable: true, reflectToAttr: true }) prefetch: boolean = false;
   @Prop({ type: Number, mutable: true, reflectToAttr: true }) duration: number = 0;
 
-  @Prop({ type: String, mutable: true }) initialHref: string = window.location.href;
+  @Prop({ type: String, mutable: true }) baseUrl: string = window.location.href;
 
   linkSelector$: Subject<string>;
   prefetch$: Subject<boolean>;
@@ -54,23 +54,10 @@ export class HyPushState implements Location, EventListenersMixin {
   @Event() start: EventEmitter;
   @Event() ready: EventEmitter;
   @Event() after: EventEmitter;
-  @Event() progress: EventEmitter;
   @Event() load: EventEmitter;
+  @Event() progress: EventEmitter;
   @Event() error: EventEmitter;
   @Event() networkerror: EventEmitter;
-
-  // Location
-  private url: URL;
-  get hash() { return this.url.hash; }
-  get host() { return this.url.host; }
-  get hostname() { return this.url.hostname; }
-  get href() { return this.url.href; }
-  get origin() { return this.url.origin; }
-  get pathname() { return this.url.pathname; }
-  get port() { return this.url.port; }
-  get protocol() { return this.url.protocol; }
-  get search() { return this.url.search; }
-  get ancestorOrigins() { return window.location.ancestorOrigins; };
 
   animPromise: Promise<{}>;
 
@@ -79,6 +66,30 @@ export class HyPushState implements Location, EventListenersMixin {
   fetchManager = new FetchManager(this);
   updateManager = new UpdateManager(this);
   eventManager = new EventManager(this);
+
+  // Implement Location
+  set url(u: URL) {
+    this.hash = u.hash;
+    this.host = u.host;
+    this.hostname = u.hostname;
+    this.href = u.href;
+    this.origin = u.origin;
+    this.pathname = u.pathname;
+    this.port = u.port;
+    this.protocol = u.protocol;
+    this.search = u.search;
+  }
+
+  @Prop({ type: String, mutable: true }) hash: string;
+  @Prop({ type: String, mutable: true }) host: string;
+  @Prop({ type: String, mutable: true }) hostname: string;
+  @Prop({ type: String, mutable: true }) href: string;
+  @Prop({ type: String, mutable: true }) origin: string;
+  @Prop({ type: String, mutable: true }) pathname: string;
+  @Prop({ type: String, mutable: true }) port: string;
+  @Prop({ type: String, mutable: true }) protocol: string;
+  @Prop({ type: String, mutable: true }) search: string;
+  @Prop({ type: "Any" }) ancestorOrigins = window.location.ancestorOrigins;
 
   // EventListenersMixin
   setupEventListeners: () => void;
@@ -164,8 +175,7 @@ export class HyPushState implements Location, EventListenersMixin {
     // .pipe(takeUntil(this.subjects.disconnect));
 
     const merged$ = merge<Context>(push$, pop$, reload$).pipe(
-      // HACK: startwith???
-      startWith({ url: new URL(this.initialHref) } as Context),
+      startWith({ url: new URL(this.baseUrl) } as Context),
       tap(({ url }) => (this.url = url)),
       pairwise(),
       share(),
@@ -187,26 +197,20 @@ export class HyPushState implements Location, EventListenersMixin {
       deferred.response$.pipe(mapTo(false)),
     )).pipe(
       startWith(false),
-      // share(),
     );
 
-    const hint$: Observable<Context> = this.prefetch$.pipe(switchMap(prefetch => {
-      if (!prefetch) return NEVER;
-
-      return this.hintEvent$.pipe(
-        // tap(x => console.log(x)),
-        // takeUntil(this.subjects.disconnect),
-        unsubscribeWhen(pauser$),
-        map(([event, anchor]) => ({
-          cause: Cause.Hint,
-          url: new URL(anchor.href, this.href),
-          anchor,
-          event,
-          cacheNr: this.cacheNr,
-        })),
-        filter(x => isHintEvent(x, this)),
-      );
-    }));
+    const hint$: Observable<Context> = this.hintEvent$.pipe(
+      // takeUntil(this.subjects.disconnect),
+      unsubscribeWhen(pauser$),
+      map(([event, anchor]) => ({
+        cause: Cause.Hint,
+        url: new URL(anchor.href, this.href),
+        anchor,
+        event,
+        cacheNr: this.cacheNr,
+      })),
+      filter(x => isHintEvent(x, this)),
+    );
 
     const prefetchResponse$ = merge(hint$, page$).pipe(
       distinctUntilChanged((x, y) => this.compareContext(x, y)),
@@ -221,7 +225,7 @@ export class HyPushState implements Location, EventListenersMixin {
         this.eventManager.onStart(context);
       }),
       withLatestFrom(prefetchResponse$),
-      switchMap((args) => this.fetchManager.getResponse(prefetchResponse$, ...args)), 
+      switchMap((args) => this.fetchManager.getResponse(prefetchResponse$, ...args)),
       share(),
     );
 
@@ -244,21 +248,25 @@ export class HyPushState implements Location, EventListenersMixin {
       catchError((_, c) => c)
     );
 
-    main$.subscribe(context => this.eventManager.emitLoad(context));
+    main$
+      .subscribe(context => this.eventManager.emitLoad(context));
 
-    hash$.subscribe(context => {
-      this.historyManager.updateHistoryStateHash(context);
-      this.scrollManager.manageScrollPostion(context);
-    });
+    hash$
+      .subscribe(context => {
+        this.historyManager.updateHistoryStateHash(context);
+        this.scrollManager.manageScrollPostion(context);
+      });
 
-    responseErr$.subscribe(e => this.eventManager.emitNetworkError(e));
+    responseErr$
+      .subscribe(e => this.eventManager.emitNetworkError(e));
 
     page$.pipe(switchMap(context =>
       defer(() => this.animPromise).pipe(
         takeUntil(response$),
         mapTo(context),
       ),
-    )).subscribe(context => this.eventManager.emitProgress(context));
+    ))
+      .subscribe(context => this.eventManager.emitProgress(context));
   }
 }
 

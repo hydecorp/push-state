@@ -14,6 +14,9 @@ export class ScrollManager {
 
   constructor(parent: { histId: () => string }) {
     this.parent = parent;
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
   }
 
   // TODO
@@ -31,12 +34,9 @@ export class ScrollManager {
         this.restoreScrollPostionOnReload();
         break;
       }
-      case Cause.Hint: break;
     }
   }
 
-  // Given a hash, find the element of the same id on the page, and scroll it into view.
-  // If no hash is provided, scroll to the top instead.
   private scrollHashIntoView(hash: string, options: boolean | ScrollIntoViewOptions) {
     if (hash) {
       const el = document.getElementById(decodeURIComponent(hash.substr(1)));
@@ -47,7 +47,6 @@ export class ScrollManager {
     }
   }
 
-  // Takes the current history state, and restores the scroll position.
   private restoreScrollPostion() {
     const id = this.parent.histId();
     const { scrollTop } = (window.history.state && window.history.state[id]) || {} as ScrollState;
@@ -59,7 +58,6 @@ export class ScrollManager {
     }
   }
 
-  // Only restore position on page reload when the user hasn't started scorlling yet.
   private restoreScrollPostionOnReload() {
     const userHasScrolled = getScrollTop() != 0;
     if (!userHasScrolled) this.restoreScrollPostion();

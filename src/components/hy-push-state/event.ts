@@ -22,7 +22,9 @@ export class EventManager {
       this.animPromise = promise;
     };
 
-    this.parent.start.emit({ ...context, transitionUntil });
+    this.parent.dispatchEvent(new CustomEvent('start', { 
+      detail: { ...context, transitionUntil } 
+    }));
   }
 
   emitDOMError(context) {
@@ -52,34 +54,34 @@ export class EventManager {
       // If it's a different error, throw the generic `error` event.
     } else {
       // if (process.env.DEBUG) console.error(context);
-      this.parent.error.emit(context);
+      this.parent.dispatchEvent(new CustomEvent('error', { detail: context }));
     }
   }
 
   emitNetworkError(context) {
     // if (process.env.DEBUG) console.error(context);
-    this.parent.networkerror.emit(context);
+    this.parent.dispatchEvent(new CustomEvent('networkerror', { detail: context }));
   }
 
   emitError(context) {
     console.log(context.error);
     // if (process.env.DEBUG) console.error(context);
-    this.parent.error.emit(context);
+    this.parent.dispatchEvent(new CustomEvent('error', { detail: context }));
   }
 
   emitReady(context) {
-    this.parent.ready.emit(context);
+    this.parent.dispatchEvent(new CustomEvent('ready', { detail: context }));
   }
 
   emitAfter(context) {
-    this.parent.after.emit(context);
+    this.parent.dispatchEvent(new CustomEvent('after', { detail: context }));
   }
 
   emitProgress(context) {
-    this.parent.progress.emit(context);
+    this.parent.dispatchEvent(new CustomEvent('progress', { detail: context }));
   }
 
   emitLoad(context) {
-    this.parent.load.emit(context);
+    this.parent.dispatchEvent(new CustomEvent('load', { detail: context }));
   }
 };

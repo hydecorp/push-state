@@ -8,8 +8,10 @@ export class EventListenersMixin {
   
   linkSelector: string;
 
-  linkSelector$: Observable<string>;
-  prefetch$: Observable<boolean>;
+  $: {
+    linkSelector?: Subject<string>;
+    prefetch?: Subject<boolean>;
+  }
 
   pushEvent$: Observable<[MouseEvent, HTMLAnchorElement]>;
   hintEvent$: Observable<[Event, HTMLAnchorElement]>;
@@ -75,7 +77,7 @@ export class EventListenersMixin {
         }
       };
 
-      this.linkSelector$.subscribe(() => {
+      this.$.linkSelector.subscribe(() => {
         links.forEach(removeLink);
         addListeners(this.el);
       });
@@ -84,7 +86,7 @@ export class EventListenersMixin {
         .pipe(
           startWith({ addedNodes: [this.el], removedNodes: [] }),
           tap({ complete() { links.forEach(removeLink) }}),
-          subscribeWhen(this.prefetch$),
+          subscribeWhen(this.$.prefetch),
         )
         .subscribe(({ addedNodes, removedNodes }) => {
           removedNodes.forEach(removeListeners);

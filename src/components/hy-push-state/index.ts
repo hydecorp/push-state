@@ -17,7 +17,7 @@
  * @license 
  * @nocompile
  */
-import { Component, Prop, Element, Watch, Method, Event, EventEmitter } from 'pencil-runtime';
+import { LitElement, property, customElement } from 'lit-element';
 
 import { Observable, Subject, BehaviorSubject, merge, NEVER, defer, fromEvent } from "rxjs";
 import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError } from 'rxjs/operators';
@@ -31,33 +31,52 @@ import { EventManager } from './event';
 import { HistoryManager } from './history';
 import { ScrollManager } from './scroll';
 
-@Component({
-  tag: 'hy-push-state',
-})
-export class HyPushState implements Location, EventListenersMixin {
-  @Element() el: HTMLElement;
+// HACK: Applying mixins to the base class so they are defined by the time `customElement` kicks in...
+@applyMixins(EventListenersMixin)
+class RxLitElement extends LitElement {
+  $connected = new Subject<boolean>();
+  connectedCallback() { 
+    super.connectedCallback()
+    this.$connected.next(true) 
+  }
+  disconnectedCallback() { 
+    super.disconnectedCallback()
+    this.$connected.next(false) 
+  }
 
-  @Prop({ type: String, mutable: true, reflectToAttr: true }) replaceSelector?: string;
-  @Prop({ type: String, mutable: true, reflectToAttr: true }) linkSelector: string = "a[href]:not([data-no-push])";
-  @Prop({ type: String, mutable: true, reflectToAttr: true }) scriptSelector?: string;
-  @Prop({ type: Boolean, mutable: true, reflectToAttr: true }) prefetch: boolean = false;
-  @Prop({ type: Number, mutable: true, reflectToAttr: true }) duration: number = 0;
+  private firstUpdate: boolean
+  $: {}
 
-  @Prop({ type: String, mutable: true }) baseUrl: string = window.location.href;
+  firstUpdated() {
+    this.firstUpdate = true
+  }
 
-  linkSelector$: Subject<string>;
-  prefetch$: Subject<boolean>;
+  updated(changedProperties: Map<string, any>) {
+    if (!this.firstUpdate) for (const prop of changedProperties.keys()) {
+      if (prop in this.$) this.$[prop].next(this[prop]);
+    }
+    this.firstUpdate = false
+  }
+}
 
-  @Watch('linkSelector') setLinkSelector(_: string) { this.linkSelector$.next(_); }
-  @Watch('prefetch') setPrefetch(_: boolean) { this.prefetch$.next(_); }
+@customElement('hy-push-state')
+export class HyPushState extends RxLitElement implements Location, EventListenersMixin {
+  el: HTMLElement = this
 
-  @Event() start: EventEmitter;
-  @Event() ready: EventEmitter;
-  @Event() after: EventEmitter;
-  @Event() load: EventEmitter;
-  @Event() progress: EventEmitter;
-  @Event() error: EventEmitter;
-  @Event() networkerror: EventEmitter;
+  createRenderRoot() { return this }
+
+  @property({ type: String, reflect: true, attribute: 'replace-selector' }) replaceSelector?: string;
+  @property({ type: String, reflect: true, attribute: 'link-selector' }) linkSelector: string = "a[href]:not([data-no-push])";
+  @property({ type: String, reflect: true, attribute: 'script-selector' }) scriptSelector?: string;
+  @property({ type: Boolean, reflect: true, attribute: 'prefetch' }) prefetch: boolean = false;
+  @property({ type: Number, reflect: true, attribute: 'duration' }) duration: number = 0;
+
+  @property({ type: String }) baseUrl: string = window.location.href;
+
+  $: {
+    linkSelector?: Subject<string>;
+    prefetch?: Subject<boolean>;
+  } = {}
 
   animPromise: Promise<{}>;
 
@@ -67,29 +86,24 @@ export class HyPushState implements Location, EventListenersMixin {
   updateManager = new UpdateManager(this);
   eventManager = new EventManager(this);
 
-  // Implement Location
-  set url(u: URL) {
-    this.hash = u.hash;
-    this.host = u.host;
-    this.hostname = u.hostname;
-    this.href = u.href;
-    this.origin = u.origin;
-    this.pathname = u.pathname;
-    this.port = u.port;
-    this.protocol = u.protocol;
-    this.search = u.search;
+  _url: URL
+
+  set url(url: URL) {
+    this._url = url
   }
 
-  @Prop({ type: String, mutable: true }) hash: string;
-  @Prop({ type: String, mutable: true }) host: string;
-  @Prop({ type: String, mutable: true }) hostname: string;
-  @Prop({ type: String, mutable: true }) href: string;
-  @Prop({ type: String, mutable: true }) origin: string;
-  @Prop({ type: String, mutable: true }) pathname: string;
-  @Prop({ type: String, mutable: true }) port: string;
-  @Prop({ type: String, mutable: true }) protocol: string;
-  @Prop({ type: String, mutable: true }) search: string;
-  @Prop({ type: "Any" }) ancestorOrigins = window.location.ancestorOrigins;
+  // Implement Location
+  get hash() { return this._url.hash }
+  get host() { return this._url.host }
+  get hostname() { return this._url.hostname }
+  get href() { return this._url.href }
+  get origin() { return this._url.origin }
+  get pathname() { return this._url.pathname }
+  get port() { return this._url.port }
+  get protocol() { return this._url.protocol }
+  get search() { return this._url.search }
+  get ancestorOrigins() { return window.location.ancestorOrigins }
+  // TODO: Setters
 
   // EventListenersMixin
   setupEventListeners: () => void;
@@ -101,9 +115,9 @@ export class HyPushState implements Location, EventListenersMixin {
   // Methods
   private cacheNr = 0;
 
-  histId() { return this.el.id || this.el.tagName; }
+  histId() { return this.id || this.tagName; }
 
-  @Method()
+  @property()
   assign(url: string) {
     this.reload$.next({
       cause: Cause.Push,
@@ -112,7 +126,7 @@ export class HyPushState implements Location, EventListenersMixin {
     });
   }
 
-  @Method()
+  @property()
   reload() {
     this.reload$.next({
       cause: Cause.Push,
@@ -122,7 +136,7 @@ export class HyPushState implements Location, EventListenersMixin {
     });
   }
 
-  @Method()
+  @property()
   replace(url: string) {
     this.reload$.next({
       cause: Cause.Push,
@@ -136,9 +150,11 @@ export class HyPushState implements Location, EventListenersMixin {
     return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
   }
 
-  componentWillLoad() {
-    this.linkSelector$ = new BehaviorSubject(this.linkSelector);
-    this.prefetch$ = new BehaviorSubject(this.prefetch);
+  connectedCallback() {
+    super.connectedCallback()
+
+    this.$.linkSelector = new BehaviorSubject(this.linkSelector);
+    this.$.prefetch = new BehaviorSubject(this.prefetch);
 
     this.setupEventListeners();
 
@@ -269,5 +285,3 @@ export class HyPushState implements Location, EventListenersMixin {
       .subscribe(context => this.eventManager.emitProgress(context));
   }
 }
-
-applyMixins(HyPushState, [EventListenersMixin]);

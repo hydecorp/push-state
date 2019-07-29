@@ -8,8 +8,6 @@
     "moduleResolution": "node",
     "module": "esnext",
     "target": "esnext",
-    // "jsx": "react",
-    // "jsxFactory": "h",
     "outDir": "dist",
   },
   "include": [

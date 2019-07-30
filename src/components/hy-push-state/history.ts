@@ -3,36 +3,32 @@ import { isExternal, getScrollTop, getScrollHeight, Cause, Context } from "./com
 import { ReplaceContext } from "./update";
 
 export class HistoryManager {
-  private parent: {
-    host: string;
-    protocol: string;
-    histId: () => string;
-  };
+  private parent: Location & { histId: () => string };
 
-  constructor(parent: { host: string, protocol: string, histId: () => string }) {
+  constructor(parent: Location & { histId: () => string }) {
     this.parent = parent;
   }
 
-  // ## Update History state
-  // add a new entry on the history stack, assuming the href is differnt.
-  updateHistoryState({ cause, replace, url: { href } }: Context) {
+  updateHistoryState({ cause, replace, url: { href }, title }: ReplaceContext) {
     if (isExternal(this.parent)) return;
 
     switch (cause) {
       case Cause.Init:
       case Cause.Push: {
         const id = this.parent.histId();
-        const state = { ...window.history.state, [id]: {} };
-        if (replace || href === window.location.href) {
-          window.history.replaceState(state, document.title, href);
+        if (replace || href === location.href) {
+          const state = { ...history.state, [id]: { ...history.state[id] } };
+          history.replaceState(state, title, href);
         } else {
-          window.history.pushState(state, document.title, href);
+          const state = { ...history.state, [id]: {} };
+          history.pushState(state, title, href);
         }
       }
-      case Cause.Pop:
+      case Cause.Pop: {
         break;
+      }
       default: {
-        //   if (process.env.DEBUG) console.warn(`Type '${cause}' not reconginzed?`);
+        // if (process.env.DEBUG) console.warn(`Type '${cause}' not reconginzed`);
         break;
       }
     }
@@ -44,23 +40,15 @@ export class HistoryManager {
 
     if (cause === Cause.Push) {
       const id = this.parent.histId();
-      window.history.pushState({ [id]: {} }, document.title, url.href);
+      history.pushState({ ...history.state, [id]: {} }, document.title, url.href);
     }
   }
 
-  updateHistoryTitle({ cause, title }: ReplaceContext) {
-    document.title = title;
-
-    if (!isExternal(this.parent) && cause === Cause.Push) {
-      window.history.replaceState(window.history.state, title, window.location.href);
-    }
-  }
-
-  updateHistoryScrollPosition() {
+  updateHistoryScrollPosition = () => {
     if (isExternal(this.parent)) return;
 
-    const state = this.assignScrollPosition(window.history.state || {});
-    window.history.replaceState(state, document.title, window.location.href);
+    const state = this.assignScrollPosition(history.state || {});
+    history.replaceState(state, document.title, location.href);
   }
 
   private assignScrollPosition(state: object) {

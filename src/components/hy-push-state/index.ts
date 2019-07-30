@@ -25,7 +25,7 @@ import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchM
 import { applyMixins, unsubscribeWhen, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent } from './common';
 
 import { FetchManager, ResponseContext } from './fetch';
-import { UpdateManager } from './update';
+import { UpdateManager, ReplaceContext } from './update';
 import { EventListenersMixin } from './event-listeners';
 import { EventManager } from './event';
 import { HistoryManager } from './history';
@@ -35,13 +35,13 @@ import { ScrollManager } from './scroll';
 @applyMixins(EventListenersMixin)
 class RxLitElement extends LitElement {
   $connected = new Subject<boolean>();
-  connectedCallback() { 
+  connectedCallback() {
     super.connectedCallback()
-    this.$connected.next(true) 
+    this.$connected.next(true)
   }
-  disconnectedCallback() { 
+  disconnectedCallback() {
     super.disconnectedCallback()
-    this.$connected.next(false) 
+    this.$connected.next(false)
   }
 
   private firstUpdate: boolean
@@ -71,7 +71,7 @@ export class HyPushState extends RxLitElement implements Location, EventListener
   @property({ type: Boolean, reflect: true, attribute: 'prefetch' }) prefetch: boolean = false;
   @property({ type: Number, reflect: true, attribute: 'duration' }) duration: number = 0;
 
-  @property({ type: String }) baseUrl: string = window.location.href;
+  @property({ type: String }) baseURL: string = window.location.href;
 
   $: {
     linkSelector?: Subject<string>;
@@ -86,11 +86,9 @@ export class HyPushState extends RxLitElement implements Location, EventListener
   updateManager = new UpdateManager(this);
   eventManager = new EventManager(this);
 
-  _url: URL
+  private _url = new URL(this.baseURL)
 
-  set url(url: URL) {
-    this._url = url
-  }
+  set url(url: URL) { this._url = url }
 
   // Implement Location
   get hash() { return this._url.hash }
@@ -103,6 +101,7 @@ export class HyPushState extends RxLitElement implements Location, EventListener
   get protocol() { return this._url.protocol }
   get search() { return this._url.search }
   get ancestorOrigins() { return window.location.ancestorOrigins }
+
   // TODO: Setters
 
   // EventListenersMixin
@@ -115,7 +114,7 @@ export class HyPushState extends RxLitElement implements Location, EventListener
   // Methods
   private cacheNr = 0;
 
-  histId() { return this.id || this.tagName; }
+  histId() { return this.id || this.tagName }
 
   @property()
   assign(url: string) {
@@ -156,6 +155,13 @@ export class HyPushState extends RxLitElement implements Location, EventListener
     this.$.linkSelector = new BehaviorSubject(this.linkSelector);
     this.$.prefetch = new BehaviorSubject(this.prefetch);
 
+    // Remember the current scroll position (for F5/reloads).
+    window.addEventListener("beforeunload", this.historyManager.updateHistoryScrollPosition);
+
+    this.updateComplete.then(this.upgrade)
+  }
+
+  upgrade = () => {
     this.setupEventListeners();
 
     const deferred: { response$?: Observable<ResponseContext> } = {};
@@ -191,7 +197,7 @@ export class HyPushState extends RxLitElement implements Location, EventListener
     // .pipe(takeUntil(this.subjects.disconnect));
 
     const merged$ = merge<Context>(push$, pop$, reload$).pipe(
-      startWith({ url: new URL(this.baseUrl) } as Context),
+      startWith({ url: new URL(this.baseURL) } as Context),
       tap(({ url }) => (this.url = url)),
       pairwise(),
       share(),
@@ -236,10 +242,7 @@ export class HyPushState extends RxLitElement implements Location, EventListener
     );
 
     const response$ = deferred.response$ = page$.pipe(
-      tap(context => {
-        this.historyManager.updateHistoryState(context);
-        this.eventManager.onStart(context);
-      }),
+      tap(context => this.eventManager.onStart(context)),
       withLatestFrom(prefetchResponse$),
       switchMap((args) => this.fetchManager.getResponse(prefetchResponse$, ...args)),
       share(),
@@ -253,12 +256,24 @@ export class HyPushState extends RxLitElement implements Location, EventListener
       tap(context => {
         this.eventManager.emitReady(context);
         this.updateManager.updateDOM(context);
-        this.historyManager.updateHistoryTitle(context);
-        this.scrollManager.manageScrollPostion(context);
         this.eventManager.emitAfter(context);
       }),
+      startWith({
+        cause: Cause.Init,
+        url: new URL(this.baseURL),
+        cacheNr: this.cacheNr,
+        title: document.title,
+        replaceEls: Array.from(document.querySelectorAll(this.replaceSelector)),
+        scripts: [],
+        documentFragment: null,
+        response: null,
+      } as ReplaceContext),
+      tap(context => {
+        this.historyManager.updateHistoryState(context);
+        this.scrollManager.manageScrollPostion(context);
+      }),
       tap({ error: e => this.eventManager.emitDOMError(e) }),
-      catchError((_, c) => c),
+      catchError((_, c) => (console.error(_), c)),
       switchMap(x => this.updateManager.reinsertScriptTags(x)),
       tap({ error: e => this.eventManager.emitError(e) }),
       catchError((_, c) => c)
@@ -283,5 +298,11 @@ export class HyPushState extends RxLitElement implements Location, EventListener
       ),
     ))
       .subscribe(context => this.eventManager.emitProgress(context));
+      
+    this.dispatchEvent(new CustomEvent("init"));
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener("beforeunload", this.historyManager.updateHistoryScrollPosition);
   }
 }

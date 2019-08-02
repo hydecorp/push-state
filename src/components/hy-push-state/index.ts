@@ -31,8 +31,6 @@ import { EventManager } from './event';
 import { HistoryManager } from './history';
 import { ScrollManager } from './scroll';
 
-// HACK: Applying mixins to the base class so they are defined by the time `customElement` kicks in...
-@applyMixins(EventListenersMixin)
 class RxLitElement extends LitElement {
   $connected = new Subject<boolean>();
   connectedCallback() {
@@ -60,7 +58,10 @@ class RxLitElement extends LitElement {
 }
 
 @customElement('hy-push-state')
-export class HyPushState extends RxLitElement implements Location, EventListenersMixin {
+export class HyPushState 
+    extends applyMixins(RxLitElement, [EventListenersMixin]) 
+    implements Location, EventListenersMixin {
+
   el: HTMLElement = this
 
   createRenderRoot() { return this }

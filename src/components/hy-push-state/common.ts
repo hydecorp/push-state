@@ -11,6 +11,7 @@ export enum Cause {
 export interface Context {
   cause: Cause,
   url: URL,
+  oldURL?: URL,
   cacheNr?: number,
   replace?: boolean,
   error?: any,
@@ -133,9 +134,10 @@ export function isHintEvent({ url, anchor }: Context, location: Location) {
   );
 }
 
-export function isHashChange(
-  { url: { pathname: prevPathname } }: Context,
-  { url: { pathname, hash }, cause }: Context,
-) {
+export function isHashChange({
+  cause,
+  url: { pathname, hash }, 
+  oldURL: { pathname: prevPathname },
+}: Context) {
   return pathname === prevPathname && (cause === Cause.Pop || (cause === Cause.Push && hash !== ''));
 }

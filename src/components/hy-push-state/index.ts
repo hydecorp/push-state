@@ -19,7 +19,7 @@
  */
 import { LitElement, property, customElement } from 'lit-element';
 
-import { Observable, Subject, BehaviorSubject, merge, NEVER, defer, fromEvent } from "rxjs";
+import { Observable, Subject, BehaviorSubject, merge, defer, fromEvent } from "rxjs";
 import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError } from 'rxjs/operators';
 
 import { applyMixins, unsubscribeWhen, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent } from './common';
@@ -71,6 +71,8 @@ export class HyPushState
   @property({ type: String, reflect: true, attribute: 'script-selector' }) scriptSelector?: string;
   @property({ type: Boolean, reflect: true, attribute: 'prefetch' }) prefetch: boolean = false;
   @property({ type: Number, reflect: true, attribute: 'duration' }) duration: number = 0;
+  // @property({ type: Boolean, reflect: true, attribute: 'simulate-load' }) simulateLoad: boolean = false;
+  @property({ type: Boolean, reflect: true, attribute: 'hashchange' }) simulateHashChange: boolean = false;
 
   @property({ type: String }) baseURL: string = window.location.href;
 
@@ -115,7 +117,7 @@ export class HyPushState
   // Methods
   private cacheNr = 0;
 
-  histId() { return this.id || this.tagName }
+  get histId() { return this.id || this.tagName }
 
   @property()
   assign(url: string) {
@@ -185,34 +187,32 @@ export class HyPushState
 
     const pop$: Observable<Context> = fromEvent(window, "popstate").pipe(
       // takeUntil(this.subjects.disconnect),
-      filter(() => window.history.state && window.history.state[this.histId()]),
+      filter(() => window.history.state && window.history.state[this.histId]),
       map(event => ({
         cause: Cause.Pop,
-        url: new URL(window.location.href, this.href),
-        event,
+        url: new URL(window.location.href),
         cacheNr: this.cacheNr,
+        event,
       }))
     );
 
-    const reload$ = this.reload$;
-    // .pipe(takeUntil(this.subjects.disconnect));
+    const reload$ = this.reload$; // .pipe(takeUntil(this.subjects.disconnect));
 
     const merged$ = merge<Context>(push$, pop$, reload$).pipe(
-      startWith({ url: new URL(this.baseURL) } as Context),
-      tap(({ url }) => (this.url = url)),
+      startWith({ url: new URL(window.location.href) } as Context),
       pairwise(),
+      map(([old, current]) => Object.assign(current, { oldURL: old.url })), 
       share(),
     );
 
     const page$ = merged$.pipe(
-      filter(p => !isHashChange(...p)),
-      map(([, x]) => x),
+      filter(p => !isHashChange(p)),
       share(),
     );
 
     const hash$ = merged$.pipe(
-      filter(p => isHashChange(...p)),
-      map(([, x]) => x),
+      filter(p => isHashChange(p)),
+      filter(() => history.state && history.state[this.histId]),
     );
 
     const pauser$ = defer(() => merge(
@@ -243,7 +243,11 @@ export class HyPushState
     );
 
     const response$ = deferred.response$ = page$.pipe(
-      tap(context => this.eventManager.onStart(context)),
+      tap(context => {
+        this.eventManager.onStart(context)
+        this.historyManager.updateHistoryState(context);
+        this._url = context.url;
+      }),
       withLatestFrom(prefetchResponse$),
       switchMap((args) => this.fetchManager.getResponse(prefetchResponse$, ...args)),
       share(),
@@ -257,24 +261,19 @@ export class HyPushState
       tap(context => {
         this.eventManager.emitReady(context);
         this.updateManager.updateDOM(context);
+        this.historyManager.updateTitle(context)
         this.eventManager.emitAfter(context);
       }),
       startWith({
         cause: Cause.Init,
         url: new URL(this.baseURL),
-        cacheNr: this.cacheNr,
-        title: document.title,
-        replaceEls: Array.from(document.querySelectorAll(this.replaceSelector)),
         scripts: [],
-        documentFragment: null,
-        response: null,
-      } as ReplaceContext),
+      }),
       tap(context => {
-        this.historyManager.updateHistoryState(context);
-        this.scrollManager.manageScrollPostion(context);
+        this.scrollManager.manageScrollPosition(context);
       }),
       tap({ error: e => this.eventManager.emitDOMError(e) }),
-      catchError((_, c) => (console.error(_), c)),
+      catchError((_, c) => c),
       switchMap(x => this.updateManager.reinsertScriptTags(x)),
       tap({ error: e => this.eventManager.emitError(e) }),
       catchError((_, c) => c)
@@ -286,7 +285,7 @@ export class HyPushState
     hash$
       .subscribe(context => {
         this.historyManager.updateHistoryStateHash(context);
-        this.scrollManager.manageScrollPostion(context);
+        this.scrollManager.manageScrollPosition(context);
       });
 
     responseErr$

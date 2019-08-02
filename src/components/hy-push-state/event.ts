@@ -83,5 +83,6 @@ export class EventManager {
 
   emitLoad(context) {
     this.parent.dispatchEvent(new CustomEvent('load', { detail: context }));
+    // if (this.parent.simulateLoad) document.dispatchEvent(new Event('load'))
   }
 };

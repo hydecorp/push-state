@@ -1,7 +1,6 @@
 import { of, from } from "rxjs";
 import { concatMap, catchError, finalize, mapTo } from "rxjs/operators";
 
-import { ReplaceContext } from "./update";
 import { HyPushState } from ".";
 
 export class ScriptManager {
@@ -14,7 +13,7 @@ export class ScriptManager {
   get scriptSelector() { return this.parent.scriptSelector }
 
   removeScriptTags(replaceEls: Element[]) {
-    const scripts: Array<[HTMLScriptElement, Node | null]> = [];
+    const scripts: Array<[HTMLScriptElement, Node]> = [];
 
     replaceEls.forEach(el => {
       return el.querySelectorAll(this.scriptSelector).forEach((script: HTMLScriptElement) => {
@@ -27,7 +26,7 @@ export class ScriptManager {
     return scripts;
   }
 
-  reinsertScriptTags(context: ReplaceContext) {
+  reinsertScriptTags(context: { scripts: Array<[HTMLScriptElement, Node]> }) {
     if (!this.scriptSelector) return Promise.resolve(context);
 
     const { scripts } = context;

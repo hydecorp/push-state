@@ -3,28 +3,40 @@ import { isExternal, getScrollTop, getScrollHeight, Cause, Context } from "./com
 import { ReplaceContext } from "./update";
 
 export class HistoryManager {
-  private parent: Location & { histId: () => string };
+  private parent: Location & { histId: string, simulateHashChange: boolean };
 
-  constructor(parent: Location & { histId: () => string }) {
+  constructor(parent: Location & { histId: string, simulateHashChange: boolean }) {
     this.parent = parent;
   }
 
-  updateHistoryState({ cause, replace, url: { href }, title }: ReplaceContext) {
+  updateHistoryState(context: Context) {
+    const { cause, replace, url: { href, hash }, oldURL } = context
     if (isExternal(this.parent)) return;
 
     switch (cause) {
       case Cause.Init:
       case Cause.Push: {
-        const id = this.parent.histId();
+        const { histId } = this.parent;
+
+        const oldURL = location.href
+        const hashChange = hash !== location.hash;
+
         if (replace || href === location.href) {
-          const state = { ...history.state, [id]: { ...history.state[id] } };
-          history.replaceState(state, title, href);
+          const state = Object.assign(history.state || {}, { [histId]: {} });
+          history.replaceState(state, document.title, href);
         } else {
-          const state = { ...history.state, [id]: {} };
-          history.pushState(state, title, href);
+          history.pushState({ [histId]: {} }, document.title, href);
+        }
+
+        if (this.parent.simulateHashChange && hashChange) {
+          window.dispatchEvent(new HashChangeEvent('hashchange', { newURL: href, oldURL }))
         }
       }
       case Cause.Pop: {
+        const hashChange = hash !== oldURL.hash;
+        if (this.parent.simulateHashChange && hashChange) {
+          window.dispatchEvent(new HashChangeEvent('hashchange', { newURL: href, oldURL: oldURL.href }))
+        }
         break;
       }
       default: {
@@ -34,32 +46,38 @@ export class HistoryManager {
     }
   }
 
+  updateTitle({ cause, title }: ReplaceContext) {
+    document.title = title;
+    if (!isExternal(this.parent) && cause === Cause.Push) {
+      history.replaceState(history.state, title);
+    }
+  }
+
   // FIXME: use one updatehistory state function for both?
   updateHistoryStateHash({ cause, url }: Context) {
     if (isExternal(this.parent)) return; // TODO: abort or not?
 
     if (cause === Cause.Push) {
-      const id = this.parent.histId();
-      history.pushState({ ...history.state, [id]: {} }, document.title, url.href);
+      const { histId } = this.parent;
+      history.pushState({ [histId]: {} }, document.title, url.href);
     }
   }
 
   updateHistoryScrollPosition = () => {
     if (isExternal(this.parent)) return;
 
-    const state = this.assignScrollPosition(history.state || {});
+    const state = this.assignScrollPosition(history.state);
     history.replaceState(state, document.title, location.href);
   }
 
-  private assignScrollPosition(state: object) {
-    const id = this.parent.histId();
-    return {
-      ...state,
-      [id]: {
-        ...state[id],
+  private assignScrollPosition(state: object = {}) {
+    const { histId } = this.parent;
+    return Object.assign(state, {
+      [histId]: {
+        ...state[histId],
         scrollTop: getScrollTop(),
         scrollHeight: getScrollHeight(),
       },
-    };
+    });
   }
 };

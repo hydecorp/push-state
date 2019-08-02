@@ -10,17 +10,16 @@ interface ScrollState {
 }
 
 export class ScrollManager {
-  private parent: { histId: () => string };
+  private parent: { histId: string };
 
-  constructor(parent: { histId: () => string }) {
+  constructor(parent: { histId: string }) {
     this.parent = parent;
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
   }
 
-  // TODO
-  manageScrollPostion({ cause, url: { hash } }: Context) {
+  manageScrollPosition({ cause, url: { hash } }: { cause: Cause, url: URL }) {
     switch (cause) {
       case Cause.Push:
         // FIXME: make configurable
@@ -48,8 +47,8 @@ export class ScrollManager {
   }
 
   private restoreScrollPostion() {
-    const id = this.parent.histId();
-    const { scrollTop } = (window.history.state && window.history.state[id]) || {} as ScrollState;
+    const { histId } = this.parent;
+    const { scrollTop } = (window.history.state && window.history.state[histId]) || {} as ScrollState;
 
     if (scrollTop != null) {
       // FIXME: Setting `min-height` to ensure that we can scroll back to the previous position?

@@ -17,7 +17,7 @@
     "watch:rollup": "rollup -c -w",
     "build": "npm run copy && (npm run build:tsc & npm run build:rollup) & wait",
     "watch": "npm run copy && (npm run watch:tsc & npm run watch:rollup)",
-    "dev": "npm run watch & http-server -p 3337",
+    "dev": "npm run watch & http-server -p 3336",
     "preversion": "sed -i '' -E 's:^(lib|assets/hy-\\*)$:#<removed temporarily>\\1:' .gitignore",
     "version": "npm run build && git add .",
     "postversion": "sed -i '' -E 's:^#<removed temporarily>(lib|assets/hy-\\*)$:\\1:' .gitignore && git rm --cached -r lib assets/hy-* && git add . && git commit -m 'Restore preversion .gitignore'"

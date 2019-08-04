@@ -1,5 +1,5 @@
-import { Observable, PartialObserver, NEVER } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, PartialObserver, NEVER, OperatorFunction } from 'rxjs';
+import { switchMap, debounceTime, tap, map, withLatestFrom, filter } from 'rxjs/operators';
 
 export enum Cause {
   Init = "init",
@@ -31,6 +31,29 @@ export function subscribeWhen<T>(p$: Observable<boolean>) {
 export function unsubscribeWhen<T>(p$: Observable<boolean>) {
   return (source: Observable<T>) => {
     return p$.pipe(switchMap(p => (p ? NEVER : source)));
+  };
+}
+
+export function filterWhen<T>(p$: Observable<boolean>) {
+  return (source: Observable<T>) => {
+    return source.pipe(
+      withLatestFrom(p$),
+      filter(([, p]) => p),
+      map(([x]) => x)
+    );
+  };
+};
+
+export function bufferDebounceTime<T>(time: number = 0): OperatorFunction<T, T[]> {
+  return (source: Observable<T>) => {
+    let bufferedValues: T[] = [];
+
+    return source.pipe(
+      tap(value => bufferedValues.push(value)),
+      debounceTime(time),
+      map(() => bufferedValues),
+      tap(() => bufferedValues = []),
+    );
   };
 }
 

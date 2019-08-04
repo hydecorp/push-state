@@ -1,8 +1,5 @@
 import { getScrollTop, Cause, Context } from "./common";
 
-// ### Managing scroll positions
-// The following functions deal with managing the scroll position of the site.
-
 interface ScrollState {
   [k: string]: any;
   scrollTop?: number;

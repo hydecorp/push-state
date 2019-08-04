@@ -19,13 +19,13 @@
  */
 import { LitElement, property, customElement } from 'lit-element';
 
-import { Observable, Subject, BehaviorSubject, merge, defer, fromEvent } from "rxjs";
-import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError } from 'rxjs/operators';
+import { Observable, Subject, BehaviorSubject, merge, defer, fromEvent, animationFrameScheduler } from "rxjs";
+import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError, observeOn } from 'rxjs/operators';
 
-import { applyMixins, unsubscribeWhen, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent } from './common';
+import { applyMixins, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent, filterWhen } from './common';
 
 import { FetchManager, ResponseContext } from './fetch';
-import { UpdateManager, ReplaceContext } from './update';
+import { UpdateManager } from './update';
 import { EventListenersMixin } from './event-listeners';
 import { EventManager } from './event';
 import { HistoryManager } from './history';
@@ -108,9 +108,10 @@ export class HyPushState
   // TODO: Setters
 
   // EventListenersMixin
-  setupEventListeners: () => void;
-  pushEvent$: Observable<[MouseEvent, HTMLAnchorElement]>;
-  hintEvent$: Observable<[Event, HTMLAnchorElement]>;
+  setupEventListeners: () => { 
+    pushEvent$: Observable<[MouseEvent, HTMLAnchorElement]>;
+    hintEvent$: Observable<[Event, HTMLAnchorElement]>;
+  };
 
   reload$ = new Subject<Context>();
 
@@ -165,11 +166,11 @@ export class HyPushState
   }
 
   upgrade = () => {
-    this.setupEventListeners();
+    const { pushEvent$, hintEvent$ } = this.setupEventListeners();
 
     const deferred: { response$?: Observable<ResponseContext> } = {};
 
-    const push$: Observable<ClickContext> = this.pushEvent$.pipe(
+    const push$: Observable<ClickContext> = pushEvent$.pipe(
       // takeUntil(this.subjects.disconnect),
       map(([event, anchor]) => ({
         cause: Cause.Push,
@@ -222,9 +223,9 @@ export class HyPushState
       startWith(false),
     );
 
-    const hint$: Observable<Context> = this.hintEvent$.pipe(
+    const hint$: Observable<Context> = hintEvent$.pipe(
       // takeUntil(this.subjects.disconnect),
-      unsubscribeWhen(pauser$),
+      filterWhen(pauser$.pipe(map(x => !x))),
       map(([event, anchor]) => ({
         cause: Cause.Hint,
         url: new URL(anchor.href, this.href),
@@ -258,8 +259,9 @@ export class HyPushState
 
     const main$ = responseOk$.pipe(
       map(context => this.updateManager.responseToContent(context)),
+      tap(context => this.eventManager.emitReady(context)),
+      observeOn(animationFrameScheduler),
       tap(context => {
-        this.eventManager.emitReady(context);
         this.updateManager.updateDOM(context);
         this.historyManager.updateTitle(context)
         this.eventManager.emitAfter(context);
@@ -269,9 +271,7 @@ export class HyPushState
         url: new URL(this.baseURL),
         scripts: [],
       }),
-      tap(context => {
-        this.scrollManager.manageScrollPosition(context);
-      }),
+      tap(context => this.scrollManager.manageScrollPosition(context)),
       tap({ error: e => this.eventManager.emitDOMError(e) }),
       catchError((_, c) => c),
       switchMap(x => this.updateManager.reinsertScriptTags(x)),

@@ -1,11 +1,18 @@
-import { Subject, Observable, fromEvent } from "rxjs";
+import { Subject, Observable, from, fromEvent, of, merge } from "rxjs";
 
-import { matchesAncestors, createMutationObservable, subscribeWhen } from "./common";
-import { map, filter, startWith, tap } from "rxjs/operators";
+import { matchesAncestors, createMutationObservable, subscribeWhen, bufferDebounceTime } from "./common";
+import { map, filter, startWith, tap, flatMap, mergeAll, switchMap } from "rxjs/operators";
+
+const flat = <T>(x: Array<Array<T>>): Array<T> => Array.prototype.concat.apply([], x);
+
+const combineRecords = (records: MutationRecord[]) => ({
+  addedNodes: new Set(flat(records.map(r => Array.from(r.addedNodes)))),
+  removedNodes: new Set(flat(records.map(r => Array.from(r.removedNodes)))),
+});
 
 export class EventListenersMixin {
   el: HTMLElement;
-  
+
   linkSelector: string;
 
   $: {
@@ -13,11 +20,9 @@ export class EventListenersMixin {
     prefetch?: Subject<boolean>;
   }
 
-  pushEvent$: Observable<[MouseEvent, HTMLAnchorElement]>;
-  hintEvent$: Observable<[Event, HTMLAnchorElement]>;
-
+  // LINKS 2
   setupEventListeners() {
-    this.pushEvent$ = fromEvent(this.el, "click").pipe(
+    const pushEvent$ = fromEvent(this.el, "click").pipe(
       map(event => {
         const anchor = matchesAncestors(event.target as Element, this.linkSelector);
         if (anchor instanceof HTMLAnchorElement) {
@@ -27,71 +32,57 @@ export class EventListenersMixin {
       filter(x => !!x),
     );
 
-    // TODO: this.prefech?
-    if ("MutationObserver" in window && "Set" in window) {
-      const links = new Set();
-      const hintSubject = new Subject<[Event, HTMLAnchorElement]>();
-      this.hintEvent$ = hintSubject;
-
-      const hintNext = (e: Event) => hintSubject.next([e, e.currentTarget as HTMLAnchorElement]);
-
-      const addLink = (link: Element) => {
-        if (!links.has(link)) {
-          links.add(link);
-          link.addEventListener("mouseenter", hintNext, { passive: true });
-          link.addEventListener("touchstart", hintNext, { passive: true });
-          link.addEventListener("focus", hintNext, { passive: true });
-
-          // When fetching resources from an external domain, rewrite the link's href,
-          // so that shift-click, etc works as expected.
-          // if (isExternal(this)) {
-          //   link.href = new URL(link.getAttribute("href"), this.href).href;
-          // }
-        }
-      };
-
-      const addListeners = (added: Node) => {
-        if (added instanceof Element) {
-          if (added.matches(this.linkSelector)) {
-            addLink(added);
-          } else {
-            added.querySelectorAll(this.linkSelector).forEach(addLink);
-          }
-        }
-      };
-
-      const removeLink = (link: Element) => {
-        links.delete(link);
-        link.removeEventListener("mouseenter", hintNext);
-        link.removeEventListener("touchstart", hintNext);
-        link.removeEventListener("focus", hintNext);
-      };
-
-      const removeListeners = (removed: Node) => {
-        if (removed instanceof Element) {
-          if (removed.matches(this.linkSelector)) {
-            removeLink(removed);
-          } else {
-            removed.querySelectorAll(this.linkSelector).forEach(removeLink);
-          }
-        }
-      };
-
-      this.$.linkSelector.subscribe(() => {
-        links.forEach(removeLink);
-        addListeners(this.el);
-      });
-
-      createMutationObservable(this.el, { childList: true, subtree: true })
-        .pipe(
-          startWith({ addedNodes: [this.el], removedNodes: [] }),
-          tap({ complete() { links.forEach(removeLink) }}),
-          subscribeWhen(this.$.prefetch),
-        )
-        .subscribe(({ addedNodes, removedNodes }) => {
-          removedNodes.forEach(removeListeners);
-          addedNodes.forEach(addListeners);
-        });
+    const matchOrQuery = (el: Element, selector: string): Observable<Element> => {
+      if (el.matches(selector)) {
+        return of(el);
+      } else {
+        return from(el.querySelectorAll(selector));
+      }
     }
+
+    const addEventListeners = (link: HTMLAnchorElement) => {
+      return merge(
+        fromEvent(link, "mouseenter", { passive: true }),
+        fromEvent(link, "touchstart", { passive: true }),
+        fromEvent(link, "focus", { passive: true }),
+      ).pipe(map(event => [event, link] as [Event, HTMLAnchorElement]))
+    };
+
+    const hintEvent$ = this.$.linkSelector.pipe(switchMap((linkSelector) => {
+      const links = new Map<HTMLAnchorElement, Observable<[Event, HTMLAnchorElement]>>();
+
+      const addLink = (link: HTMLAnchorElement) => {
+        if (!links.has(link)) {
+          links.set(link, addEventListeners(link));
+        }
+      }
+      const removeLink = (link: HTMLAnchorElement) => {
+        links.delete(link);
+      }
+
+      return createMutationObservable(this.el, { childList: true, subtree: true }).pipe(
+        startWith({ addedNodes: [this.el], removedNodes: [] }),
+        bufferDebounceTime(500),
+        map(combineRecords),
+        switchMap(({ addedNodes, removedNodes }) => {
+          from(removedNodes).pipe(
+            filter(el => el instanceof Element),
+            flatMap((el: Element) => matchOrQuery(el, linkSelector)),
+            tap(removeLink)
+          ).subscribe()
+
+          from(addedNodes).pipe(
+            filter(el => el instanceof Element),
+            flatMap((el: Element) => matchOrQuery(el, linkSelector)),
+            tap(addLink)
+          ).subscribe()
+
+          return from(links.values()).pipe(mergeAll());
+        }),
+        subscribeWhen(this.$.prefetch),
+      );
+    }));
+
+    return { hintEvent$, pushEvent$ }
   }
-};
+}

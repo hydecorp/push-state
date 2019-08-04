@@ -82,7 +82,7 @@ export class UpdateManager {
 
   // TODO: doc
   private replaceContent(replaceEls: Element[]) {
-    if (this.scriptSelector) {
+    if (this.replaceSelector) {
       this.replaceContentWithSelector(replaceEls);
     } else {
       this.replaceContentWholesale(replaceEls as [Element]);

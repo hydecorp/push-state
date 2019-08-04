@@ -66,11 +66,11 @@ export class HistoryManager {
   updateHistoryScrollPosition = () => {
     if (isExternal(this.parent)) return;
 
-    const state = this.assignScrollPosition(history.state);
-    history.replaceState(state, document.title, location.href);
+    const state = this.assignScrollPosition(history.state || {});
+    history.replaceState(state, document.title);
   }
 
-  private assignScrollPosition(state: object = {}) {
+  private assignScrollPosition(state: object) {
     const { histId } = this.parent;
     return Object.assign(state, {
       [histId]: {

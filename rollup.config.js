@@ -3,7 +3,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import typescript from 'rollup-plugin-typescript';
 
 export default {
-    input: 'src/components/hy-push-state/index.ts',
+    input: 'src/index.ts',
     output: {
         file: `docs/assets/hy-push-state.js`,
         format: 'es',

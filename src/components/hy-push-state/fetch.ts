@@ -29,7 +29,10 @@ export class FetchManager {
     .pipe(
       switchMap(response => response.text()),
       map(response => ({ ...context, response })),
-      catchError(error => of({ ...context, error, response: null })),
+      catchError(error => {
+        console.log(error);
+        return of({ ...context, error, response: null });
+      }),
     );
   }
 

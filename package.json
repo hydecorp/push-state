@@ -1,12 +1,15 @@
 {
-  "name": "hy-push-state",
-  "version": "1.0.0-stencil.0",
+  "name": "@hydecorp/push-state",
+  "version": "1.0.0-alpha",
   "description": "Turn static web sites into dynamic web apps",
+  "main": "lib/index.js",
   "module": "lib/index.js",
   "files": [
-    "lib",
-    "src"
+    "lib"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "rm -rf lib",
     "test": "exit 0",
@@ -18,9 +21,9 @@
     "build": "npm run copy && (npm run build:tsc & npm run build:rollup) & wait",
     "watch": "npm run copy && (npm run watch:tsc & npm run watch:rollup)",
     "dev": "npm run watch & http-server -p 3336",
-    "preversion": "sed -i '' -E 's:^(lib|assets/hy-\\*)$:#<removed temporarily>\\1:' .gitignore",
+    "preversion": "sed -i '' -E 's:^(lib|docs/assets/hy-\\*)$:#<removed temporarily>\\1:' .gitignore",
     "version": "npm run build && git add .",
-    "postversion": "sed -i '' -E 's:^#<removed temporarily>(lib|assets/hy-\\*)$:\\1:' .gitignore && git rm --cached -r lib assets/hy-* && git add . && git commit -m 'Restore preversion .gitignore'"
+    "postversion": "sed -i '' -E 's:^#<removed temporarily>(lib|docs/assets/hy-\\*)$:\\1:' .gitignore && git rm --cached -r lib docs/assets/hy-* && git add . && git commit -m 'Restore preversion .gitignore'"
   },
   "author": "Florian Klampfer <mail@qwtel.com> (https://qwtel.com/)",
   "license": "GPL-3.0",
@@ -36,12 +39,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qwtel/hy-push-state.git"
+    "url": "git+https://github.com/hydecorp/push-state.git"
   },
   "bugs": {
-    "url": "https://github.com/qwtel/hy-push-state/issues"
+    "url": "https://github.com/hydecorp/push-state/issues"
   },
-  "homepage": "https://qwtel.com/hy-push-state/",
+  "homepage": "https://hydecorp.github.io/push-state/",
   "keywords": [
     "page-transitions",
     "ajax",
@@ -63,14 +66,5 @@
     "page-loader",
     "prefetcher",
     "reactive"
-  ],
-  "prettier": {
-    "printWidth": 100,
-    "trailingComma": "es5"
-  },
-  "babel": {
-    "presets": [
-      "@babel/preset-env"
-    ]
-  }
+  ]
 }

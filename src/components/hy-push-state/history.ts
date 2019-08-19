@@ -2,6 +2,16 @@ import { isExternal, getScrollTop, getScrollHeight, Cause, Context } from "./com
 
 import { ReplaceContext } from "./update";
 
+// @ts-ignore
+window.HashChangeEvent = window.HashChangeEvent || function HashChangeEvent(type, { oldURL = '', newURL = '' } = {}) {
+  const e = new CustomEvent(type)
+  // @ts-ignore
+  e.oldURL = oldURL;
+  // @ts-ignore
+  e.newURL = newURL;
+  return e;
+}
+
 export class HistoryManager {
   private parent: Location & { histId: string, simulateHashChange: boolean };
 

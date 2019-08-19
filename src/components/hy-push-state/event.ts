@@ -28,7 +28,7 @@ export class EventManager {
   }
 
   emitDOMError(context) {
-    console.log(context.error);
+    console.error(context);
     const { replaceElMissing, url } = context;
 
     if (replaceElMissing) {

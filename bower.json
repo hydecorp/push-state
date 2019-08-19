@@ -1,19 +1,17 @@
 {
-  "name": "hy-push-state",
+  "name": "@hydecorp/push-state",
   "description": "Turn static web sites into dynamic web apps",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "authors": [
     "Florian Klampfer <mail@qwtel.com> (https://qwtel.com/)"
   ],
   "license": "GPL-3.0",
-  "homepage": "https://qwtel.com/hy-push-state/",
+  "homepage": "https://hydecorp.github.io/push-state/",
   "ignore": [
     "**/.*",
     "**/_*",
     "node_modules",
     "bower_components",
-    "Gemfile*",
-    "webpack.config.js",
-    "404.md"
+    "*config.js*"
   ]
 }

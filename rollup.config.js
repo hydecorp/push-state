@@ -5,7 +5,7 @@ import typescript from 'rollup-plugin-typescript';
 export default {
     input: 'src/components/hy-push-state/index.ts',
     output: {
-        file: `assets/hy-push-state.js`,
+        file: `docs/assets/hy-push-state.js`,
         format: 'es',
         sourcemap: true
     },

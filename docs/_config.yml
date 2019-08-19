@@ -3,8 +3,8 @@ email: mail@qwtel.com
 
 description: >
   Turn static web sites into dynamic web apps.
-baseurl: /hy-push-state
 url: https://hydecorp.github.io
+baseurl: /push-state
 
 author:
   email: mail@qwtel.com

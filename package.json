@@ -1,6 +1,6 @@
 {
   "name": "@hydecorp/push-state",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Turn static web sites into dynamic web apps",
   "main": "lib/index.js",
   "module": "lib/index.js",

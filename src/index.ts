@@ -231,6 +231,10 @@ export class HyPushState
     const hash$ = merged$.pipe(
       filter(p => isHashChange(p)),
       filter(() => history.state && history.state[this.histId]),
+      tap(context => {
+        this.historyManager.updateHistoryStateHash(context);
+        this.scrollManager.manageScrollPosition(context);
+      }),
     );
 
     const pauser$ = defer(() => merge(
@@ -272,7 +276,7 @@ export class HyPushState
     );
 
     const responseOk$ = response$.pipe(filter(({ error }) => !error));
-    const responseErr$ = response$.pipe(filter(({ error }) => error));
+    const responseError$ = response$.pipe(filter(({ error }) => error));
 
     const main$ = responseOk$.pipe(
       map(context => this.updateManager.responseToContent(context)),
@@ -293,28 +297,29 @@ export class HyPushState
       catchError((_, c) => c),
       switchMap(x => this.updateManager.reinsertScriptTags(x)),
       tap({ error: e => this.eventManager.emitError(e) }),
-      catchError((_, c) => c)
+      catchError((_, c) => c),
+      tap(context => this.eventManager.emitLoad(context)),
     );
 
-    main$
-      .subscribe(context => this.eventManager.emitLoad(context));
+    const error$ = responseError$.pipe(
+      tap(e => this.eventManager.emitNetworkError(e)),
+    );
 
-    hash$
-      .subscribe(context => {
-        this.historyManager.updateHistoryStateHash(context);
-        this.scrollManager.manageScrollPosition(context);
-      });
-
-    responseErr$
-      .subscribe(e => this.eventManager.emitNetworkError(e));
-
-    page$.pipe(switchMap(context =>
-      defer(() => this.animPromise).pipe(
-        takeUntil(response$),
-        mapTo(context),
+    const progress$ = page$.pipe(
+      switchMap(context =>
+        defer(() => this.animPromise).pipe(
+          takeUntil(response$),
+          mapTo(context),
+        ),
       ),
-    ))
-      .subscribe(context => this.eventManager.emitProgress(context));
+      tap(context => this.eventManager.emitProgress(context)),
+    );
+
+    // Subscriptions
+    main$.subscribe();
+    hash$.subscribe();
+    error$.subscribe();
+    progress$.subscribe();
       
     this.dispatchEvent(new CustomEvent("init"));
   }

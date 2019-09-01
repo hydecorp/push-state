@@ -1,4 +1,4 @@
-import { getScrollTop, Cause, Context } from "./common";
+import { getScrollTop, Cause } from "./common";
 
 interface ScrollState {
   [k: string]: any;
@@ -7,55 +7,64 @@ interface ScrollState {
 }
 
 export class ScrollManager {
-  private parent: { histId: string };
+  private parent: { histId: string } & HTMLElement;
 
-  constructor(parent: { histId: string }) {
+  constructor(parent: { histId: string } & HTMLElement) {
     this.parent = parent;
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
     }
   }
 
   manageScrollPosition({ cause, url: { hash } }: { cause: Cause, url: URL }) {
     switch (cause) {
-      case Cause.Push:
+      case Cause.Push: {
         // FIXME: make configurable
         this.scrollHashIntoView(hash, { behavior: "smooth", block: "start", inline: "nearest" });
         break;
+      }
       case Cause.Pop: {
-        this.restoreScrollPostion();
+        this.restoreScrollPosition();
         break;
       }
       case Cause.Init: {
-        this.restoreScrollPostionOnReload();
+        this.restoreScrollPositionOnReload();
         break;
       }
     }
   }
 
+  private elementFromHash(hash: string) {
+    return document.getElementById(decodeURIComponent(hash.substr(1)))
+  }
+
   private scrollHashIntoView(hash: string, options: boolean | ScrollIntoViewOptions) {
     if (hash) {
-      const el = document.getElementById(decodeURIComponent(hash.substr(1)));
+      const el = this.elementFromHash(hash);
       if (el) el.scrollIntoView(options);
-      // else if (process.env.DEBUG) console.warn(`Can't find element with id ${hash}`);
     } else {
       window.scroll(window.pageXOffset, 0);
     }
   }
 
-  private restoreScrollPostion() {
+  private restoreScrollPosition() {
     const { histId } = this.parent;
-    const { scrollTop } = (window.history.state && window.history.state[histId]) || {} as ScrollState;
+    const { scrollTop } = (history.state && history.state[histId]) || {} as ScrollState;
 
     if (scrollTop != null) {
-      // FIXME: Setting `min-height` to ensure that we can scroll back to the previous position?
-      /* document.body.style.minHeight = `${scrollHeight}px`; */
       window.scroll(window.pageXOffset, scrollTop);
     }
   }
 
-  private restoreScrollPostionOnReload() {
-    const userHasScrolled = getScrollTop() != 0;
-    if (!userHasScrolled) this.restoreScrollPostion();
+  private restoreScrollPositionOnReload() {
+    const { histId } = this.parent;
+    const scrollState = history.state && history.state[histId];
+    // FIXME: As far as I can tell there is no better way of figuring out if the user has scrolled
+    //        and it doesn't work on hash links b/c the scroll position is going to be non-null by definition
+    if (scrollState && getScrollTop() === 0) {
+      this.restoreScrollPosition();
+    } else if (location.hash) {
+      requestAnimationFrame(() => this.scrollHashIntoView(location.hash, true));
+    }
   }
 };

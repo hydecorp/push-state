@@ -166,6 +166,11 @@ export class HyPushState
     });
   }
 
+  fireEvent<T>(name: string, eventInitDict?: CustomEventInit<T>) {
+    this.dispatchEvent(new CustomEvent(name, eventInitDict));
+    this.dispatchEvent(new CustomEvent(`hy-push-state-${name}`, eventInitDict));
+  }
+
   compareContext(p: Context, q: Context) {
     return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
   }
@@ -321,7 +326,7 @@ export class HyPushState
     error$.subscribe();
     progress$.subscribe();
       
-    this.dispatchEvent(new CustomEvent("init"));
+    this.fireEvent('init');
   }
 
   disconnectedCallback() {

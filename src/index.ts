@@ -91,19 +91,36 @@ export class HyPushState
 
   private _url = new URL(this.baseURL)
 
-  set url(url: URL) { this._url = url }
+  private _setLocation(key: string, value: string) {
+    const u = new URL(this._url.href); 
+    u[key] = value;
+    this.assign(u.href);
+  }
 
   // Implement Location
   get hash() { return this._url.hash }
   get host() { return this._url.host }
   get hostname() { return this._url.hostname }
   get href() { return this._url.href }
-  get origin() { return this._url.origin }
   get pathname() { return this._url.pathname }
   get port() { return this._url.port }
   get protocol() { return this._url.protocol }
   get search() { return this._url.search }
+  get origin() { return this._url.origin }
   get ancestorOrigins() { return window.location.ancestorOrigins }
+
+  set hash(value) { this._setLocation('hash', value) }
+  set host(value) { this._setLocation('host', value) }
+  set hostname(value) { this._setLocation('hostname', value) }
+  set href(value) { this._setLocation('href', value) }
+  set pathname(value) { this._setLocation('pathname', value) }
+  set port(value) { this._setLocation('port', value) }
+  set protocol(value) { this._setLocation('protocol', value) }
+  set search(value) { this._setLocation('search', value) }
+
+  // Silent read-only
+  set origin(_) { }
+  set ancestorOrigins(_) { }
 
   // TODO: Setters
 
@@ -268,7 +285,7 @@ export class HyPushState
       }),
       startWith({
         cause: Cause.Init,
-        url: new URL(this.baseURL),
+        url: this._url,
         scripts: [],
       }),
       tap(context => this.scrollManager.manageScrollPosition(context)),

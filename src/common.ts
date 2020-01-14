@@ -117,11 +117,13 @@ export function fragmentFromString(strHTML) {
   return document.createRange().createContextualFragment(strHTML);
 }
 
+const matches = (el: Element, selector: string) => (el.matches || el['msMatchesSelector']).call(el, selector);
+
 // Checks if this element or any of its parents matches a given `selector`.
 export function matchesAncestors(el: Element, selector: string): Element | null {
   let curr = el;
   while (curr != null) {
-    if (curr.matches(selector)) return curr;
+    if (matches(curr, selector)) return curr;
     curr = curr.parentNode instanceof Element ? curr.parentNode : null;
   }
   return null;

@@ -237,7 +237,7 @@ export class HyPushState
       filter(p => isHashChange(p)),
       filter(() => history.state && history.state[this.histId]),
       tap(context => {
-        this.historyManager.updateHistoryStateHash(context);
+        this.historyManager.updateHistoryState(context);
         this.scrollManager.manageScrollPosition(context);
       }),
     );

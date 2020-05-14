@@ -12,6 +12,12 @@ window.HashChangeEvent = window.HashChangeEvent || function HashChangeEvent(type
   return e;
 }
 
+function simHashChange(newURL: URL, oldURL: URL) {
+  if (newURL.hash !== oldURL.hash) {
+    window.dispatchEvent(new HashChangeEvent('hashchange', { newURL: newURL.href, oldURL: oldURL.href }));
+  }
+}
+
 export class HistoryManager {
   private parent: Location & { histId: string, simulateHashChange: boolean };
 
@@ -19,8 +25,7 @@ export class HistoryManager {
     this.parent = parent;
   }
 
-  updateHistoryState(context: Context) {
-    const { cause, replace, url: { href, hash }, oldURL } = context
+  updateHistoryState({ cause, replace, url, oldURL }: Context) {
     if (isExternal(this.parent)) return;
 
     switch (cause) {
@@ -28,25 +33,16 @@ export class HistoryManager {
       case Cause.Push: {
         const { histId } = this.parent;
 
-        const oldURL = location.href
-        const hashChange = hash !== location.hash;
-
-        if (replace || href === location.href) {
+        if (replace || url.href === location.href) {
           const state = Object.assign(history.state || {}, { [histId]: {} });
-          history.replaceState(state, document.title, href);
+          history.replaceState(state, document.title, url.href);
         } else {
-          history.pushState({ [histId]: {} }, document.title, href);
+          history.pushState({ [histId]: {} }, document.title, url.href);
         }
-
-        if (this.parent.simulateHashChange && hashChange) {
-          window.dispatchEvent(new HashChangeEvent('hashchange', { newURL: href, oldURL }))
-        }
+        // no break
       }
       case Cause.Pop: {
-        const hashChange = hash !== oldURL.hash;
-        if (this.parent.simulateHashChange && hashChange) {
-          window.dispatchEvent(new HashChangeEvent('hashchange', { newURL: href, oldURL: oldURL.href }))
-        }
+        if (this.parent.simulateHashChange) simHashChange(url, oldURL);
         break;
       }
       default: {
@@ -60,16 +56,6 @@ export class HistoryManager {
     document.title = title;
     if (!isExternal(this.parent) && cause === Cause.Push) {
       history.replaceState(history.state, title);
-    }
-  }
-
-  // FIXME: use one updatehistory state function for both?
-  updateHistoryStateHash({ cause, url }: Context) {
-    if (isExternal(this.parent)) return; // TODO: abort or not?
-
-    if (cause === Cause.Push) {
-      const { histId } = this.parent;
-      history.pushState({ [histId]: {} }, document.title, url.href);
     }
   }
 

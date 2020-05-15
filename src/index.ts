@@ -236,6 +236,7 @@ export class HyPushState
     const hash$ = merged$.pipe(
       filter(p => isHashChange(p)),
       filter(() => history.state && history.state[this.histId]),
+      observeOn(animationFrameScheduler),
       tap(context => {
         this.historyManager.updateHistoryState(context);
         this.scrollManager.manageScrollPosition(context);
@@ -297,6 +298,7 @@ export class HyPushState
         url: this._url,
         scripts: [],
       }),
+      observeOn(animationFrameScheduler),
       tap(context => this.scrollManager.manageScrollPosition(context)),
       tap({ error: e => this.eventManager.emitDOMError(e) }),
       catchError((_, c) => c),

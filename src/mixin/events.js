@@ -74,9 +74,7 @@ export const eventMixin = C =>
             .map(x => `#${x}`)
             .join(", ");
           console.warn(
-            `Couldn't find one or more ids of '${ids}' in the document at '${
-              window.location
-            }'. Opening the link directly.`
+            `Couldn't find one or more ids of '${ids}' in the document at '${window.location}'. Opening the link directly.`
           );
         }
 

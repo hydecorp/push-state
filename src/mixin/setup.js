@@ -130,10 +130,7 @@ export const setupObservablesMixin = C =>
             merge(page$.pipe(mapTo(true)), this.fetch$.pipe(mapTo(false)))
           )
             // Start with `false`, i.e. we want the prefetch pipelien to be active
-            .pipe(
-              startWith(false),
-              share()
-            );
+            .pipe(startWith(false), share());
 
           return this.hintSubject.pipe(
             takeUntil(this.subjects.disconnect),
@@ -212,10 +209,7 @@ export const setupObservablesMixin = C =>
       page$
         .pipe(
           switchMap(context =>
-            defer(() => this.animPromise).pipe(
-              takeUntil(this.fetch$),
-              mapTo(context)
-            )
+            defer(() => this.animPromise).pipe(takeUntil(this.fetch$), mapTo(context))
           )
         )
         .subscribe(this.onProgress.bind(this));

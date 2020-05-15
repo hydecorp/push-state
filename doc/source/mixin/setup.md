@@ -181,10 +181,7 @@ Start with `false`, i.e. we want the prefetch pipelien to be active
 
 
 ```js
-            .pipe(
-              startWith(false),
-              share()
-            );
+            .pipe(startWith(false), share());
 
           return this.hintSubject.pipe(
             takeUntil(this.subjects.disconnect),
@@ -309,10 +306,7 @@ Fire `progress` event when fetching takes longer than expected.
       page$
         .pipe(
           switchMap(context =>
-            defer(() => this.animPromise).pipe(
-              takeUntil(this.fetch$),
-              mapTo(context)
-            )
+            defer(() => this.animPromise).pipe(takeUntil(this.fetch$), mapTo(context))
           )
         )
         .subscribe(this.onProgress.bind(this));

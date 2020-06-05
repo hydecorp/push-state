@@ -19,7 +19,7 @@ export class EventManager {
     this.animPromise = timeout(this.duration);
 
     const transitionUntil = (promise: Promise<{}>) => {
-      this.animPromise = promise;
+      this.animPromise = Promise.all([this.animPromise, promise]);
     };
 
     this.parent.fireEvent('start', { detail: { ...context, transitionUntil } });

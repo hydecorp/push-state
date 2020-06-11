@@ -1,5 +1,5 @@
 /** 
- * Copyright (c) 2019 Florian Klampfer <https://qwtel.com/>
+ * Copyright (c) 2020 Florian Klampfer <https://qwtel.com/>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,12 @@
  * @license 
  * @nocompile
  */
-import { LitElement, property, customElement } from 'lit-element';
+import { property, customElement } from 'lit-element';
 
 import { Observable, Subject, BehaviorSubject, merge, defer, fromEvent, animationFrameScheduler } from "rxjs";
 import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError, observeOn } from 'rxjs/operators';
+
+import { RxLitElement } from '@hydecorp/component';
 
 import { applyMixins, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent, filterWhen } from './common';
 
@@ -30,32 +32,6 @@ import { EventListenersMixin } from './event-listeners';
 import { EventManager } from './event';
 import { HistoryManager } from './history';
 import { ScrollManager } from './scroll';
-
-class RxLitElement extends LitElement {
-  $connected = new Subject<boolean>();
-  connectedCallback() {
-    super.connectedCallback()
-    this.$connected.next(true)
-  }
-  disconnectedCallback() {
-    super.disconnectedCallback()
-    this.$connected.next(false)
-  }
-
-  private firstUpdate: boolean
-  $: {}
-
-  firstUpdated() {
-    this.firstUpdate = true
-  }
-
-  updated(changedProperties: Map<string, any>) {
-    if (!this.firstUpdate) for (const prop of changedProperties.keys()) {
-      if (prop in this.$) this.$[prop].next(this[prop]);
-    }
-    this.firstUpdate = false
-  }
-}
 
 @customElement('hy-push-state')
 export class HyPushState 

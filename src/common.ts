@@ -1,5 +1,18 @@
-import { Observable, PartialObserver, NEVER, OperatorFunction } from 'rxjs';
-import { switchMap, debounceTime, tap, map, withLatestFrom, filter } from 'rxjs/operators';
+export {
+  applyMixins,
+  subscribeWhen,
+  unsubscribeWhen,
+  filterWhen,
+  bufferDebounceTime,
+  fetchRx,
+  fragmentFromString,
+  createMutationObservable,
+  getScrollHeight,
+  getScrollLeft,
+  getScrollTop,
+  matches,
+  matchesAncestors
+} from '@hydecorp/component';
 
 export enum Cause {
   Init = "init",
@@ -22,59 +35,6 @@ export interface ClickContext extends Context {
   event: MouseEvent,
 }
 
-export function subscribeWhen<T>(p$: Observable<boolean>) {
-  return (source: Observable<T>) => {
-    return p$.pipe(switchMap(p => (p ? source : NEVER)));
-  };
-}
-
-export function unsubscribeWhen<T>(p$: Observable<boolean>) {
-  return (source: Observable<T>) => {
-    return p$.pipe(switchMap(p => (p ? NEVER : source)));
-  };
-}
-
-export function filterWhen<T>(p$: Observable<boolean>) {
-  return (source: Observable<T>) => {
-    return source.pipe(
-      withLatestFrom(p$),
-      filter(([, p]) => p),
-      map(([x]) => x)
-    );
-  };
-};
-
-export function bufferDebounceTime<T>(time: number = 0): OperatorFunction<T, T[]> {
-  return (source: Observable<T>) => {
-    let bufferedValues: T[] = [];
-
-    return source.pipe(
-      tap(value => bufferedValues.push(value)),
-      debounceTime(time),
-      map(() => bufferedValues),
-      tap(() => bufferedValues = []),
-    );
-  };
-}
-
-export function fetchRx(input: RequestInfo, init?: RequestInit): Observable<Response> {
-  return Observable.create((observer: PartialObserver<Response>) => {
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    let response = null;
-    fetch(input, { ...init, signal })
-      .then(r => {
-        response = r;
-        observer.next(r);
-        observer.complete();
-      })
-      .catch(x => observer.error(x));
-
-    return () => { if (!response) controller.abort(); };
-  });
-}
-
 export function isExternal(
   { protocol, host }: { protocol: string, host: string },
   location: { protocol: string, host: string } = window.location,
@@ -88,55 +48,6 @@ export function isHash(
 ) {
   return hash !== "" && origin === location.origin && pathname === location.pathname;
 }
-
-export function applyMixins<T>(derivedCtor: Constructor<T>, baseCtors: Constructor<any>[]) {
-  baseCtors.forEach(baseCtor => {
-    Object.getOwnPropertyNames(baseCtor.prototype).forEach(name => {
-      derivedCtor.prototype[name] = baseCtor.prototype[name];
-    });
-  });
-  return derivedCtor;
-}
-
-export function getScrollHeight() {
-  const h = document.documentElement;
-  const b = document.body;
-  const sh = "scrollHeight";
-  return h[sh] || b[sh];
-}
-
-export function getScrollLeft() {
-  return window.pageXOffset || document.body.scrollLeft;
-}
-
-export function getScrollTop() {
-  return window.pageYOffset || document.body.scrollTop;
-}
-
-export function fragmentFromString(strHTML) {
-  return document.createRange().createContextualFragment(strHTML);
-}
-
-const matches = (el: Element, selector: string) => (el.matches || el['msMatchesSelector']).call(el, selector);
-
-// Checks if this element or any of its parents matches a given `selector`.
-export function matchesAncestors(el: Element, selector: string): Element | null {
-  let curr = el;
-  while (curr != null) {
-    if (matches(curr, selector)) return curr;
-    curr = curr.parentNode instanceof Element ? curr.parentNode : null;
-  }
-  return null;
-}
-
-export function createMutationObservable(el: HTMLElement, options?: MutationObserverInit): Observable<MutationRecord> {
-  return Observable.create((obs: PartialObserver<MutationRecord>) => {
-    const observer = new MutationObserver(xs => xs.forEach(x => obs.next(x)));
-    observer.observe(el, options);
-    return () => { observer.disconnect(); };
-  });
-}
-
 
 export function shouldLoadAnchor(anchor: HTMLAnchorElement) {
   return anchor && anchor.target === "";
@@ -161,7 +72,7 @@ export function isHintEvent({ url, anchor }: Context, location: Location) {
 
 export function isHashChange({
   cause,
-  url: { pathname, hash }, 
+  url: { pathname, hash },
   oldURL: { pathname: prevPathname },
 }: Context) {
   return pathname === prevPathname && (cause === Cause.Pop || (cause === Cause.Push && hash !== ''));

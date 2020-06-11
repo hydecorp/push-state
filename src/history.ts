@@ -34,7 +34,7 @@ export class HistoryManager {
         const { histId } = this.parent;
 
         if (replace || url.href === location.href) {
-          const state = Object.assign(history.state || {}, { [histId]: {} });
+          const state = { ...history.state, [histId]: {} };
           history.replaceState(state, document.title, url.href);
         } else {
           history.pushState({ [histId]: {} }, document.title, url.href);
@@ -68,12 +68,13 @@ export class HistoryManager {
 
   private assignScrollPosition(state: object) {
     const { histId } = this.parent;
-    return Object.assign(state, {
+    return {
+      ...state,
       [histId]: {
         ...state[histId],
         scrollTop: getScrollTop(),
         scrollHeight: getScrollHeight(),
       },
-    });
+    };
   }
 };

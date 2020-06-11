@@ -29,10 +29,7 @@ export class FetchManager {
     .pipe(
       switchMap(response => response.text()),
       map(response => ({ ...context, response })),
-      catchError(error => {
-        console.log(error);
-        return of({ ...context, error, response: null });
-      }),
+      catchError(error => of({ ...context, error, response: null })),
     );
   }
 
@@ -48,7 +45,8 @@ export class FetchManager {
     return zip(
       this.selectPrefetch(context.url, latestPrefetch, prefetch$),
       this.animPromise,
-      prefetch => ({ ...prefetch, ...context }) as ResponseContext,
+    ).pipe(
+      map(([prefetch]) => ({ ...prefetch, ...context }) as ResponseContext),
     );
   }
 };

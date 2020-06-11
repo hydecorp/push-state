@@ -34,7 +34,7 @@ export class FetchManager {
   }
 
   private selectPrefetch({ href }: URL, latestPrefetch: ResponseContext, prefetch$: Observable<ResponseContext>) {
-    return href === latestPrefetch.url.href && latestPrefetch.error == null
+    return href === latestPrefetch.url.href // && latestPrefetch.error == null
       ? of(latestPrefetch)
       : prefetch$.pipe(take(1));
   }

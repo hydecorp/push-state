@@ -258,7 +258,7 @@ export class HyPushState
     );
 
     const responseOk$ = response$.pipe(filter(({ error }) => !error));
-    const responseError$ = response$.pipe(filter(({ error }) => error));
+    const responseError$ = response$.pipe(filter(({ error }) => !!error));
 
     const main$ = responseOk$.pipe(
       map(context => this.updateManager.responseToContent(context)),

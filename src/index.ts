@@ -22,7 +22,7 @@ import { property, customElement } from 'lit-element';
 import { Observable, Subject, BehaviorSubject, merge, defer, fromEvent, animationFrameScheduler } from "rxjs";
 import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError, observeOn } from 'rxjs/operators';
 
-import { RxLitElement } from '@hydecorp/component';
+import { RxLitElement, createResolvablePromise } from '@hydecorp/component';
 
 import { applyMixins, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent, filterWhen } from './common';
 
@@ -51,6 +51,11 @@ export class HyPushState
   @property({ type: Boolean, reflect: true, attribute: 'hashchange' }) simulateHashChange: boolean = false;
 
   @property({ type: String }) baseURL: string = window.location.href;
+
+  _initialized = createResolvablePromise();
+  get initialized() {
+    return this._initialized;
+  }
 
   $: {
     linkSelector?: Subject<string>;
@@ -141,11 +146,6 @@ export class HyPushState
       cacheNr: ++this.cacheNr,
       replace: true,
     });
-  }
-
-  fireEvent<T>(name: string, eventInitDict?: CustomEventInit<T>) {
-    this.dispatchEvent(new CustomEvent(name, eventInitDict));
-    this.dispatchEvent(new CustomEvent(`hy-push-state-${name}`, eventInitDict));
   }
 
   compareContext(p: Context, q: Context) {
@@ -306,6 +306,7 @@ export class HyPushState
     error$.subscribe();
     progress$.subscribe();
       
+    this._initialized.resolve(this);
     this.fireEvent('init');
   }
 

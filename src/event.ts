@@ -10,16 +10,11 @@ export class EventManager {
     this.parent = parent;
   }
 
-  get animPromise() { return this.parent.animPromise; }
-  set animPromise(p) { this.parent.animPromise = p; }
-  
-  get duration() { return this.parent.duration; };
-
   onStart(context: Context) {
-    this.animPromise = timeout(this.duration);
+    this.parent.animPromise = timeout(this.parent.duration);
 
     const transitionUntil = (promise: Promise<{}>) => {
-      this.animPromise = Promise.all([this.animPromise, promise]);
+      this.parent.animPromise = Promise.all([this.parent.animPromise, promise]);
     };
 
     this.parent.fireEvent('start', { detail: { ...context, transitionUntil } });
@@ -64,7 +59,13 @@ export class EventManager {
   }
 
   emitAfter(context) {
-    this.parent.fireEvent('after', { detail: context });
+    this.parent.fadePromise = timeout(this.parent.duration);
+
+    const transitionUntil = (promise: Promise<{}>) => {
+      this.parent.fadePromise = Promise.all([this.parent.fadePromise, promise]);
+    };
+
+    this.parent.fireEvent('after', { detail: { ...context, transitionUntil } });
   }
 
   emitProgress(context) {

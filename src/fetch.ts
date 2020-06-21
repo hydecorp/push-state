@@ -16,10 +16,6 @@ export class FetchManager {
     this.parent = parent;
   }
 
-  private get animPromise() {
-    return this.parent.animPromise;
-  }
-
   fetchPage(context: Context): Observable<ResponseContext> {
     return fetchRx(context.url.href, {
       method: "GET",
@@ -44,7 +40,7 @@ export class FetchManager {
   getResponse(prefetch$: Observable<ResponseContext>, context: Context, latestPrefetch: ResponseContext) {
     return zip(
       this.selectPrefetch(context.url, latestPrefetch, prefetch$),
-      this.animPromise,
+      this.parent.animPromise,
     ).pipe(
       map(([prefetch]) => ({ ...prefetch, ...context }) as ResponseContext),
     );

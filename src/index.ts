@@ -58,6 +58,7 @@ export class HyPushState
   } = {}
 
   animPromise: Promise<{}>;
+  fadePromise: Promise<{}> = Promise.resolve(null);
 
   scrollManager = new ScrollManager(this);
   historyManager = new HistoryManager(this);
@@ -281,6 +282,7 @@ export class HyPushState
       switchMap(x => this.updateManager.reinsertScriptTags(x)),
       tap({ error: e => this.eventManager.emitError(e) }),
       catchError((_, c) => c),
+      switchMap(() => this.fadePromise),
       tap(context => this.eventManager.emitLoad(context)),
     );
 

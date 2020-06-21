@@ -6,6 +6,9 @@ import { rewriteURLs } from "./rewrite-urls";
 import { ResponseContext } from './fetch';
 import { HyPushState } from ".";
 
+const CANONICAL_SEL = 'link[rel=canonical]';
+const META_DESC_SEL = 'meta[name=description]';
+
 export interface ReplaceContext extends ResponseContext {
   title: string;
   documentFragment: DocumentFragment;
@@ -89,12 +92,25 @@ export class UpdateManager {
     }
   }
 
+  private replaceHead(df: DocumentFragment)  {
+    const { head } = this.el.ownerDocument;
+
+    const canonicalEl = head.querySelector(CANONICAL_SEL) as HTMLLinkElement|null;
+    const cEl = df.querySelector(CANONICAL_SEL) as HTMLLinkElement|null;
+    if (canonicalEl && cEl) canonicalEl.href = cEl.href;
+
+    const metaDescEl = head.querySelector(META_DESC_SEL) as HTMLMetaElement|null;
+    const mEl = df.querySelector(META_DESC_SEL) as HTMLMetaElement|null;
+    if (metaDescEl && mEl) metaDescEl.content = mEl.content;
+  }
+
   // TODO: doc
   updateDOM(context: ReplaceContext) {
     try {
-      const { replaceEls } = context;
+      const { replaceEls, documentFragment } = context;
       if (isExternal(this.parent)) rewriteURLs(replaceEls, this.parent.href);
       this.replaceContent(replaceEls);
+      this.replaceHead(documentFragment)
     } catch (error) {
       throw { ...context, error };
     }

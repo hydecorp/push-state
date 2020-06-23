@@ -5,7 +5,7 @@ import { fetchRx, Context } from "./common";
 import { HyPushState } from './index';
 
 export interface ResponseContext extends Context {
-  response: string | null;
+  responseText: string | null;
   error?: any;
 };
 
@@ -24,8 +24,8 @@ export class FetchManager {
     })
     .pipe(
       switchMap(response => response.text()),
-      map(response => ({ ...context, response })),
-      catchError(error => of({ ...context, error, response: null })),
+      map(responseText => ({ ...context, responseText })),
+      catchError(error => of({ ...context, error, responseText: null })),
     );
   }
 

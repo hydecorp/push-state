@@ -3,6 +3,13 @@ import { concatMap, catchError, finalize, mapTo } from "rxjs/operators";
 
 import { HyPushState } from ".";
 
+function cloneScript(script: HTMLScriptElement) {
+  const newScript = document.createElement('script');
+  Array.from(script.attributes).forEach(attr => newScript.setAttributeNode(attr.cloneNode() as Attr));
+  newScript.innerHTML = script.innerHTML;
+  return newScript;
+}
+
 export class ScriptManager {
   private parent: HyPushState;
 
@@ -13,12 +20,12 @@ export class ScriptManager {
   get scriptSelector() { return this.parent.scriptSelector }
 
   removeScriptTags(replaceEls: Element[]) {
-    const scripts: Array<[HTMLScriptElement, Node]> = [];
+    const scripts: Array<[HTMLScriptElement, HTMLScriptElement]> = [];
 
     replaceEls.forEach(el => {
       return el.querySelectorAll(this.scriptSelector).forEach((script: HTMLScriptElement) => {
-        const pair: [HTMLScriptElement, Node] = [script, script.previousSibling];
-        script.parentNode.removeChild(script);
+        const newScript = cloneScript(script);
+        const pair: [HTMLScriptElement, HTMLScriptElement] = [newScript, script];
         scripts.push(pair);
       })
     });
@@ -26,7 +33,7 @@ export class ScriptManager {
     return scripts;
   }
 
-  reinsertScriptTags(context: { scripts: Array<[HTMLScriptElement, Node]> }) {
+  reinsertScriptTags(context: { scripts: Array<[HTMLScriptElement, HTMLScriptElement]> }) {
     if (!this.scriptSelector) return Promise.resolve(context);
 
     const { scripts } = context;
@@ -42,23 +49,21 @@ export class ScriptManager {
       .toPromise();
   }
 
-  private insertScript([script, ref]: [HTMLScriptElement, Node]): Promise<{}> {
+  private insertScript([script, ref]: [HTMLScriptElement, HTMLScriptElement]): Promise<{}> {
     document.write = (...args) => {
       const temp = document.createElement("div");
       temp.innerHTML = args.join();
-      Array.from(temp.childNodes).forEach(node => {
-        ref.parentNode.insertBefore(node, ref.nextSibling);
-      });
+      Array.from(temp.childNodes).forEach(node => ref.parentNode.insertBefore(node, ref));
     };
 
     return new Promise((resolve, reject) => {
       if (script.src !== "") {
         script.addEventListener("load", resolve);
         script.addEventListener("error", reject);
-        ref.parentNode.insertBefore(script, ref.nextSibling);
+        ref.parentNode.replaceChild(script, ref);
       } else {
-        ref.parentNode.insertBefore(script, ref.nextSibling);
-        resolve();
+        ref.parentNode.replaceChild(script, ref);
+        resolve({});
       }
     });
   }

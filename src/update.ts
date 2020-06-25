@@ -13,7 +13,7 @@ export interface ReplaceContext extends ResponseContext {
   title: string;
   document: Document,
   replaceEls: [Element] | Element[];
-  scripts: Array<[HTMLScriptElement, Node]>;
+  scripts: Array<[HTMLScriptElement, HTMLScriptElement]>;
 };
 
 export class UpdateManager {
@@ -110,7 +110,7 @@ export class UpdateManager {
     }
   }
 
-  reinsertScriptTags(context: { scripts: Array<[HTMLScriptElement, Node]> }) {
+  reinsertScriptTags(context: { scripts: Array<[HTMLScriptElement, HTMLScriptElement]> }) {
     return this.scriptManager.reinsertScriptTags(context);
   }
 }

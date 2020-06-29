@@ -2,6 +2,7 @@
   "name": "@hydecorp/push-state",
   "version": "1.0.0-alpha.6",
   "description": "Turn static web sites into dynamic web apps",
+  "type": "module",
   "main": "lib/index.js",
   "module": "lib/index.js",
   "files": [
@@ -29,14 +30,14 @@
   "author": "Florian Klampfer <mail@qwtel.com> (https://qwtel.com/)",
   "license": "GPL-3.0",
   "devDependencies": {
-    "rollup": "^2.10.0",
+    "rollup": "^2.18.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-typescript": "^1.0.1",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.5"
   },
   "dependencies": {
-    "@hydecorp/component": "^1.0.0-alpha.2",
+    "@hydecorp/component": "^1.0.0-alpha.3",
     "lit-element": "^2.3.1",
     "rxjs": "^7.0.0-beta.0"
   },

@@ -279,10 +279,10 @@ export class HyPushState
       tap(context => this.scrollManager.manageScrollPosition(context)),
       tap({ error: e => this.eventManager.emitDOMError(e) }),
       catchError((_, c) => c),
+      switchMap((x) => this.fadePromise.then(() => x)),
       switchMap(x => this.updateManager.reinsertScriptTags(x)),
       tap({ error: e => this.eventManager.emitError(e) }),
       catchError((_, c) => c),
-      switchMap(() => this.fadePromise),
       tap(context => this.eventManager.emitLoad(context)),
     );
 

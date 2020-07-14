@@ -1,6 +1,6 @@
 # NOTICE
 
-Copyright (c) 2018 Florian Klampfer <https://qwtel.com/>
+Copyright (c) 2020 Florian Klampfer <https://qwtel.com/>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,22 +20,15 @@ Parts of this program are provided under separate licenses.
 
 ### smoothState
 This software also uses portions of the smoothState project,
-which is MIT licensed with the following copyright
+which is [MIT] licensed with the following copyright
 
 > Copyright (c) 2014 Miguel Angel Perez
 
-A copy of the [MIT] license is provided as part of this distribution.
-
 ### rxjs
 This software also uses portions of the rxjs project,
-which is Apache-2.0 licensed with the following copyright
+which is [Apache-2.0] licensed with the following copyright
 
 > Copyright (c) 2015-2017 Google, Inc., Netflix, Inc., Microsoft Corp. and contributors
-
-No substantial changes to the software were made.
-No `NOTICE` file was provided.
-
-A copy of the [Apache-2.0] license is provided as part of this distribution.
 
 [MIT]: licenses/MIT.md
 [Apache-2.0]: licenses/Apache-2.0.md

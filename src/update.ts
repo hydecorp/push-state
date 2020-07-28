@@ -103,8 +103,8 @@ export class UpdateManager {
     try {
       const { replaceEls, document } = context;
       if (isExternal(this.parent)) rewriteURLs(replaceEls, this.parent.href);
-      this.replaceContent(replaceEls);
       this.replaceHead(document)
+      this.replaceContent(replaceEls);
     } catch (error) {
       throw { ...context, error };
     }

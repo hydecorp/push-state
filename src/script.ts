@@ -19,15 +19,15 @@ export class ScriptManager {
 
   get scriptSelector() { return this.parent.scriptSelector }
 
-  removeScriptTags(replaceEls: Element[]) {
+  removeScriptTags(replaceEls: (Element|null)[]) {
     const scripts: Array<[HTMLScriptElement, HTMLScriptElement]> = [];
 
     replaceEls.forEach(el => {
-      return el.querySelectorAll(this.scriptSelector).forEach((script: HTMLScriptElement) => {
+      if (el != null) el.querySelectorAll(this.scriptSelector).forEach((script: HTMLScriptElement) => {
         const newScript = cloneScript(script);
         const pair: [HTMLScriptElement, HTMLScriptElement] = [newScript, script];
         scripts.push(pair);
-      })
+      });
     });
 
     return scripts;

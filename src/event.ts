@@ -20,28 +20,17 @@ export class EventManager {
     this.parent.fireEvent('start', { detail: { ...context, transitionUntil } });
   }
 
-  emitDOMError(context) {
-    const { replaceElMissing, url } = context;
+  emitDOMError(error: any) {
+    if (process.env.DEBUG) console.error(error);
 
-    if (replaceElMissing) {
-      if (process.env.DEBUG) {
-        console.warn(
-          `Couldn't find one or more element in the document at '${location}'. Opening the link directly.`
-        );
-      }
-
-      // To open the link directly, we first pop one entry off the browser history.
-      // We have to do this because (some) browsers won't handle the back button correctly otherwise.
-      // We then wait for a short time and change the document's location.
-      // TODO: If we didn't call `pushState` optimistically we wouldn't have to do this.
-      window.history.back();
-      setTimeout(() => document.location.assign(url), 100);
-
-      // If it's a different error, throw the generic `error` event.
-    } else {
-      if (process.env.DEBUG) console.error(context);
-      this.parent.fireEvent('error', { detail: context });
-    }
+    // To open the link directly, we first pop one entry off the browser history.
+    // We have to do this because some browsers (Safari) won't handle the back button correctly otherwise.
+    // We then wait for a short time and change the document's location.
+    // TODO: If we didn't call `pushState` optimistically we wouldn't have to do this.
+    // TODO: Use browser sniffing instead?
+    const url = location.href;
+    window.history.back();
+    setTimeout(() => document.location.assign(url), 100);
   }
 
   emitNetworkError(context) {

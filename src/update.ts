@@ -44,26 +44,21 @@ export class UpdateManager {
   // Takes the response string and turns it into document fragments
   // that can be inserted into the DOM.
   responseToContent(context: ResponseContext): ReplaceContext {
-    try {
-      const { responseText } = context;
+    const { responseText } = context;
 
-      const doc = new DOMParser().parseFromString(responseText, 'text/html');
+    const doc = new DOMParser().parseFromString(responseText, 'text/html');
+    const { title = '' } = doc;
+    const replaceEls = this.getReplaceElements(doc);
 
-      const { title = '' } = doc;
-      const replaceEls = this.getReplaceElements(doc);
-
-      // if (replaceEls.some(x => x == null)) {
-      //   throw { ...context, replaceElMissing: true };
-      // }
-
-      const scripts = this.scriptSelector
-        ? this.scriptManager.removeScriptTags(replaceEls)
-        : [];
-
-      return { ...context, document: doc, title, replaceEls, scripts };
-    } catch (e) {
-      console.error(e);
+    if (replaceEls.every(el => el == null)) {
+      throw new Error(`Couldn't find any element in the document at '${location}'.`);
     }
+
+    const scripts = this.scriptSelector
+      ? this.scriptManager.removeScriptTags(replaceEls)
+      : [];
+
+    return { ...context, document: doc, title, replaceEls, scripts };
   }
 
   // Replaces the old elments with the new one, one-by-one.

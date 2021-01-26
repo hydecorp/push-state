@@ -9,6 +9,15 @@ export interface ResponseContext extends Context {
   error?: any;
 };
 
+export interface ResponseContextOk extends ResponseContext {
+  responseText: string;
+};
+
+export interface ResponseContextErr extends ResponseContext {
+  responseText: null;
+  error: any;
+};
+
 export class FetchManager {
   private parent: HyPushState;
 

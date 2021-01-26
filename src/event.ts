@@ -1,4 +1,5 @@
 import { Context } from './common';
+import { ResponseContextErr } from './fetch';
 import { HyPushState } from "./index";
 
 const timeout = (t: number) => new Promise(r => setTimeout(r, t));
@@ -33,21 +34,21 @@ export class EventManager {
     setTimeout(() => document.location.assign(url), 100);
   }
 
-  emitNetworkError(context) {
+  emitNetworkError(context: ResponseContextErr) {
     if (process.env.DEBUG) console.error(context);
     this.parent.fireEvent('networkerror', { detail: context });
   }
 
-  emitError(context) {
+  emitError(context: Context) {
     if (process.env.DEBUG) console.error(context);
     this.parent.fireEvent('error', { detail: context });
   }
 
-  emitReady(context) {
+  emitReady(context: Context) {
     this.parent.fireEvent('ready', { detail: context });
   }
 
-  emitAfter(context) {
+  emitAfter(context: Context) {
     this.parent.fadePromise = timeout(this.parent.duration);
 
     const transitionUntil = (promise: Promise<{}>) => {
@@ -57,11 +58,11 @@ export class EventManager {
     this.parent.fireEvent('after', { detail: { ...context, transitionUntil } });
   }
 
-  emitProgress(context) {
+  emitProgress(context: Context) {
     this.parent.fireEvent('progress', { detail: context });
   }
 
-  emitLoad(context) {
+  emitLoad(context: Context) {
     this.parent.fireEvent('load', { detail: context });
   }
 };

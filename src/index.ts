@@ -26,17 +26,21 @@ import { RxLitElement, createResolvablePromise } from '@hydecorp/component';
 
 import { applyMixins, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent, filterWhen } from './common';
 
-import { FetchManager, ResponseContext } from './fetch';
+import { FetchManager, ResponseContext, ResponseContextErr, ResponseContextOk } from './fetch';
 import { UpdateManager } from './update';
 import { EventListenersMixin } from './event-listeners';
 import { EventManager } from './event';
 import { HistoryManager } from './history';
 import { ScrollManager } from './scroll';
 
+function compareContext(p: Context, q: Context) {
+  return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
+}
+
 @customElement('hy-push-state')
-export class HyPushState 
-    extends applyMixins(RxLitElement, [EventListenersMixin]) 
-    implements Location, EventListenersMixin {
+export class HyPushState
+  extends applyMixins(RxLitElement, [EventListenersMixin])
+  implements Location, EventListenersMixin {
 
   el: HTMLElement = this
 
@@ -45,129 +49,120 @@ export class HyPushState
   @property({ type: String, reflect: true, attribute: 'replace-selector' }) replaceSelector?: string;
   @property({ type: String, reflect: true, attribute: 'link-selector' }) linkSelector: string = "a[href]:not([data-no-push])";
   @property({ type: String, reflect: true, attribute: 'script-selector' }) scriptSelector?: string;
-  @property({ type: Boolean, reflect: true, attribute: 'prefetch' }) prefetch: boolean = false;
-  @property({ type: Number, reflect: true, attribute: 'duration' }) duration: number = 0;
+  @property({ type: Boolean, reflect: true }) prefetch: boolean = false;
+  @property({ type: Number, reflect: true }) duration: number = 0;
   // @property({ type: Boolean, reflect: true, attribute: 'simulate-load' }) simulateLoad: boolean = false;
   @property({ type: Boolean, reflect: true, attribute: 'hashchange' }) simulateHashChange: boolean = false;
 
   @property({ type: String }) baseURL: string = window.location.href;
 
-  _initialized = createResolvablePromise();
+  #initialized = createResolvablePromise();
   get initialized() {
-    return this._initialized;
+    return this.#initialized;
   }
 
-  $: {
-    linkSelector?: Subject<string>;
-    prefetch?: Subject<boolean>;
-  } = {}
+  $!: {
+    linkSelector: Subject<string>;
+    prefetch: Subject<boolean>;
+  };
 
-  animPromise: Promise<{}>;
-  fadePromise: Promise<{}> = Promise.resolve(null);
+  animPromise: Promise<any> = Promise.resolve(null);
+  fadePromise: Promise<any> = Promise.resolve(null);
 
-  scrollManager = new ScrollManager(this);
-  historyManager = new HistoryManager(this);
-  fetchManager = new FetchManager(this);
-  updateManager = new UpdateManager(this);
-  eventManager = new EventManager(this);
+  #scrollManager = new ScrollManager(this);
+  #historyManager = new HistoryManager(this);
+  #fetchManager = new FetchManager(this);
+  #updateManager = new UpdateManager(this);
+  #eventManager = new EventManager(this);
 
-  private _url = new URL(this.baseURL)
+  #url = new URL(this.baseURL)
 
-  private _setLocation(key: string, value: string) {
-    const u = new URL(this._url.href); 
+  #setLocation = (key: 'hash' | 'host' | 'hostname' | 'href' | 'pathname' | 'port' | 'protocol' | 'search', value: string) => {
+    const u = new URL(this.#url.href);
     u[key] = value;
     this.assign(u.href);
   }
 
   // Implement Location
-  get hash() { return this._url.hash }
-  get host() { return this._url.host }
-  get hostname() { return this._url.hostname }
-  get href() { return this._url.href }
-  get pathname() { return this._url.pathname }
-  get port() { return this._url.port }
-  get protocol() { return this._url.protocol }
-  get search() { return this._url.search }
-  get origin() { return this._url.origin }
+  get hash() { return this.#url.hash }
+  get host() { return this.#url.host }
+  get hostname() { return this.#url.hostname }
+  get href() { return this.#url.href }
+  get pathname() { return this.#url.pathname }
+  get port() { return this.#url.port }
+  get protocol() { return this.#url.protocol }
+  get search() { return this.#url.search }
+  get origin() { return this.#url.origin }
   get ancestorOrigins() { return window.location.ancestorOrigins }
 
-  set hash(value) { this._setLocation('hash', value) }
-  set host(value) { this._setLocation('host', value) }
-  set hostname(value) { this._setLocation('hostname', value) }
-  set href(value) { this._setLocation('href', value) }
-  set pathname(value) { this._setLocation('pathname', value) }
-  set port(value) { this._setLocation('port', value) }
-  set protocol(value) { this._setLocation('protocol', value) }
-  set search(value) { this._setLocation('search', value) }
-
-  // Silent read-only
-  set origin(_) { }
-  set ancestorOrigins(_) { }
-
-  // TODO: Setters
+  set hash(value) { this.#setLocation('hash', value) }
+  set host(value) { this.#setLocation('host', value) }
+  set hostname(value) { this.#setLocation('hostname', value) }
+  set href(value) { this.#setLocation('href', value) }
+  set pathname(value) { this.#setLocation('pathname', value) }
+  set port(value) { this.#setLocation('port', value) }
+  set protocol(value) { this.#setLocation('protocol', value) }
+  set search(value) { this.#setLocation('search', value) }
 
   // EventListenersMixin
-  setupEventListeners: () => { 
+  setupEventListeners!: () => {
     pushEvent$: Observable<[MouseEvent, HTMLAnchorElement]>;
     hintEvent$: Observable<[Event, HTMLAnchorElement]>;
   };
 
-  reload$ = new Subject<Context>();
-
-  // Methods
-  private cacheNr = 0;
+  #cacheNr = 0;
 
   get histId() { return this.id || this.tagName }
 
+  #reload$ = new Subject<Context>();
+
   @property()
   assign(url: string) {
-    this.reload$.next({
+    this.#reload$.next({
       cause: Cause.Push,
       url: new URL(url, this.href),
-      cacheNr: ++this.cacheNr,
+      cacheNr: ++this.#cacheNr,
     });
   }
 
   @property()
   reload() {
-    this.reload$.next({
+    this.#reload$.next({
       cause: Cause.Push,
       url: new URL(this.href),
-      cacheNr: ++this.cacheNr,
+      cacheNr: ++this.#cacheNr,
       replace: true,
     });
   }
 
   @property()
   replace(url: string) {
-    this.reload$.next({
+    this.#reload$.next({
       cause: Cause.Push,
       url: new URL(url, this.href),
-      cacheNr: ++this.cacheNr,
+      cacheNr: ++this.#cacheNr,
       replace: true,
     });
-  }
-
-  compareContext(p: Context, q: Context) {
-    return p.url.href === q.url.href && p.error === q.error && p.cacheNr === q.cacheNr;
   }
 
   connectedCallback() {
     super.connectedCallback()
 
-    this.$.linkSelector = new BehaviorSubject(this.linkSelector);
-    this.$.prefetch = new BehaviorSubject(this.prefetch);
+    this.$ = {
+      linkSelector: new BehaviorSubject(this.linkSelector),
+      prefetch: new BehaviorSubject(this.prefetch),
+    };
 
     // Remember the current scroll position (for F5/reloads).
-    window.addEventListener("beforeunload", this.historyManager.updateHistoryScrollPosition);
+    window.addEventListener("beforeunload", this.#historyManager.updateHistoryScrollPosition);
 
-    this.updateComplete.then(this.upgrade)
+    this.updateComplete.then(this.#upgrade)
   }
 
-  upgrade = () => {
-    const { pushEvent$, hintEvent$ } = this.setupEventListeners();
+  #response$!: Observable<ResponseContext>
 
-    const deferred: { response$?: Observable<ResponseContext> } = {};
+  #upgrade = () => {
+    const { pushEvent$, hintEvent$ } = this.setupEventListeners();
 
     const push$: Observable<ClickContext> = pushEvent$.pipe(
       // takeUntil(this.subjects.disconnect),
@@ -176,12 +171,12 @@ export class HyPushState
         url: new URL(anchor.href, this.href),
         anchor,
         event,
-        cacheNr: this.cacheNr,
+        cacheNr: this.#cacheNr,
       })),
       filter(x => isPushEvent(x, this)),
       tap(({ event }) => {
         event.preventDefault();
-        this.historyManager.updateHistoryScrollPosition();
+        this.#historyManager.updateHistoryScrollPosition();
       })
     );
 
@@ -191,17 +186,17 @@ export class HyPushState
       map(event => ({
         cause: Cause.Pop,
         url: new URL(window.location.href),
-        cacheNr: this.cacheNr,
+        cacheNr: this.#cacheNr,
         event,
       }))
     );
 
-    const reload$ = this.reload$; // .pipe(takeUntil(this.subjects.disconnect));
+    const reload$ = this.#reload$; // .pipe(takeUntil(this.subjects.disconnect));
 
-    const merged$ = merge<Context>(push$, pop$, reload$).pipe(
+    const merged$: Observable<Context> = merge(push$, pop$, reload$).pipe(
       startWith({ url: new URL(window.location.href) } as Context),
       pairwise(),
-      map(([old, current]) => Object.assign(current, { oldURL: old.url })), 
+      map(([old, current]) => Object.assign(current, { oldURL: old.url })),
       share(),
     );
 
@@ -213,16 +208,16 @@ export class HyPushState
     const hash$ = merged$.pipe(
       filter(p => isHashChange(p)),
       filter(() => history.state && history.state[this.histId]),
-      observeOn(animationFrameScheduler),
+      observeOn<Context>(animationFrameScheduler),
       tap(context => {
-        this.historyManager.updateHistoryState(context);
-        this.scrollManager.manageScrollPosition(context);
+        this.#historyManager.updateHistoryState(context);
+        this.#scrollManager.manageScrollPosition(context);
       }),
     );
 
     const pauser$ = defer(() => merge(
       page$.pipe(mapTo(true)),
-      deferred.response$.pipe(mapTo(false)),
+      this.#response$.pipe(mapTo(false)),
     )).pipe(
       startWith(false),
     );
@@ -235,59 +230,59 @@ export class HyPushState
         url: new URL(anchor.href, this.href),
         anchor,
         event,
-        cacheNr: this.cacheNr,
+        cacheNr: this.#cacheNr,
       })),
       filter(x => isHintEvent(x, this)),
     );
 
     const prefetchResponse$ = merge(hint$, page$).pipe(
-      distinctUntilChanged((x, y) => this.compareContext(x, y)),
-      switchMap(x => this.fetchManager.fetchPage(x)),
+      distinctUntilChanged((x, y) => compareContext(x, y)),
+      switchMap(x => this.#fetchManager.fetchPage(x)),
       startWith({ url: {} } as ResponseContext),
       share(),
     );
 
-    const response$ = deferred.response$ = page$.pipe(
+    const response$ = this.#response$ = page$.pipe(
       tap(context => {
-        this.eventManager.onStart(context)
-        this.historyManager.updateHistoryState(context);
-        this._url = context.url;
+        this.#eventManager.onStart(context)
+        this.#historyManager.updateHistoryState(context);
+        this.#url = context.url;
       }),
       withLatestFrom(prefetchResponse$),
-      switchMap((args) => this.fetchManager.getResponse(prefetchResponse$, ...args)),
+      switchMap((args) => this.#fetchManager.getResponse(prefetchResponse$, ...args)),
       share(),
     );
 
-    const responseOk$ = response$.pipe(filter(({ error }) => !error));
-    const responseError$ = response$.pipe(filter(({ error }) => !!error));
+    const responseOk$ = response$.pipe(filter((ctx): ctx is ResponseContextOk => !ctx.error));
+    const responseErr$ = response$.pipe(filter((ctx): ctx is ResponseContextErr => !!ctx.error));
 
     const main$ = responseOk$.pipe(
-      map(context => this.updateManager.responseToContent(context)),
-      tap(context => this.eventManager.emitReady(context)),
+      map(context => this.#updateManager.responseToContent(context)),
+      tap(context => this.#eventManager.emitReady(context)),
       observeOn(animationFrameScheduler),
       tap(context => {
-        this.updateManager.updateDOM(context);
-        this.historyManager.updateTitle(context)
-        this.eventManager.emitAfter(context);
+        this.#updateManager.updateDOM(context);
+        this.#historyManager.updateTitle(context)
+        this.#eventManager.emitAfter(context);
       }),
       startWith({
         cause: Cause.Init,
-        url: this._url,
+        url: this.#url,
         scripts: [],
       }),
       observeOn(animationFrameScheduler),
-      tap(context => this.scrollManager.manageScrollPosition(context)),
-      tap({ error: (e) => this.eventManager.emitDOMError(e) }),
+      tap(context => this.#scrollManager.manageScrollPosition(context)),
+      tap({ error: (e) => this.#eventManager.emitDOMError(e) }),
       catchError((_, c) => c),
       switchMap((x) => this.fadePromise.then(() => x)),
-      switchMap(x => this.updateManager.reinsertScriptTags(x)),
-      tap({ error: e => this.eventManager.emitError(e) }),
+      switchMap(x => this.#updateManager.reinsertScriptTags(x)),
+      tap({ error: e => this.#eventManager.emitError(e) }),
       catchError((_, c) => c),
-      tap(context => this.eventManager.emitLoad(context)),
+      tap(context => this.#eventManager.emitLoad(context)),
     );
 
-    const error$ = responseError$.pipe(
-      tap(e => this.eventManager.emitNetworkError(e)),
+    const error$ = responseErr$.pipe(
+      tap(e => this.#eventManager.emitNetworkError(e)),
     );
 
     const progress$ = page$.pipe(
@@ -297,7 +292,7 @@ export class HyPushState
           mapTo(context),
         ),
       ),
-      tap(context => this.eventManager.emitProgress(context)),
+      tap(context => this.#eventManager.emitProgress(context)),
     );
 
     // Subscriptions
@@ -305,12 +300,12 @@ export class HyPushState
     hash$.subscribe();
     error$.subscribe();
     progress$.subscribe();
-      
-    this._initialized.resolve(this);
+
+    this.#initialized.resolve(this);
     this.fireEvent('init');
   }
 
   disconnectedCallback() {
-    window.removeEventListener("beforeunload", this.historyManager.updateHistoryScrollPosition);
+    window.removeEventListener("beforeunload", this.#historyManager.updateHistoryScrollPosition);
   }
 }

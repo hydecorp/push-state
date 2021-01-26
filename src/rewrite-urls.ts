@@ -1,8 +1,9 @@
 // When fetching documents from an external source,
 // relative URLs will be resolved relative to the current `window.location`.
 // We can rewrite URL to absolute urls
-export function rewriteURLs(replaceEls: Element[], base: string) {
+export function rewriteURLs(replaceEls: (Element | null)[], base: string) {
   replaceEls.forEach((el) => {
+    if (!el) return;
     el.querySelectorAll("[href]").forEach(rewriteURL("href", base));
     el.querySelectorAll("[src]").forEach(rewriteURL("src", base));
     el.querySelectorAll("img[srcset]").forEach(rewriteURLSrcSet("srcset", base));
@@ -30,7 +31,9 @@ export function rewriteURLs(replaceEls: Element[], base: string) {
 function rewriteURL(attr: string, base: string) {
   return (el: Element) => {
     try {
-      el.setAttribute(attr, new URL(el.getAttribute(attr), base).href);
+      const attrVal = el.getAttribute(attr);
+      if (attrVal == null) return;
+      el.setAttribute(attr, new URL(attrVal, base).href);
     } catch (e) {
       // if (process.env.DEBUG) console.warn(`Couldn't rewrite URL in attribute ${attr} on element`, el);
     }
@@ -40,10 +43,11 @@ function rewriteURL(attr: string, base: string) {
 function rewriteURLSrcSet(attr: string, base: string) {
   return (el: Element) => {
     try {
+      const attrVal = el.getAttribute(attr);
+      if (attrVal == null) return;
       el.setAttribute(
         attr,
-        el
-          .getAttribute(attr)
+        attrVal
           .split(/\s*,\s*/)
           .map(str => {
             const pair = str.split(/\s+/);
@@ -61,10 +65,11 @@ function rewriteURLSrcSet(attr: string, base: string) {
 function rewriteURLList(attr: string, base: string) {
   return (el: Element) => {
     try {
+      const attrVal = el.getAttribute(attr);
+      if (attrVal == null) return;
       el.setAttribute(
         attr,
-        el
-          .getAttribute(attr)
+        attrVal
           .split(/[\s,]+/)
           .map(str => new URL(str, base).href)
           .join(", ")

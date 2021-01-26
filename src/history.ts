@@ -42,7 +42,7 @@ export class HistoryManager {
         // no break
       }
       case Cause.Pop: {
-        if (this.parent.simulateHashChange) simHashChange(url, oldURL);
+        if (this.parent.simulateHashChange && oldURL) simHashChange(url, oldURL);
         break;
       }
       default: {
@@ -66,7 +66,7 @@ export class HistoryManager {
     history.replaceState(state, document.title);
   }
 
-  private assignScrollPosition(state: object) {
+  private assignScrollPosition(state: any) {
     const { histId } = this.parent;
     return {
       ...state,

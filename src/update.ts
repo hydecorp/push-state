@@ -3,7 +3,7 @@ import { isExternal, fragmentFromString } from "./common";
 import { ScriptManager } from "./script";
 import { rewriteURLs } from "./rewrite-urls";
 
-import { ResponseContext } from './fetch';
+import { ResponseContext, ResponseContextOk } from './fetch';
 import { HyPushState } from ".";
 
 const CANONICAL_SEL = 'link[rel=canonical]';
@@ -12,25 +12,25 @@ const META_DESC_SEL = 'meta[name=description]';
 export interface ReplaceContext extends ResponseContext {
   title: string;
   document: Document,
-  replaceEls: [Element] | Element[];
+  replaceEls: (Element | null)[];
   scripts: Array<[HTMLScriptElement, HTMLScriptElement]>;
 };
 
 export class UpdateManager {
-  private parent: HyPushState;
-  private scriptManager: ScriptManager;
+  private parent!: HyPushState;
+  private scriptManager!: ScriptManager;
 
   constructor(parent: HyPushState) {
     this.parent = parent;
     this.scriptManager = new ScriptManager(parent);
   }
 
-  get el() { return this.parent.el; }
+  get el() { return this.parent; }
   get replaceSelector() { return this.parent.replaceSelector; }
   get scriptSelector() { return this.parent.scriptSelector; }
 
   // Extracts the elements to be replaced
-  private getReplaceElements(doc: Document): Element[] {
+  private getReplaceElements(doc: Document): (Element | null)[] {
     if (this.replaceSelector) {
       return this.replaceSelector.split(',').map(sel => doc.querySelector(sel));
     } else if (this.el.id) {
@@ -43,7 +43,7 @@ export class UpdateManager {
 
   // Takes the response string and turns it into document fragments
   // that can be inserted into the DOM.
-  responseToContent(context: ResponseContext): ReplaceContext {
+  responseToContent(context: ResponseContextOk): ReplaceContext {
     const { responseText } = context;
 
     const doc = new DOMParser().parseFromString(responseText, 'text/html');
@@ -61,24 +61,27 @@ export class UpdateManager {
     return { ...context, document: doc, title, replaceEls, scripts };
   }
 
-  // Replaces the old elments with the new one, one-by-one.
-  private replaceContentWithSelector(elements: Element[]) {
-    this.replaceSelector
+  // Replaces the old elements with the new one, one-by-one.
+  private replaceContentWithSelector(replaceSelector: string, elements: (Element | null)[]) {
+    replaceSelector
       .split(',')
       .map(sel => document.querySelector(sel))
-      .forEach((oldElement, i) => oldElement.parentNode.replaceChild(elements[i], oldElement));
+      .forEach((oldElement, i) => {
+        const el = elements[i];
+        if (el) oldElement?.parentNode?.replaceChild(el, oldElement);
+      });
   }
 
-  // When no `relaceIds` are set, replace the entire content of the component (slow).
-  private replaceContentWholesale([el]: [Element]) {
-    this.el.innerHTML = el.innerHTML;
+  // When no `replaceIds` are set, replace the entire content of the component (slow).
+  private replaceContentWholesale([el]: (Element | null)[]) {
+    if (el) this.el.innerHTML = el.innerHTML;
   }
 
-  private replaceContent(replaceEls: Element[]) {
+  private replaceContent(replaceEls: (Element | null)[]) {
     if (this.replaceSelector) {
-      this.replaceContentWithSelector(replaceEls);
+      this.replaceContentWithSelector(this.replaceSelector, replaceEls);
     } else {
-      this.replaceContentWholesale(replaceEls as [Element]);
+      this.replaceContentWholesale(replaceEls);
     }
   }
 

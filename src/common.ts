@@ -49,12 +49,12 @@ export function isHash(
   return hash !== "" && origin === location.origin && pathname === location.pathname;
 }
 
-export function shouldLoadAnchor(anchor: HTMLAnchorElement) {
+export function shouldLoadAnchor(anchor?: HTMLAnchorElement | null) {
   return anchor && anchor.target === "";
 }
 
 export function isPushEvent({ url, anchor, event: { metaKey, ctrlKey } }: ClickContext, location: Location) {
-  return (
+  return !!(
     !metaKey &&
     !ctrlKey &&
     shouldLoadAnchor(anchor) &&
@@ -63,7 +63,7 @@ export function isPushEvent({ url, anchor, event: { metaKey, ctrlKey } }: ClickC
 }
 
 export function isHintEvent({ url, anchor }: Context, location: Location) {
-  return (
+  return !!(
     shouldLoadAnchor(anchor) &&
     !isExternal(url, location) &&
     !isHash(url, location)
@@ -73,7 +73,7 @@ export function isHintEvent({ url, anchor }: Context, location: Location) {
 export function isHashChange({
   cause,
   url: { pathname, hash },
-  oldURL: { pathname: prevPathname },
+  oldURL,
 }: Context) {
-  return pathname === prevPathname && (cause === Cause.Pop || (cause === Cause.Push && hash !== ''));
+  return pathname === oldURL?.pathname && (cause === Cause.Pop || (cause === Cause.Push && hash !== ''));
 }

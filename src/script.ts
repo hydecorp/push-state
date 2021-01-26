@@ -23,11 +23,15 @@ export class ScriptManager {
     const scripts: Array<[HTMLScriptElement, HTMLScriptElement]> = [];
 
     replaceEls.forEach(el => {
-      if (el != null) el.querySelectorAll(this.scriptSelector).forEach((script: HTMLScriptElement) => {
-        const newScript = cloneScript(script);
-        const pair: [HTMLScriptElement, HTMLScriptElement] = [newScript, script];
-        scripts.push(pair);
-      });
+      if (el && this.scriptSelector) {
+        el.querySelectorAll(this.scriptSelector).forEach((script) => {
+          if (script instanceof HTMLScriptElement) {
+            const newScript = cloneScript(script);
+            const pair: [HTMLScriptElement, HTMLScriptElement] = [newScript, script];
+            scripts.push(pair);
+          }
+        });
+      }
     });
 
     return scripts;
@@ -53,16 +57,16 @@ export class ScriptManager {
     document.write = (...args) => {
       const temp = document.createElement("div");
       temp.innerHTML = args.join();
-      Array.from(temp.childNodes).forEach(node => ref.parentNode.insertBefore(node, ref));
+      Array.from(temp.childNodes).forEach(node => ref.parentNode?.insertBefore(node, ref));
     };
 
     return new Promise((resolve, reject) => {
       if (script.src !== "") {
         script.addEventListener("load", resolve);
         script.addEventListener("error", reject);
-        ref.parentNode.replaceChild(script, ref);
+        ref.parentNode?.replaceChild(script, ref);
       } else {
-        ref.parentNode.replaceChild(script, ref);
+        ref.parentNode?.replaceChild(script, ref);
         resolve({});
       }
     });

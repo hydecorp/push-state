@@ -1,30 +1,32 @@
-import { Subject, Observable, from, fromEvent, of, merge } from "rxjs";
+import { Subject, Observable, from, fromEvent, of, merge, NEVER } from "rxjs";
 
 import { matchesAncestors, createMutationObservable, subscribeWhen, bufferDebounceTime } from "./common";
-import { map, filter, startWith, tap, flatMap, mergeAll, switchMap } from "rxjs/operators";
+import { map, filter, startWith, tap, mergeMap, mergeAll, switchMap } from "rxjs/operators";
 
 const flat = <T>(x: Array<Array<T>>): Array<T> => Array.prototype.concat.apply([], x);
 
-const combineRecords = (records: MutationRecord[]) => ({
+type MiniRecord = { addedNodes: Iterable<Node>, removedNodes: Iterable<Node> };
+
+const combineRecords = (records: MiniRecord[]) => ({
   addedNodes: new Set(flat(records.map(r => Array.from(r.addedNodes)))),
   removedNodes: new Set(flat(records.map(r => Array.from(r.removedNodes)))),
 });
 
 export class EventListenersMixin {
-  el: HTMLElement;
+  el!: HTMLElement;
 
-  linkSelector: string;
+  linkSelector!: string;
 
-  $: {
-    linkSelector?: Subject<string>;
-    prefetch?: Subject<boolean>;
+  $!: {
+    linkSelector: Subject<string>;
+    prefetch: Subject<boolean>;
   }
 
   // LINKS 2
   setupEventListeners() {
     const pushEvent$ = fromEvent(this.el, "click").pipe(
       map(event => {
-        const anchor = matchesAncestors(event.target as Element, this.linkSelector);
+        const anchor = matchesAncestors(<Element>event.target, this.linkSelector);
         if (anchor instanceof HTMLAnchorElement) {
           return [event, anchor] as [MouseEvent, HTMLAnchorElement];
         }
@@ -32,11 +34,13 @@ export class EventListenersMixin {
       filter(x => !!x),
     );
 
-    const matchOrQuery = (el: Element, selector: string): Observable<Element> => {
-      if (el.matches(selector)) {
+    const matchOrQuery = (el: Element, selector: string): Observable<HTMLAnchorElement> => {
+      if (el.matches(selector) && el instanceof HTMLAnchorElement) {
         return of(el);
       } else {
-        return from(el.querySelectorAll(selector));
+        return from(el.querySelectorAll(selector)).pipe(
+          filter((el): el is HTMLAnchorElement => el instanceof HTMLAnchorElement),
+        );
       }
     }
 
@@ -60,20 +64,21 @@ export class EventListenersMixin {
         links.delete(link);
       }
 
+
       return createMutationObservable(this.el, { childList: true, subtree: true }).pipe(
         startWith({ addedNodes: [this.el], removedNodes: [] }),
         bufferDebounceTime(500),
         map(combineRecords),
         switchMap(({ addedNodes, removedNodes }) => {
           from(removedNodes).pipe(
-            filter(el => el instanceof Element),
-            flatMap((el: Element) => matchOrQuery(el, linkSelector)),
+            filter((el): el is Element => el instanceof Element),
+            mergeMap(el => matchOrQuery(el, linkSelector)),
             tap(removeLink)
           ).subscribe()
 
           from(addedNodes).pipe(
-            filter(el => el instanceof Element),
-            flatMap((el: Element) => matchOrQuery(el, linkSelector)),
+            filter((el): el is Element => el instanceof Element),
+            mergeMap(el => matchOrQuery(el, linkSelector)),
             tap(addLink)
           ).subscribe()
 

@@ -167,7 +167,6 @@ export class HyPushState
   #updateHistoryScrollPosition = (event: MouseEvent) => {
     const anchor = matchesAncestors(<Element>event.target, 'a[href]') as HTMLAnchorElement;
     if (isExternal(anchor)) {
-      console.log(event)
       this.#historyManager.updateHistoryScrollPosition();
     }
   }

@@ -22,9 +22,9 @@ import { property, customElement } from 'lit-element';
 import { Observable, Subject, BehaviorSubject, merge, defer, fromEvent, animationFrameScheduler } from "rxjs";
 import { map, filter, tap, takeUntil, startWith, pairwise, share, mapTo, switchMap, distinctUntilChanged, withLatestFrom, catchError, observeOn } from 'rxjs/operators';
 
-import { RxLitElement, createResolvablePromise } from '@hydecorp/component';
+import { RxLitElement, createResolvablePromise, matchesAncestors } from '@hydecorp/component';
 
-import { applyMixins, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent, filterWhen } from './common';
+import { applyMixins, Context, Cause, ClickContext, isPushEvent, isHashChange, isHintEvent, filterWhen, isExternal } from './common';
 
 import { FetchManager, ResponseContext, ResponseContextErr, ResponseContextOk } from './fetch';
 import { UpdateManager } from './update';
@@ -156,7 +156,20 @@ export class HyPushState
     // Remember the current scroll position (for F5/reloads).
     window.addEventListener("beforeunload", this.#historyManager.updateHistoryScrollPosition);
 
+    // Remember scroll position for backward/forward navigation cache.
+    // Technically, this is only necessary for Safari, because other browsers will not use the BFN cache
+    // when a beforeunload event is registered...
+    document.documentElement.addEventListener('click', this.#updateHistoryScrollPosition)
+
     this.updateComplete.then(this.#upgrade)
+  }
+
+  #updateHistoryScrollPosition = (event: MouseEvent) => {
+    const anchor = matchesAncestors(<Element>event.target, 'a[href]') as HTMLAnchorElement;
+    if (isExternal(anchor)) {
+      console.log(event)
+      this.#historyManager.updateHistoryScrollPosition();
+    }
   }
 
   #response$!: Observable<ResponseContext>
@@ -307,5 +320,6 @@ export class HyPushState
 
   disconnectedCallback() {
     window.removeEventListener("beforeunload", this.#historyManager.updateHistoryScrollPosition);
+    document.documentElement.removeEventListener('click', this.#updateHistoryScrollPosition);
   }
 }

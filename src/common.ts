@@ -36,10 +36,10 @@ export interface ClickContext extends Context {
 }
 
 export function isExternal(
-  { protocol, host }: { protocol: string, host: string },
+  url?: { protocol: string, host: string } | null,
   location: { protocol: string, host: string } = window.location,
 ) {
-  return protocol !== location.protocol || host !== location.host;
+  return url != null && (url.protocol !== location.protocol || url.host !== location.host);
 }
 
 export function isHash(
